@@ -47,7 +47,7 @@ test.beforeEach(async ({ page, context }) => {
   const modal = page.locator(".fixed.inset-0.z-50")
   await modal.getByPlaceholder("you@example.com").fill(testAccount.email)
   await modal.getByPlaceholder("••••••••").fill(testAccount.password)
-  await modal.getByRole("button", { name: "Sign in", exact: true }).click()
+  await modal.getByRole("button", { name: "Sign in", exact: true }).last().click() // modal has a "Sign in" tab + the submit button
 
   await expect(page.getByPlaceholder("Describe how you feel…")).toBeEnabled({ timeout: 15_000 })
 })

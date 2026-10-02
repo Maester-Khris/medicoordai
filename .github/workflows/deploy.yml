@@ -23,26 +23,14 @@ jobs:
             backend:
               - 'backend/**'
 
-  # deploy-backend:
-  #   name: Deploy backend → Render
-  #   runs-on: ubuntu-latest
-  #   needs: detect-changes
-  #   if: needs.detect-changes.outputs.backend == 'true'
-  #
-  #   steps:
-  #     - name: Trigger Render deploy webhook
-  #       run: |
-  #         echo "Backend changes detected — triggering Render deploy"
-  #         curl -f -X POST "${{ secrets.RENDER_DEPLOY_HOOK_MEDICOORD }}"
-  #
-  #     - name: Confirm webhook accepted
-  #       run: echo "Render deploy webhook triggered successfully"
+  # Backend deploys to Railway via the Railway CLI from backend/ (see docs/ARCHITECTURE.md).
+  # No CI deploy job is wired up yet; add a `railway up` job here if CI-driven deploys are wanted.
 
   skip-backend:
-    name: No backend changes — skip Render deploy
+    name: No backend changes — skip Railway deploy
     runs-on: ubuntu-latest
     needs: detect-changes
     if: needs.detect-changes.outputs.backend == 'false'
 
     steps:
-      - run: echo "No backend changes — Render deploy skipped"
+      - run: echo "No backend changes — Railway deploy skipped"

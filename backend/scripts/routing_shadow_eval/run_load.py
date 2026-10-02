@@ -15,7 +15,7 @@ eval Supabase project, same 12 scattered-Toronto-coordinate messages.
 
 Invocation:
     doppler run --config eval -- python scripts/routing_shadow_eval/run_load.py \
-        --count 400 --base-url <eval-project preview Render URL>
+        --count 400 --base-url <eval-project preview Railway URL>
 """
 import argparse
 import concurrent.futures

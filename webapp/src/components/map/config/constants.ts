@@ -1,5 +1,10 @@
 import type { TriageUIState, FacilityCandidate } from '../../../../../shared/types'
 
+const CARTO_KEY = import.meta.env.VITE_CARTO_API_KEY as string | undefined
+
+export const cartoTileUrl = (style: 'rastertiles/voyager' | 'dark_all'): string =>
+  `https://{s}.basemaps.cartocdn.com/${style}/{z}/{x}/{y}{r}.png${CARTO_KEY ? `?key=${CARTO_KEY}` : ''}`
+
 export const cnTowerPos: [number, number] = [43.6426, -79.3871]
 
 export const INACTIVE_TRIAGE: TriageUIState = {

@@ -3,7 +3,7 @@ import L from "leaflet"
 import { useState } from "react"
 import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet"
 import type { Facility, FacilityCategory } from "@shared/types"
-import { cnTowerPos } from "../map/config/constants"
+import { cnTowerPos, cartoTileUrl } from "../map/config/constants"
 import { cnTowerIcon } from "../map/config/icons"
 
 interface SandboxMapProps {
@@ -108,7 +108,7 @@ export function SandboxMap({ facilities, facilitiesLoading }: SandboxMapProps) {
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url={cartoTileUrl('dark_all')}
           tileSize={512}
           zoomOffset={-1}
           detectRetina={true}

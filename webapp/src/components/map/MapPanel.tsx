@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, Marker, Tooltip, Popup } from 'react-leaflet'
 import { useMapEvents } from 'react-leaflet'
 import type { Facility, TriageUIState } from '../../../../shared/types'
 import { useBreakpoint } from '../../hooks/useBreakpoint'
-import { cnTowerPos, INACTIVE_TRIAGE, buildTriageCandidates } from './config/constants'
+import { cnTowerPos, cartoTileUrl, INACTIVE_TRIAGE, buildTriageCandidates } from './config/constants'
 import { cnTowerIcon, userIcon, manualPinIcon } from './config/icons'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useAnchor } from '../../hooks/useAnchor'
@@ -121,7 +121,7 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
         <MapProvider activeTriage={activeTriage} recommendedId={recommendedId} isMobile={isMobile}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+            url={cartoTileUrl('rastertiles/voyager')}
             tileSize={512}
             zoomOffset={-1}
             detectRetina={true}
