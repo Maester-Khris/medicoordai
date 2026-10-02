@@ -23,7 +23,7 @@ Does NOT:
 - Make direct calls to Geoapify, Groq, or Anthropic — all AI/routing calls go through the backend
 - Store any patient data client-side beyond the current session
 
-### Backend — Render (Web Service)
+### Backend — Railway (Web Service)
 **Stack:** Python 3.11, FastAPI, Pydantic
 
 Responsibilities:
@@ -38,8 +38,8 @@ Does NOT:
 - Handle authentication (Phase 1)
 - Serve the frontend
 
-### Background Worker — Render (Background Worker)
-TBD. Reserved for functions that need to run constantly or on a schedule (e.g. facility status polling). Not implemented in Phase 1.
+### Background Worker — Railway (Cron / Worker Service)
+Implemented for ER wait-time scraping as a Railway cron service (`workers/railway.toml`, every 15 min).
 
 ---
 
@@ -102,7 +102,7 @@ User browser ──▶│  React SPA   │
                 └──────┬───────┘
                        │ POST /triage
                        ▼
-                    Render
+                    Railway
                 ┌──────────────┐
                 │  FastAPI app │──▶ Groq API
                 │              │──▶ Anthropic API
@@ -110,7 +110,7 @@ User browser ──▶│  React SPA   │
                 └──────────────┘
 ```
 
-Environment variables are managed in Doppler and injected at runtime. Vercel and Render each have their own Doppler config environment (`vercel-preview`, `vercel-prod`, `render-prod`).
+Environment variables are managed in Doppler and injected at runtime. The frontend (Vercel) reads `VITE_*` values at build time; the backend (Railway) reads them at runtime. Doppler configs: `dev`, `dev_personal`, `stg`, `prd`, `eval`.
 
 ---
 

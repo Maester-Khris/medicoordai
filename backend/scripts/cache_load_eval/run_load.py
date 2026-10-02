@@ -10,7 +10,7 @@ testing tool — same decision and rationale as routing_shadow_eval/run_load.py.
 
 Invocation:
     doppler run --config eval -- python scripts/cache_load_eval/run_load.py \
-        --count 300 --base-url <eval-project preview Render URL>
+        --count 300 --base-url <eval-project preview Railway URL>
 """
 import argparse
 import concurrent.futures
