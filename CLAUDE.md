@@ -22,7 +22,7 @@ medicoordai/
 - **Auth / DB:** Supabase — not in scope for current phase, do not scaffold yet
 - **Env vars:** Doppler — all `run` commands must use `doppler run --`
 - **Frontend deploy:** Vercel (preview on PR, production on main)
-- **Backend deploy:** Render (web service + background worker if needed)
+- **Backend deploy:** Railway (web service + cron/worker services; deploy via Railway CLI from `backend/`)
 
 
 ## Running Commands

@@ -22,4 +22,4 @@ requires only a config change, not a code change.
 - Tool definitions in `backend/llm/tools.py` are provider-agnostic
 - `LLM_PROVIDER` is managed in Doppler per environment (dev/staging/prod can differ)
 - If Groq rate limits become a problem in production, flipping to Anthropic requires
-  one Doppler config change and a Render redeploy — no code change
+  one Doppler config change and a Railway redeploy (`railway redeploy`) — no code change

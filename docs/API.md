@@ -11,8 +11,8 @@ Any change to an endpoint, request shape, or response shape in this file require
 | Environment | Frontend origin | Backend base URL |
 |---|---|---|
 | Local dev | `http://localhost:5173` | `http://localhost:8000` |
-| Vercel preview | `https://<branch>.medicoord.vercel.app` | Render staging URL |
-| Production | `https://medicoord.vercel.app` | `https://api.medicoord.onrender.com` |
+| Vercel preview | `https://<branch>.medicoord.vercel.app` | `https://medicoordai-staging-production.up.railway.app` (Railway staging) |
+| Production | `https://medicoord.vercel.app` | Railway production service domain (see Railway dashboard) |
 
 CORS: The backend allows requests from Vercel preview URLs and the production frontend origin. Configured in `backend/main.py`.
 
@@ -93,7 +93,7 @@ The primary endpoint. Accepts a user's symptom message and location, returns a s
 
 ### GET `/health`
 
-Liveness check. Used by Render to confirm the service is running.
+Liveness check. Used by Railway to confirm the service is running.
 
 **Response `200`**
 ```json
