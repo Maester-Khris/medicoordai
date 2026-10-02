@@ -32,6 +32,7 @@ import {
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
+import { cartoTileUrl } from '../components/map/config/constants'
 
 const MOUNT_SINAI_POS: [number, number] = [43.6579, -79.3873]
 
@@ -527,7 +528,7 @@ export default function ProfilePage() {
                   >
                     <TileLayer
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                      url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      url={cartoTileUrl('dark_all')}
                       tileSize={512}
                       zoomOffset={-1}
                       detectRetina={true}
