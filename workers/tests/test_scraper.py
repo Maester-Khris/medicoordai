@@ -1,382 +1,291 @@
-import json
-import logging
 import os
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-import scraper
+import scraper  # noqa: E402
 
-_RECORD = {
-    "facility_id": "f1", "facility_name": "A", "category": "hospital",
-    "source_facility_type": "general", "accepted_severity": ["emergent"],
-    "address": "123 St", "lat": 1.0, "lng": 2.0, "phone": "555",
-    "google_place_id": "p1", "business_status": "OPERATIONAL", "weekday_hours": "[]",
+# A slice of the real hospital rows in medicoord-db-demo.
+HOSPITALS = [
+    {"id": "tgh", "name": "University Health Network - Toronto General Hospital"},
+    {"id": "tw", "name": "University Health Network - Toronto Western Hospital"},
+    {"id": "teg", "name": "Toronto East General Hospital"},
+    {"id": "nyg", "name": "North York General Hospital - General Division"},
+    {"id": "hr", "name": "Humber River Hospital"},
+    {"id": "hr-yf", "name": "Humber River Hospital -York Finch"},
+    {"id": "hr-church", "name": "Humber River Regional Hospital - Church St. Site"},
+    {"id": "sb", "name": "Sunnybrook Health Sciences Centre"},
+    {"id": "sb-bay", "name": "Sunnybrook Health Sciences Centre - Bayview Campus"},
+    {"id": "osler-e", "name": "William Osler Health System - Etobicoke"},
+    {"id": "sickkids", "name": "Hospital for Sick Children"},
+    {"id": "uhn", "name": "University Health Network"},
+]
+ALIASES = {
+    scraper.normalize("Michael Garron Hospital"): scraper.normalize("Toronto East General Hospital"),
+    scraper.normalize("Etobicoke General Hospital"): scraper.normalize("William Osler Health System - Etobicoke"),
+    scraper.normalize("Ghost Hospital"): scraper.normalize("Not A Real Facility"),
 }
 
 
-def _places_responses(address, lat, lng):
-    search_resp = MagicMock(status_code=200)
-    search_resp.raise_for_status = lambda: None
-    search_resp.json = lambda: {"candidates": [{"place_id": "place-1"}]}
+def row(name, minutes=60, raw=None, **extra):
+    return {"name": name, "wait_minutes": minutes, "raw_wait": raw or f"{minutes}m", **extra}
 
-    details_resp = MagicMock(status_code=200)
-    details_resp.raise_for_status = lambda: None
-    details_resp.json = lambda: {
-        "result": {
-            "name": "Test Hospital",
-            "formatted_address": address,
-            "formatted_phone_number": "555-1234",
-            "opening_hours": {"weekday_text": []},
-            "business_status": "OPERATIONAL",
-            "geometry": {"location": {"lat": lat, "lng": lng}},
+
+def match(names):
+    return {r["name"]: r["facility_id"] for r in scraper.match_to_hospitals([row(n) for n in names], HOSPITALS, ALIASES)}
+
+
+# ── parsing ───────────────────────────────────────────────────────────────────
+
+class TestParseTime:
+    @pytest.mark.parametrize("raw,expected", [
+        ("3h 59m", 239), ("6 hr 26 min", 386), ("30m", 30), ("45", 45), ("2h", 120),
+    ])
+    def test_live_values(self, raw, expected):
+        assert scraper.parse_time_to_minutes(raw) == expected
+
+    @pytest.mark.parametrize("raw", [
+        "3h 15m–8hPredicted", "45m–2h 15mPredicted", "Not available", "No data", "--", "—", "", None,
+    ])
+    def test_no_data_and_predicted_ranges_are_ignored(self, raw):
+        assert scraper.parse_time_to_minutes(raw) is None
+
+
+class TestParsePredicted:
+    @pytest.mark.parametrize("raw,expected", [
+        ("45m–2hPredicted", "45m–2h"), ("1h 15m–2h 45mPredicted", "1h 15m–2h 45m"), ("2h–5h predicted", "2h–5h"),
+    ])
+    def test_range_becomes_display_text(self, raw, expected):
+        assert scraper.parse_predicted(raw) == expected
+
+    @pytest.mark.parametrize("raw", ["3h 59m", "Not available", "--", "Predicted", "", None])
+    def test_everything_else_is_not_predicted(self, raw):
+        assert scraper.parse_predicted(raw) is None
+
+
+class TestParseErstat:
+    def test_reads_hospital_rows_and_ignores_predicted(self):
+        html = """
+        <div class="hospital-row"><div class="hospital-row-info"><h3>Toronto General Hospital</h3></div>
+            <div class="hospital-row-wait">3h 59m</div></div>
+        <div class="hospital-row"><div class="hospital-row-info"><h3>Kingston General Hospital</h3></div>
+            <div class="hospital-row-wait">2h–5hPredicted</div></div>
+        """
+        rows = scraper.parse_erstat(html)
+        assert [(r["name"], r["wait_minutes"]) for r in rows] == [
+            ("Toronto General Hospital", 239), ("Kingston General Hospital", None)]
+        assert [r["predicted_text"] for r in rows] == [None, "2h–5h"]
+
+
+# ── matching: the regression suite for the 2026-10-05 bug ─────────────────────
+
+class TestMatching:
+    def test_exact_and_branded_names_match_their_hospital(self):
+        m = match(["Toronto General Hospital", "Toronto General (University Health Network)",
+                   "Toronto Western Hospital", "Sunnybrook Health Sciences Centre", "Sunnybrook",
+                   "Hospital for Sick Children", "North York General"])
+        assert m == {
+            "Toronto General Hospital": "tgh", "Toronto General (University Health Network)": "tgh",
+            "Toronto Western Hospital": "tw", "Sunnybrook Health Sciences Centre": "sb", "Sunnybrook": "sb",
+            "Hospital for Sick Children": "sickkids", "North York General": "nyg",
         }
-    }
-    return [search_resp, details_resp]
+
+    def test_toronto_general_is_not_toronto_east_general(self):
+        assert match(["Toronto General Hospital"]) == {"Toronto General Hospital": "tgh"}
+
+    @pytest.mark.parametrize("name", [
+        "Kingston General Hospital", "Brantford General Hospital", "Hamilton General Hospital",
+        "Thunder Bay Regional Hospital", "Grand River Hospital", "Health Sciences North",
+        "Almonte General Hospital", "St. Mary's General Hospital",
+    ])
+    def test_other_cities_hospitals_never_match(self, name):
+        assert match([name]) == {}
+
+    def test_campus_names_pick_the_right_site(self):
+        m = match(["Humber River Hospital", "Humber River Hospital (Church St.)", "Humber River Hospital -York Finch"])
+        assert m == {"Humber River Hospital": "hr", "Humber River Hospital (Church St.)": "hr-church",
+                     "Humber River Hospital -York Finch": "hr-yf"}
+
+    def test_alias_handles_renames(self):
+        assert match(["Michael Garron Hospital", "Etobicoke General Hospital"]) == {
+            "Michael Garron Hospital": "teg", "Etobicoke General Hospital": "osler-e"}
+
+    def test_alias_pointing_at_a_missing_facility_is_skipped(self, caplog):
+        assert match(["Ghost Hospital"]) == {}
+        assert "alias target not found" in caplog.text
+
+    def test_name_with_only_generic_words_matches_nothing(self):
+        assert match(["General Hospital", "Regional Health Centre"]) == {}
+
+    def test_hospital_with_no_distinctive_words_is_never_a_target(self):
+        assert "uhn" not in match(["University Health Network"]).values()
+
+    def test_shipped_alias_file_only_names_real_looking_targets(self):
+        aliases = scraper.load_aliases()
+        assert aliases and all(k and v for k, v in aliases.items())
 
 
-class TestResolveUnmatchedFacility:
-    @patch("scraper.requests.get")
-    def test_inside_toronto_bounds_returns_facility(self, mock_get):
-        mock_get.side_effect = _places_responses("123 Main St, Toronto, ON", lat=43.70, lng=-79.40)
+# ── consolidate ───────────────────────────────────────────────────────────────
 
-        result = scraper.resolve_unmatched_facility("Test Hospital")
+class TestConsolidate:
+    def test_two_sources_are_averaged(self):
+        out = scraper.consolidate([row("a", 200, "3h 20m", facility_id="f1", score=1.0)],
+                                  [row("b", 100, "1 hr 40 min", facility_id="f1", score=1.0)])
+        assert len(out) == 1 and out[0]["wait_minutes"] == 150 and out[0]["source"] == "erstat+howlongwilliwait"
 
-        assert result is not None
-        assert result["lat"] == pytest.approx(43.70)
+    def test_single_source_passes_through(self):
+        out = scraper.consolidate([row("a", 90, facility_id="f1", score=1.0)], [])
+        assert out[0]["wait_minutes"] == 90 and out[0]["source"] == "erstat"
 
-    @patch("scraper.requests.get")
-    def test_outside_toronto_bounds_returns_none(self, mock_get):
-        mock_get.side_effect = _places_responses("123 Bank St, Ottawa, ON", lat=45.42, lng=-75.69)
+    def test_one_value_per_source_never_an_average_of_many_names(self):
+        er = [row("A", 30, facility_id="f1", score=0.7), row("B", 600, facility_id="f1", score=1.0),
+              row("C", 900, facility_id="f1", score=0.6)]
+        out = scraper.consolidate(er, [])
+        assert len(out) == 1 and out[0]["wait_minutes"] == 600   # best match wins, no averaging
 
-        result = scraper.resolve_unmatched_facility("Ottawa General")
+    def test_live_value_beats_a_better_scored_entry_without_data(self):
+        er = [row("A", None, "Not available", facility_id="f1", score=1.0), row("B", 45, facility_id="f1", score=0.7)]
+        assert scraper.consolidate(er, [])[0]["wait_minutes"] == 45
 
-        assert result is None
+    def test_no_data_keeps_a_null_record_for_redis_only(self):
+        out = scraper.consolidate([row("a", None, "Not available", facility_id="f1", score=1.0)], [])
+        assert out[0]["wait_minutes"] is None and out[0]["predicted"] is False
+        assert scraper._live(out) == [] and scraper._publishable(out) == []
 
-    @patch("scraper.requests.get")
-    def test_real_toronto_hospital_without_literal_toronto_in_address_matches(self, mock_get):
-        # Regression for finding #3: real prod row "the Scarborough Hospital -
-        # Grace Campus" has no literal "toronto" substring in its address.
-        mock_get.side_effect = _places_responses(
-            "3030 birchmount rd. scarborough on m1w 3w3", lat=43.80, lng=-79.31
-        )
+    def test_predicted_only_is_kept_flagged_with_display_text_and_no_minutes(self):
+        out = scraper.consolidate([row("a", None, "45m–2hPredicted", predicted_text="45m–2h", facility_id="f1", score=1.0)], [])
+        assert len(out) == 1
+        assert (out[0]["wait_minutes"], out[0]["predicted"], out[0]["raw_wait"]) == (None, True, "45m–2h")
+        assert scraper._publishable(out) == out and scraper._live(out) == []
 
-        result = scraper.resolve_unmatched_facility("the Scarborough Hospital - Grace Campus")
+    def test_live_value_from_another_source_beats_a_predicted_range_and_is_not_averaged_with_it(self):
+        er = [row("a", None, "45m–2hPredicted", predicted_text="45m–2h", facility_id="f1", score=1.0)]
+        hw = [row("b", 41, "0 hr 41 min", facility_id="f1", score=1.0)]
+        out = scraper.consolidate(er, hw)
+        assert (out[0]["wait_minutes"], out[0]["predicted"], out[0]["source"]) == (41, False, "howlongwilliwait")
 
-        assert result is not None
-
-    @patch("scraper.requests.get")
-    def test_network_error_raises_transient_lookup_error(self, mock_get):
-        mock_get.side_effect = scraper.requests.ConnectionError("timeout")
-
-        with pytest.raises(scraper.TransientLookupError):
-            scraper.resolve_unmatched_facility("Test Hospital")
-
-    @patch("scraper.requests.get")
-    def test_normalizes_typographic_unicode_in_weekday_hours(self, mock_get):
-        search_resp = MagicMock(status_code=200)
-        search_resp.raise_for_status = lambda: None
-        search_resp.json = lambda: {"candidates": [{"place_id": "place-1"}]}
-
-        details_resp = MagicMock(status_code=200)
-        details_resp.raise_for_status = lambda: None
-        details_resp.json = lambda: {
-            "result": {
-                "name": "Test Hospital",
-                "formatted_address": "123 Main St, Toronto, ON",
-                "formatted_phone_number": "555-1234",
-                "opening_hours": {"weekday_text": ["Monday: 9:00 AM – 5:00 PM"]},
-                "business_status": "OPERATIONAL",
-                "geometry": {"location": {"lat": 43.70, "lng": -79.40}},
-            }
-        }
-        mock_get.side_effect = [search_resp, details_resp]
-
-        result = scraper.resolve_unmatched_facility("Test Hospital")
-
-        assert result is not None
-        hours = json.loads(result["weekday_hours"])
-        assert hours == ["Monday: 9:00 AM - 5:00 PM"]
+    def test_predicted_range_beats_a_no_data_entry_from_the_same_source(self):
+        er = [row("a", None, "--", facility_id="f1", score=1.0),
+              row("b", None, "1h–2hPredicted", predicted_text="1h–2h", facility_id="f1", score=0.7)]
+        assert scraper.consolidate(er, [])[0]["raw_wait"] == "1h–2h"
 
 
-class TestFetchExistingPlaceIds:
-    @patch("scraper.requests.get")
-    def test_returns_place_id_to_facility_id_map(self, mock_get):
-        mock_get.return_value = MagicMock(status_code=200)
-        mock_get.return_value.raise_for_status = lambda: None
-        mock_get.return_value.json = lambda: [
-            {"id": "fac-1", "google_place_id": "place-1"},
-            {"id": "fac-2", "google_place_id": "place-2"},
-        ]
+# ── sinks: each is a single batched write ─────────────────────────────────────
 
-        result = scraper.fetch_existing_place_ids("https://x.supabase.co", {})
-
-        assert result == {"place-1": "fac-1", "place-2": "fac-2"}
-
-    @patch("scraper.fetch_existing_place_ids")
-    @patch("scraper.fuzz_process.extractOne", return_value=("existing hospital", 90, 0))
-    def test_not_called_when_every_name_fuzzy_matches(self, mock_extract, mock_fetch_existing):
-        redis_client = MagicMock()
-        redis_client.smembers.return_value = set()
-
-        scraper.build_facility_map(
-            {"existing hospital": {"official_name": "Existing Hospital"}}, {},
-            {"existing hospital": "fac-existing"},
-            "https://x.supabase.co", {}, redis_client,
-        )
-
-        mock_fetch_existing.assert_not_called()
+T0 = "2026-10-05T10:00:00+00:00"
+RECORDS = [
+    {"facility_id": "f1", "wait_minutes": 90, "predicted": False, "raw_wait": "1h 30m", "source": "erstat", "scraped_at": T0},
+    {"facility_id": "f2", "wait_minutes": 45, "predicted": False, "raw_wait": "45m", "source": "howlongwilliwait", "scraped_at": T0},
+    {"facility_id": "f3", "wait_minutes": None, "predicted": False, "raw_wait": "Not available", "source": "erstat", "scraped_at": T0},
+    {"facility_id": "f4", "wait_minutes": None, "predicted": True, "raw_wait": "45m–2h", "source": "erstat", "scraped_at": T0},
+]
 
 
-class TestBuildFacilityMapIdempotency:
-    @patch("scraper.insert_new_facilities", return_value=set())
-    @patch("scraper.resolve_unmatched_facility")
-    @patch("scraper.fetch_existing_place_ids", return_value={"place-99": "existing-fac-id"})
-    @patch("scraper.fuzz_process.extractOne", return_value=None)
-    def test_reuses_existing_facility_instead_of_recreating(
-        self, mock_extract, mock_fetch_existing, mock_resolve, mock_insert
-    ):
-        mock_resolve.return_value = {
-            "facility_name": "New Name", "category": "hospital",
-            "source_facility_type": "general", "accepted_severity": ["emergent"],
-            "address": "x", "lat": 1.0, "lng": 1.0, "phone": None,
-            "google_place_id": "place-99", "business_status": "OPERATIONAL",
-            "weekday_hours": "[]",
-        }
-        redis_client = MagicMock()
-        redis_client.smembers.return_value = set()
+class TestSinks:
+    @patch("scraper.psycopg.connect")
+    def test_postgres_is_one_statement_with_arrays_live_and_predicted_but_not_no_data(self, mock_connect):
+        conn = mock_connect.return_value.__enter__.return_value
+        assert scraper.write_postgres("postgresql://x", RECORDS) == 3
+        assert conn.execute.call_count == 1
+        sql, params = conn.execute.call_args.args
+        assert "unnest" in sql and "on conflict (facility_id) do update" in sql
+        assert params[0] == ["f1", "f2", "f4"]
+        assert params[1] == [90, 45, None]          # predicted rows carry NULL minutes, never 0
+        assert params[2] == [False, False, True]
+        assert params[3][2] == "45m–2h"             # display text
 
-        result = scraper.build_facility_map(
-            {"clean name": {"official_name": "Clean Name"}}, {}, {},
-            "https://x.supabase.co", {}, redis_client,
-        )
-
-        assert result["clean name"] == "existing-fac-id"
-        mock_insert.assert_called_once_with("https://x.supabase.co", {}, [])
-        # Dedup-reused names must NOT be blacklisted: facilities_clean can lag
-        # the facilities table by up to ~7 days post-dbt-rebuild, so this name
-        # needs to keep being re-attempted every run until the corpus catches
-        # up — blacklisting it here would silently stop this facility's wait
-        # time from ever updating again.
-        redis_client.sadd.assert_not_called()
-
-
-class TestNegativeCache:
-    @patch("scraper.insert_new_facilities", return_value=set())
-    @patch("scraper.resolve_unmatched_facility")
-    @patch("scraper.fetch_existing_place_ids", return_value={})
-    @patch("scraper.fuzz_process.extractOne", return_value=None)
-    def test_skips_resolve_call_for_previously_unresolved_name(
-        self, mock_extract, mock_fetch_existing, mock_resolve, mock_insert
-    ):
-        redis_client = MagicMock()
-        redis_client.smembers.return_value = {"clean name"}
-
-        result = scraper.build_facility_map(
-            {"clean name": {"official_name": "Clean Name"}}, {}, {},
-            "https://x.supabase.co", {}, redis_client,
-        )
-
-        mock_resolve.assert_not_called()
-        assert "clean name" not in result
-
-    @patch("scraper.insert_new_facilities", return_value=set())
-    @patch("scraper.resolve_unmatched_facility", return_value=None)
-    @patch("scraper.fetch_existing_place_ids", return_value={})
-    @patch("scraper.fuzz_process.extractOne", return_value=None)
-    def test_adds_to_negative_cache_on_resolve_failure(
-        self, mock_extract, mock_fetch_existing, mock_resolve, mock_insert
-    ):
-        redis_client = MagicMock()
-        redis_client.smembers.return_value = set()
-
-        scraper.build_facility_map(
-            {"clean name": {"official_name": "Clean Name"}}, {}, {},
-            "https://x.supabase.co", {}, redis_client,
-        )
-
-        redis_client.sadd.assert_called_once_with(scraper.NEGATIVE_CACHE_KEY, "clean name")
-
-    @patch("scraper.insert_new_facilities", return_value=set())
-    @patch("scraper.resolve_unmatched_facility", return_value=None)
-    @patch("scraper.fetch_existing_place_ids", return_value={})
-    @patch("scraper.fuzz_process.extractOne", return_value=None)
-    def test_negative_cache_key_is_normalized(
-        self, mock_extract, mock_fetch_existing, mock_resolve, mock_insert
-    ):
-        redis_client = MagicMock()
-        redis_client.smembers.return_value = set()
-
-        scraper.build_facility_map(
-            {"clean name": {"official_name": "  Clean NAME  "}}, {}, {},
-            "https://x.supabase.co", {}, redis_client,
-        )
-
-        redis_client.sadd.assert_called_once_with(scraper.NEGATIVE_CACHE_KEY, "clean name")
-
-    @patch("scraper.insert_new_facilities", return_value=set())
-    @patch("scraper.resolve_unmatched_facility")
-    @patch("scraper.fetch_existing_place_ids", return_value={})
-    @patch("scraper.fuzz_process.extractOne", return_value=None)
-    def test_transient_lookup_error_does_not_add_to_negative_cache(
-        self, mock_extract, mock_fetch_existing, mock_resolve, mock_insert
-    ):
-        mock_resolve.side_effect = scraper.TransientLookupError("Clean Name")
-        redis_client = MagicMock()
-        redis_client.smembers.return_value = set()
-
-        result = scraper.build_facility_map(
-            {"clean name": {"official_name": "Clean Name"}}, {}, {},
-            "https://x.supabase.co", {}, redis_client,
-        )
-
-        redis_client.sadd.assert_not_called()
-        assert "clean name" not in result
-
-
-class TestInsertNewFacilitiesReturnsSucceededIds:
-    @patch("scraper.requests.post")
-    def test_returns_facility_ids_on_full_success(self, mock_post):
-        ok = MagicMock(status_code=201)
-        ok.raise_for_status = lambda: None
-        mock_post.side_effect = [ok, ok]
-
-        result = scraper.insert_new_facilities("https://x.supabase.co", {}, [_RECORD])
-
-        assert result == {"f1"}
+    @patch("scraper.psycopg.connect")
+    def test_postgres_with_nothing_to_write_does_not_connect(self, mock_connect):
+        assert scraper.write_postgres("postgresql://x", [RECORDS[2]]) == 0
+        mock_connect.assert_not_called()
 
     @patch("scraper.requests.post")
-    def test_returns_empty_set_when_facilities_insert_fails(self, mock_post):
-        mock_post.side_effect = scraper.requests.RequestException("boom")
+    def test_supabase_is_one_post_with_only_live_rows_and_no_predicted_column(self, mock_post):
+        assert scraper.write_supabase("https://sb", "key", RECORDS) == 2
+        assert mock_post.call_count == 1
+        sent = mock_post.call_args.kwargs["json"]
+        assert [r["facility_id"] for r in sent] == ["f1", "f2"]
+        assert all("predicted" not in r for r in sent)
+        assert mock_post.call_args.args[0] == "https://sb/rest/v1/wait_times"
 
-        result = scraper.insert_new_facilities("https://x.supabase.co", {}, [_RECORD])
-
-        assert result == set()
-
-    @patch("scraper.requests.post")
-    def test_returns_facility_ids_even_if_clean_insert_fails(self, mock_post):
-        ok = MagicMock(status_code=201)
-        ok.raise_for_status = lambda: None
-        mock_post.side_effect = [ok, scraper.requests.RequestException("clean failed")]
-
-        result = scraper.insert_new_facilities("https://x.supabase.co", {}, [_RECORD])
-
-        assert result == {"f1"}
-
-
-class TestBuildFacilityMapDropsFailedInserts:
-    @patch("scraper.insert_new_facilities")
-    @patch("scraper.resolve_unmatched_facility")
-    @patch("scraper.fetch_existing_place_ids", return_value={})
-    @patch("scraper.fuzz_process.extractOne", return_value=None)
-    def test_drops_facility_map_entries_for_facilities_that_failed_to_persist(
-        self, mock_extract, mock_fetch_existing, mock_resolve, mock_insert
-    ):
-        mock_resolve.return_value = {
-            "facility_name": "New Hospital", "category": "hospital",
-            "source_facility_type": "general", "accepted_severity": ["emergent"],
-            "address": "x", "lat": 43.7, "lng": -79.4, "phone": None,
-            "google_place_id": "place-1", "business_status": "OPERATIONAL", "weekday_hours": "[]",
-        }
-        mock_insert.return_value = set()  # facilities insert failed
-        redis_client = MagicMock()
-        redis_client.smembers.return_value = set()
-
-        result = scraper.build_facility_map(
-            {"new hospital": {"official_name": "New Hospital"}}, {}, {},
-            "https://x.supabase.co", {}, redis_client,
-        )
-
-        assert "new hospital" not in result
-
-    @patch("scraper.insert_new_facilities", return_value=set())
-    @patch("scraper.resolve_unmatched_facility", return_value=None)
-    @patch("scraper.fetch_existing_place_ids", return_value={})
-    def test_matched_count_excludes_within_run_dedup_hits(
-        self, mock_fetch_existing, mock_resolve, mock_insert, caplog
-    ):
-        db_corpus = {"existing hospital": "fac-existing"}
-        redis_client = MagicMock()
-        redis_client.smembers.return_value = set()
-
-        with patch("scraper.fuzz_process.extractOne", return_value=("existing hospital", 90, 0)), \
-             caplog.at_level(logging.INFO, logger="scraper"):
-            result = scraper.build_facility_map(
-                {"existing hospital": {"official_name": "Existing Hospital"}}, {}, db_corpus,
-                "https://x.supabase.co", {}, redis_client,
-            )
-
-        assert result == {"existing hospital": "fac-existing"}
-        assert "1 matched, 0 newly created, 0 dedup-reused, 0 unmatched" in caplog.text
-
-    @patch("scraper.insert_new_facilities", return_value=set())
-    @patch("scraper.resolve_unmatched_facility")
-    @patch("scraper.fetch_existing_place_ids", return_value={"place-99": "existing-fac-id"})
-    @patch("scraper.fuzz_process.extractOne", return_value=None)
-    def test_matched_count_excludes_place_id_dedup_reuse(
-        self, mock_extract, mock_fetch_existing, mock_resolve, mock_insert, caplog
-    ):
-        mock_resolve.return_value = {
-            "facility_name": "New Name", "category": "hospital",
-            "source_facility_type": "general", "accepted_severity": ["emergent"],
-            "address": "x", "lat": 1.0, "lng": 1.0, "phone": None,
-            "google_place_id": "place-99", "business_status": "OPERATIONAL",
-            "weekday_hours": "[]",
-        }
-        redis_client = MagicMock()
-        redis_client.smembers.return_value = set()
-
-        with caplog.at_level(logging.INFO, logger="scraper"):
-            result = scraper.build_facility_map(
-                {"clean name": {"official_name": "Clean Name"}}, {}, {},
-                "https://x.supabase.co", {}, redis_client,
-            )
-
-        assert result["clean name"] == "existing-fac-id"
-        assert "0 matched, 0 newly created, 1 dedup-reused, 0 unmatched" in caplog.text
+    def test_redis_is_one_pipeline_with_everything_including_the_predicted_flag(self):
+        client = MagicMock()
+        assert scraper.write_redis(client, RECORDS) == 4
+        pipe = client.pipeline.return_value
+        assert pipe.hset.call_count == 4 and pipe.execute.call_count == 1
+        payload = [__import__("json").loads(c.args[2]) for c in pipe.hset.call_args_list]
+        assert payload[3] == {"wait_minutes": None, "predicted": True, "raw_wait": "45m–2h", "source": "erstat", "updated_at": T0}
 
 
-class TestInsertNewFacilitiesPayloadShape:
-    @patch("scraper.requests.post")
-    def test_facilities_and_clean_rows_share_common_fields(self, mock_post):
-        ok = MagicMock(status_code=201)
-        ok.raise_for_status = lambda: None
-        mock_post.side_effect = [ok, ok]
+# ── main ──────────────────────────────────────────────────────────────────────
 
-        scraper.insert_new_facilities("https://x.supabase.co", {}, [_RECORD])
-
-        facilities_payload = mock_post.call_args_list[0].kwargs["json"][0]
-        clean_payload = mock_post.call_args_list[1].kwargs["json"][0]
-
-        assert facilities_payload["id"] == "f1"
-        assert facilities_payload["name"] == "A"
-        assert facilities_payload["lat"] == pytest.approx(1.0)
-        assert facilities_payload["source"] == "manual"
-        assert clean_payload["facility_id"] == "f1"
-        assert clean_payload["facility_name"] == "A"
-        assert clean_payload["is_operational"] is True
-        assert clean_payload["business_status"] == "OPERATIONAL"
+ENV = {"POSTGRES_DB_URL_WORKER": "postgresql://w", "SUPABASE_URL": "https://sb",
+       "SUPABASE_SERVICE_ROLE_KEY": "k", "UPSTASH_REDIS_URL": "redis://r"}
+MANY = [{"id": f"h{i}", "name": f"Testville Number{i} Hospital"} for i in range(12)]
 
 
-class TestMainPublishIsolation:
-    @patch("scraper.update_redis")
-    @patch("scraper.insert_wait_times", side_effect=scraper.requests.HTTPError("supabase 503"))
-    @patch("scraper.consolidate", return_value=[{"facility_id": "f1", "wait_minutes": 10}])
-    @patch("scraper.build_facility_map", return_value={"clean": "f1"})
-    @patch("scraper.scrape_howlongwilliwait", return_value={"clean": {"wait_minutes": 10, "raw_wait": "10 min"}})
-    @patch("scraper.scrape_erstat", return_value={})
-    @patch("scraper.fetch_db_facilities", return_value={"clean": "f1"})
-    @patch("scraper.redis.from_url")
-    def test_supabase_insert_failure_does_not_prevent_redis_update(
-        self, mock_from_url, mock_fetch_db, mock_erstat, mock_hlwiw,
-        mock_build_map, mock_consolidate, mock_insert, mock_update_redis,
-    ):
-        mock_redis_client = MagicMock()
-        mock_from_url.return_value = mock_redis_client
+def scraped(n):
+    return [row(f"Testville Number{i} Hospital", 30 + i) for i in range(n)]
 
-        scraper.main()  # must not raise, despite insert_wait_times raising
 
-        mock_update_redis.assert_called_once_with(mock_redis_client, [{"facility_id": "f1", "wait_minutes": 10}])
+@pytest.fixture
+def world(monkeypatch):
+    for k, v in ENV.items():
+        monkeypatch.setenv(k, v)
+    monkeypatch.delenv("SENTRY_DSN_BACKEND", raising=False)
+    monkeypatch.delenv("SENTRY_DSN", raising=False)
+    with patch("scraper.read_hospitals", return_value=MANY) as rh, \
+         patch("scraper.scrape_erstat", return_value=scraped(10)), \
+         patch("scraper.scrape_howlongwilliwait", return_value=[]), \
+         patch("scraper.load_aliases", return_value={}), \
+         patch("scraper.write_postgres", return_value=10) as pg, \
+         patch("scraper.write_supabase", return_value=10) as sb, \
+         patch("scraper.write_redis", return_value=10) as rd, \
+         patch("scraper.redis.from_url"), \
+         patch("scraper.sentry_sdk") as sentry:
+        yield {"read": rh, "pg": pg, "sb": sb, "rd": rd, "sentry": sentry}
+
+
+class TestMain:
+    def test_happy_path_writes_all_three_sinks_once(self, world):
+        scraper.main([])
+        assert world["pg"].call_count == world["sb"].call_count == world["rd"].call_count == 1
+
+    def test_dry_run_writes_nothing(self, world):
+        scraper.main(["--dry-run"])
+        assert world["pg"].call_count == world["sb"].call_count == world["rd"].call_count == 0
+
+    def test_one_failing_sink_does_not_block_the_others_but_fails_the_run(self, world):
+        world["pg"].side_effect = RuntimeError("connection refused")
+        with pytest.raises(SystemExit) as e:
+            scraper.main([])
+        assert e.value.code == 1
+        assert world["sb"].call_count == 1 and world["rd"].call_count == 1
+        world["sentry"].capture_exception.assert_called()
+
+    def test_too_few_matches_aborts_before_any_write(self, world):
+        with patch("scraper.scrape_erstat", return_value=scraped(3)), pytest.raises(SystemExit) as e:
+            scraper.main([])
+        assert e.value.code == 1
+        assert world["pg"].call_count == world["sb"].call_count == world["rd"].call_count == 0
+
+    def test_both_scrapers_empty_aborts(self, world):
+        with patch("scraper.scrape_erstat", return_value=[]), pytest.raises(SystemExit) as e:
+            scraper.main([])
+        assert e.value.code == 1 and world["pg"].call_count == 0
+
+    def test_unreadable_hospital_list_aborts_and_reports(self, world):
+        world["read"].side_effect = RuntimeError("password authentication failed")
+        with pytest.raises(SystemExit):
+            scraper.main([])
+        world["sentry"].capture_exception.assert_called()
+        assert world["pg"].call_count == 0
+
+    def test_missing_env_var_aborts(self, world, monkeypatch):
+        monkeypatch.delenv("UPSTASH_REDIS_URL")
+        with pytest.raises(SystemExit):
+            scraper.main([])
+        assert world["read"].call_count == 0
