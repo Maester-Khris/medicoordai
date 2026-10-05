@@ -726,6 +726,56 @@ technical trigger for it is real (not scale/file-size alone).
 
 ---
 
+## [Sprint 20 — In Progress] · Guest Demo Launch — Sprint 1: guest session, demo database, feedback
+
+**Started — 2026-10-04 · branch: `feat/guest-demo-core`.** First of a multi-sprint demo launch. Goal: a public,
+sign-in-free guest demo that produces real user evidence (interviews keep asking "did you get user feedback?",
+and sign-in slows our own testing). Scenario: chat → facility recommendation → route drawn on the map. Reference
+design: the `fintech-prod` repo's pre-launch demo sprint (guest ids, `DEMO_MODE`, per-guest/IP rate limit,
+feedback capture, deployed smoke test). Decisions and the sprint-1 list were worked out in a product-thinker
+session; the spec/design session comes next.
+
+### Decisions
+
+- Guest-only, sign-in hidden completely. Ships on `main` behind `DEMO_MODE` (no demo branch); the frontend learns the flag from a `/config` endpoint.
+- One metric: % of guest sessions that reach a drawn route (counter-metric: thumbs-down rate). Line in the sand for the first 10 guest sessions: ≥ 60% reach a route and ≥ 5 leave feedback; under 30% reaching a route means fix onboarding first.
+- Feedback = thumbs plus free text, stored per guest and turn.
+- New Railway Postgres demo database (name TBD), PostGIS-capable template so the later proximity-search feature needs no second migration. Supabase is **not touched** before the demo; leaving Supabase is a later sprint.
+- Facilities come from the `facilities_clean` table (the one the backend serves), and the AWS pipeline is meant to feed it. How the pipeline feeds the demo database is the main open sizing question for the spec session.
+- Chat text kept 30 days (purged on new-guest arrival), feedback and event rows kept, no raw IPs stored; the data-disclosure page is updated to match.
+- LLM stays Groq with the existing direct SDKs in this sprint.
+
+### Scope (sprint 1, in order)
+
+- [ ] Spec/design session: `/app` 404 (likely Vercel routing), pipeline-to-demo-database feed
+- [ ] Railway Postgres (PostGIS-capable) with a restricted app role; schema for facilities, `wait_times`, `guests`, guest-keyed `sessions`/`messages`, `feedback`, events
+- [ ] One-time facility + wait-time load from Supabase; repoint the wait-time worker
+- [ ] Backend data layer on the new database (real driver replaces the REST helpers)
+- [ ] Guest identity under `DEMO_MODE`; profile lookup skipped for guests
+- [ ] Frontend: `/config`, no sign-in UI/onboarding/route guard for guests, `/app` fixed
+- [ ] "Use downtown Toronto" when geolocation is denied or outside the city
+- [ ] Hide bike/bus modes until sprint 2 (their ETAs are multipliers, not real routes)
+- [ ] Rate limit per guest (10) and per IP (30) per 10 minutes; clear "busy" message on 429 and LLM quota errors
+- [ ] Feedback UI (thumbs + free text) on the recommendation message
+- [ ] Minimal events: session started, recommendation shown, route drawn; internal-tester marker on guest rows
+- [ ] Starter prompts, visible not-medical-advice/911 notice, updated disclosure page, 30-day chat-text purge
+- [ ] Delete the hardcoded Geoapify key file and rotate that key
+- [ ] Deployed Playwright smoke test: landing → starter → chat → recommendation → route drawn → feedback
+- [ ] Update `CLAUDE.md` (Supabase "non-negotiable / out of scope" lines) and this changelog
+
+### Known and accepted until the Postgres move
+
+- On Supabase, `wait_times` and `facilities_clean` have RLS off and `anon` has write grants, so anyone with the public anon key can modify them via REST. Left as-is on purpose; resolved by the move to raw Postgres.
+- `GET /facilities/nearby` errors in production (`nearby_facilities()` references a `coordinates` column that does not exist on `facilities_clean`) and nothing calls it. Proximity search stays a core feature, out of this sprint.
+
+### Next sprints in this demo launch (not this sprint)
+
+- **Sprint 2:** real vehicle modes (all Geoapify modes, mode change re-selects among the top candidates, latency work), moderated test sessions.
+- **Sprint 2 or 3 — LLM gateway:** self-deployed **static** LiteLLM proxy as its own Railway service (`config.yaml`, no Postgres/Redis, pinned image digest, private network only; the API holds only the proxy URL and master key; primary and fallback as separate model names; one retry layer). It ships to guests only after a one-day spike passes (tool tests and the 27-vignette harness through the gateway on both providers, forced Groq 429 and `tool_use_failed`, proxy memory measured on Railway). Rollback is the existing `LLM_PROVIDER` flag. Not the Railway one-click template (DB-backed, floating tag).
+- **After the demo:** the `GRAPH_RAG_PROVIDER` improvement sprint; Supabase → raw Postgres move.
+
+---
+
 ## [Deferred — v2.1+] · Core Product Features
 
 **These are the next product milestones after Sprint 5 and 6 close.**
