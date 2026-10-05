@@ -741,7 +741,7 @@ session; the spec/design session comes next.
 - One metric: % of guest sessions that reach a drawn route (counter-metric: thumbs-down rate). Line in the sand for the first 10 guest sessions: ≥ 60% reach a route and ≥ 5 leave feedback; under 30% reaching a route means fix onboarding first.
 - Feedback = thumbs plus free text, stored per guest and turn.
 - New Railway Postgres demo database `medicoord-db-demo`, PostGIS-capable template so the later proximity-search feature needs no second migration. Supabase is **not touched** before the demo; leaving Supabase is a later sprint.
-- Facilities come from the `facilities_clean` table (the one the backend serves). The Railway worker (`workers/scraper.py`, cron every 15 min) will **dual-write** new facilities and `wait_times` to Supabase and `medicoord-db-demo` until the full Postgres move. The AWS pipeline's EventBridge/Step Functions schedule was never saved, so it only runs by hand and the Railway worker is the live pipeline: the demo database is fed by a one-time load plus the worker, and enrichment/dbt runs stay manual (run against both databases when needed).
+- Facilities come from the `facilities_clean` table (the one the backend serves). The Railway worker (`workers/scraper.py`, cron every 15 min) will **dual-write** new facilities and `wait_times` to Supabase and `medicoord-db-demo` until the full Postgres move. The AWS pipeline's EventBridge/Step Functions schedule was never saved, so it only runs by hand and the Railway worker is the live pipeline: the demo database is fed by a one-time load plus the worker, and enrichment/dbt runs stay manual (run against both databases when needed). Note: The enrichment script is ported to Geoapify (since Google Places expired), but Geoapify doesn't cover all initial attributes Google Places added (e.g. `business_status`). We will look for a replacement later.
 - Chat text kept 30 days (purged on new-guest arrival), feedback and event rows kept, no raw IPs stored; the data-disclosure page is updated to match.
 - LLM stays Groq with the existing direct SDKs in this sprint.
 
@@ -758,7 +758,8 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
    - `wait_times` growth bounded: one row per facility in the demo database (upsert); Supabase keeps inserting history, hospitals only, until the Postgres move.
    - One-time cleanup of the bad data: wait-time rows for non-hospital facilities in Supabase and the Redis hash, and the `scraper:unresolved_places` Redis set.
 3. Run the worker manually and check what it writes to Redis, the new Railway database and Supabase (Railway CLI for logs).
-4. Then the spec/design session and the rest of sprint 1.
+4. **Done 2026-10-05:** Geoapify gap-fill script ported to demo database (`enrich_facilities_geoapify.py`). Executed remote apply to fill missing `phone`, `weekday_hours`, and `place_id`. 11 matched, 122 rejected by strict Jaccard/proximity checks to prevent bad overwrites.
+5. Then the spec/design session and the rest of sprint 1.
 
 ### Scope (sprint 1, in order)
 
