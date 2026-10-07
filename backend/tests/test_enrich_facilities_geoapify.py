@@ -57,11 +57,13 @@ def test_overlap_ignores_apostrophes_and_case() -> None:
 
 # ── pick_match ────────────────────────────────────────────────────────────────
 
-FACILITY = {"id": "f1", "name": "Toronto General Hospital", "lat": LAT, "lng": LNG}
+FACILITY = {"id": "f1", "name": "Toronto General Hospital", "address": "200 elizabeth street, toronto",
+            "lat": LAT, "lng": LNG}
 
 
-def _cand(name: str, metres: float, place_id: str = "pid") -> dict:
-    return {"name": name, "lat": _offset_north(metres), "lon": LNG, "place_id": place_id}
+def _cand(name: str, metres: float, place_id: str = "pid", housenumber: str | None = "200") -> dict:
+    return {"name": name, "lat": _offset_north(metres), "lon": LNG, "place_id": place_id,
+            "housenumber": housenumber}
 
 
 def test_pick_match_accepts_close_and_similar() -> None:
@@ -219,12 +221,12 @@ def test_enrich_one_unmatched_and_matched(monkeypatch: pytest.MonkeyPatch) -> No
     fac = {"id": "f", "name": "Toronto General Hospital", "address": "", "lat": LAT, "lng": LNG,
            "phone": None, "weekday_hours": "[]", "place_id": None}
     monkeypatch.setattr(mod, "search_candidates", lambda k, f: [])
-    assert mod.enrich_one("k", fac) == ("unmatched", {})
+    assert mod.enrich_one("k", fac) == ("unmatched", {}, "")
 
     cand = {"name": "Toronto General Hospital", "lat": LAT, "lon": LNG, "place_id": "geo1"}
     monkeypatch.setattr(mod, "search_candidates", lambda k, f: [cand])
     monkeypatch.setattr(mod, "fetch_details", lambda k, pid: {"contact": {"phone": "+1-416-340-4800"}})
-    status, patch = mod.enrich_one("k", fac)
+    status, patch, _ = mod.enrich_one("k", fac)
     assert status == "matched" and patch == {"phone": "+1-416-340-4800", "place_id": "geo1"}
 
 
@@ -273,3 +275,32 @@ def test_apply_patch_survives_place_id_collision(conn) -> None:
     assert written == ["phone"]
     row = conn.execute("select phone, place_id from facilities where id = %s", (fid,)).fetchone()
     assert row == ("+1-555", None)
+
+
+# ── address confirmation (regression: Kingsway / University of Toronto / Carefirst) ──────────
+
+def test_pick_match_rejects_different_street_number() -> None:
+    assert pick_match(FACILITY, [_cand("Toronto General Hospital", 20, housenumber="999")]) is None
+
+
+def test_pick_match_unconfirmed_address_needs_tight_radius_and_exact_name() -> None:
+    assert pick_match(FACILITY, [_cand("Toronto General Hospital", 90, housenumber=None)]) is not None
+    assert pick_match(FACILITY, [_cand("Toronto General Hospital", 150, housenumber=None)]) is None
+    # subset name only passes when the street number confirms it
+    assert pick_match(FACILITY, [_cand("University Health Network Toronto General Hospital", 20, housenumber=None)]) is None
+    assert pick_match(FACILITY, [_cand("University Health Network Toronto General Hospital", 20)]) is not None
+
+
+def test_pick_match_one_word_name_needs_confirmed_address() -> None:
+    fac = {"id": "k", "name": "Kingsway", "address": "4251 dundas street w", "lat": LAT, "lng": LNG}
+    assert pick_match(fac, [_cand("Kingsway Lodge", 200, housenumber=None)]) is None
+    assert pick_match(fac, [_cand("Kingsway Lodge", 200, housenumber="4251")]) is not None
+
+
+def test_place_id_conflict_keeps_closest_name_and_drops_taken() -> None:
+    a = ({"id": "a", "name": "Carefirst Seniors and Community Services Association"}, {"place_id": "P", "phone": "1"}, "Carefirst Transitional Care Centre")
+    b = ({"id": "b", "name": "Carefirst Transitional Care Centre"}, {"place_id": "P"}, "Carefirst Transitional Care Centre")
+    c = ({"id": "c", "name": "X Clinic"}, {"place_id": "Q"}, "X Clinic")
+    dropped = mod.resolve_place_id_conflicts([a, b, c], taken={"Q"})
+    assert sorted(dropped) == ["a", "c"]
+    assert a[1] == {"phone": "1"} and b[1] == {"place_id": "P"} and c[1] == {}

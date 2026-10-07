@@ -13,6 +13,7 @@ Run via: backend/script.demo.local.sh [--local] enrich [--apply] [--limit N] [--
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import logging
 import math
@@ -32,8 +33,13 @@ log = logging.getLogger("enrich_facilities_geoapify")
 GEOCODE_URL = "https://api.geoapify.com/v1/geocode/search"
 DETAILS_URL = "https://api.geoapify.com/v2/place-details"
 
-MAX_DISTANCE_M = 300.0
+MAX_DISTANCE_M = 300.0       # street number confirmed
 MIN_NAME_OVERLAP = 0.5
+# No street number on one side (e.g. a campus or area result): the address cannot confirm the match,
+# so require a tight radius and a near-exact name. Added after "Kingsway" and "University of Toronto"
+# were filled with another place's phone / hours.
+MAX_DISTANCE_UNCONFIRMED_M = 100.0
+MIN_NAME_JACCARD_UNCONFIRMED = 0.75
 MAX_RETRIES = 3
 REQUESTS_PER_SECOND = 5  # Geoapify free tier
 
@@ -78,14 +84,34 @@ def name_overlap(a: str | None, b: str | None) -> float:
     return len(wa & wb) / min(len(wa), len(wb))
 
 
+def _house_number(address: str | None) -> str | None:
+    """Leading street number of 'a/b street' style addresses, e.g. '4251 dundas street w' -> '4251'."""
+    m = re.match(r"\s*(\d+[a-z]?)\b", (address or "").lower())
+    return m.group(1) if m else None
+
+
+def name_jaccard(a: str | None, b: str | None) -> float:
+    wa, wb = _distinctive(a), _distinctive(b)
+    return len(wa & wb) / len(wa | wb) if wa and wb else 0.0
+
+
 def pick_match(facility: dict[str, Any], candidates: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """Closest candidate within MAX_DISTANCE_M whose name overlaps enough; otherwise None."""
+    """Closest acceptable candidate, or None.
+
+    Street number on both sides: must be equal, within MAX_DISTANCE_M, name overlap >= MIN_NAME_OVERLAP.
+    Otherwise (unconfirmed): within MAX_DISTANCE_UNCONFIRMED_M and name Jaccard >= MIN_NAME_JACCARD_UNCONFIRMED.
+    """
+    fac_no = _house_number(facility.get("address"))
     best: tuple[float, dict[str, Any]] | None = None
     for c in candidates:
         if c.get("lat") is None or c.get("lon") is None or not c.get("name"):
             continue
         dist = haversine_m(facility["lat"], facility["lng"], c["lat"], c["lon"])
-        if dist > MAX_DISTANCE_M or name_overlap(facility["name"], c["name"]) < MIN_NAME_OVERLAP:
+        cand_no = (c.get("housenumber") or "").strip().lower() or None
+        if fac_no and cand_no:
+            if fac_no != cand_no or dist > MAX_DISTANCE_M or name_overlap(facility["name"], c["name"]) < MIN_NAME_OVERLAP:
+                continue
+        elif dist > MAX_DISTANCE_UNCONFIRMED_M or name_jaccard(facility["name"], c["name"]) < MIN_NAME_JACCARD_UNCONFIRMED:
             continue
         if best is None or dist < best[0]:
             best = (dist, c)
@@ -222,15 +248,36 @@ def apply_patch(conn: psycopg.Connection, facility_id: str, patch: dict[str, str
 
 # ── main ──────────────────────────────────────────────────────────────────────
 
-def enrich_one(api_key: str, facility: dict[str, Any]) -> tuple[str, dict[str, str]]:
-    """Returns (status, patch) with status in matched | unmatched | nothing_new."""
+def enrich_one(api_key: str, facility: dict[str, Any]) -> tuple[str, dict[str, str], str]:
+    """Returns (status, patch, matched_name); status in matched | unmatched | nothing_new."""
     match = pick_match(facility, search_candidates(api_key, facility))
     if match is None:
-        return "unmatched", {}
+        return "unmatched", {}, ""
     geo_id = match.get("place_id")
     details = fetch_details(api_key, geo_id) if geo_id else {}
     patch = build_patch(facility, details or match, geo_id)
-    return ("matched" if patch else "nothing_new"), patch
+    return ("matched" if patch else "nothing_new"), patch, match.get("name", "")
+
+
+def resolve_place_id_conflicts(results: list[tuple[dict[str, Any], dict[str, str], str]], taken: set[str]) -> list[str]:
+    """Several facilities can geocode to the same Geoapify place (e.g. two agencies in one building).
+    Only the facility whose name is closest to the geocoded name keeps the place_id; the rest lose it from
+    their patch. Ids already used in the database (`taken`) are dropped too. Returns dropped facility ids.
+    """
+    best: dict[str, tuple[float, str]] = {}
+    for fac, patch, matched_name in results:
+        pid = patch.get("place_id")
+        if pid:
+            score = name_jaccard(fac["name"], matched_name)
+            if pid not in best or score > best[pid][0]:
+                best[pid] = (score, fac["id"])
+    dropped = []
+    for fac, patch, _ in results:
+        pid = patch.get("place_id")
+        if pid and (pid in taken or best[pid][1] != fac["id"]):
+            del patch["place_id"]
+            dropped.append(fac["id"])
+    return dropped
 
 
 def main() -> None:
@@ -252,57 +299,56 @@ def main() -> None:
     filled = {"phone": 0, "weekday_hours": 0, "place_id": 0}
     unmatched: list[str] = []
 
-    # Prepare streaming output file
     os.makedirs("artifacts", exist_ok=True)
-    out_file = "artifacts/geoapify_enrichment_results.jsonl"
-    with open(out_file, "w") as f:
-        pass # truncate on start
+    out_file = "artifacts/geoapify_enrichment_results.jsonl"  # git-ignored; written after resolution
 
     with psycopg.connect(dsn, connect_timeout=10) as conn:
         facilities = select_candidates(conn, args.category, args.limit)
         log.info("%d facilities with a gap (%s)", len(facilities), "APPLY" if args.apply else "DRY RUN")
 
-        import concurrent.futures
-        
-        # Helper to process one facility, handling its own exceptions
-        def _process(fac: dict[str, Any]) -> tuple[dict[str, Any], str, dict[str, str], Exception | None]:
+        taken = {r[0] for r in conn.execute("select place_id from facilities where place_id is not null").fetchall()}
+
+        def _process(fac: dict[str, Any]) -> tuple[dict[str, Any], str, dict[str, str], str, Exception | None]:
             try:
-                status, patch = enrich_one(api_key, fac)
-                return fac, status, patch, None
+                status, patch, matched_name = enrich_one(api_key, fac)
+                return fac, status, patch, matched_name, None
             except Exception as e:
-                return fac, "error", {}, e
+                return fac, "error", {}, "", e
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            futures = [executor.submit(_process, fac) for fac in facilities]
-            for future in concurrent.futures.as_completed(futures):
-                fac, status, patch, exc = future.result()
-                
-                # Stream the result to JSONL
-                with open(out_file, "a") as f:
-                    f.write(json.dumps({"facility_id": fac["id"], "name": fac["name"], "status": status, "patch": patch}) + "\n")
+            outcomes = list(executor.map(_process, facilities))
 
-                if exc:
-                    stats["errors"] += 1
-                    log.error("%s: %s", fac["name"], exc)
-                    continue
-
+        matched_rows = []
+        for fac, status, patch, matched_name, exc in outcomes:
+            if exc:
+                stats["errors"] += 1
+                log.error("%s: %s", fac["name"], exc)
+            elif status == "unmatched":
+                stats["unmatched"] += 1
+                unmatched.append(fac["name"])
+            else:
                 stats[status] += 1
-                if status == "unmatched":
-                    unmatched.append(fac["name"])
-                    continue
-                if not patch:
-                    continue
-                if args.apply:
-                    written = apply_patch(conn, fac["id"], patch)
-                else:
-                    written = list(patch)
-                for col in written:
-                    filled[col] += 1
-                log.info("%s: %s", fac["name"], {k: patch[k] for k in written} or "no change")
+                matched_rows.append((fac, patch, matched_name))
+        for fid in resolve_place_id_conflicts(matched_rows, taken):
+            log.warning("facility %s: place_id dropped (already used or better match elsewhere)", fid)
+
+        with open(out_file, "w") as f:
+            for fac, status, patch, matched_name, exc in outcomes:
+                final = next((p for ff, p, _ in matched_rows if ff["id"] == fac["id"]), patch)
+                f.write(json.dumps({"facility_id": fac["id"], "name": fac["name"], "status": status,
+                                    "matched_name": matched_name, "patch": final}) + "\n")
+
+        for fac, patch, _ in matched_rows:
+            if not patch:
+                continue
+            written = apply_patch(conn, fac["id"], patch) if args.apply else list(patch)
+            for col in written:
+                filled[col] += 1
+            log.info("%s: %s", fac["name"], {k: patch[k] for k in written} or "no change")
 
     print(f"summary: {stats}")
     print(f"columns {'filled' if args.apply else 'that would be filled'}: {filled}")
-    print(f"Batch output continuously written to {out_file}")
+    print(f"per-facility results: {out_file}")
     if unmatched:
         print(f"unmatched ({len(unmatched)}): " + "; ".join(unmatched[:40]) + (" ..." if len(unmatched) > 40 else ""))
     if not args.apply:
