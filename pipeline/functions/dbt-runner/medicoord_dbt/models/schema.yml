@@ -5,7 +5,8 @@ models:
     description: >
       Cleaned and enriched facilities for all categories.
       Rebuilt after every places-processor run via dbt-runner Lambda.
-      Only includes facilities that completed Google Places enrichment
+      LEGACY NOTE (2026-10): the Google Places enrichment this gate relied on is disabled
+      (see pipeline/legacy/google-places-enricher/). Only includes facilities that completed it
       (google_place_id IS NOT NULL).
 
     columns:
@@ -34,7 +35,7 @@ models:
 
       # ── enrichment ────────────────────────────────────────────────────────
       - name: google_place_id
-        description: Google Places ID — must be present (enrichment gate)
+        description: LEGACY (Google Places disabled 2026-10) Google Places ID — must be present (enrichment gate)
         tests:
           - not_null
 

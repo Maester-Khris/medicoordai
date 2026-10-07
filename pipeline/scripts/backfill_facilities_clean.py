@@ -3,7 +3,7 @@
 Local backfill: repopulate `facilities` enrichment columns via Geoapify,
 then rebuild `facilities_clean` from them.
 
-Merges places-enricher (Geoapify fetch) + places-processor (DB write)
+Merges the (legacy, Google) places-enricher (now at pipeline/legacy/google-places-enricher) + places-processor (DB write)
 into a single local loop. Supabase is reached via PostgREST API
 (SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY).
 

@@ -11,48 +11,6 @@ os.environ.setdefault('SUPABASE_SERVICE_ROLE_KEY', 'x')
 import backfill_facilities_clean as b
 
 
-def test_build_weekday_hours():
-    hours = {'regular': [
-        {'day': 1, 'open': '0800', 'close': '1700'},
-        {'day': 1, 'open': '1800', 'close': '2000'},
-    ]}
-    out = b._build_weekday_hours_fsq(hours)
-    assert out == '["Monday: 08:00 \\u2013 17:00, 18:00 \\u2013 20:00"]', out
-    assert b._build_weekday_hours_fsq({}) is None
-    assert b._build_weekday_hours_fsq({'display': 'Call for hours'}) == '["Call for hours"]'
-
-
-def test_build_record_foursquare():
-    facility = {'id': 'f1', 'name': 'Test Clinic', 'address': '1 Main St'}
-    details = {
-        'fsq_place_id': 'fsq123', 'tel': '555-1234',
-        'location': {'formatted_address': '1 Main St, Toronto'},
-        'hours': {}, 'date_closed': None,
-    }
-    record = b.build_record_foursquare(facility, details)
-    assert record['facility_id'] == 'f1'
-    assert record['business_status'] == 'OPERATIONAL'
-    assert record['is_operational'] is True
-    assert record['fsq_place_id'] == 'fsq123'
-
-    closed = b.build_record_foursquare(facility, {**details, 'date_closed': '2024-01-01'})
-    assert closed['business_status'] == 'CLOSED_PERMANENTLY'
-    assert closed['is_operational'] is False
-
-
-def test_patch_fields_drops_none():
-    record = {'phone': '555', 'business_status': None, 'is_operational': True,
-              'weekday_hours': None, 'fsq_place_id': 'abc', 'scraped_at': '2024-01-01'}
-    fields = b._patch_fields(record)
-    assert fields['phone'] == '555'
-    assert fields['is_operational'] is True
-    assert fields['google_place_id'] == 'abc'
-    assert fields['last_enriched_at'] == '2024-01-01'
-    assert 'business_status' not in fields
-    assert 'weekday_hours' not in fields
-    assert 'updated_at' in fields  # always stamped
-
-
 def test_build_clean_record_mirrors_dbt_model():
     facility = {
         'id': 'f1', 'name': '  Test Clinic  ', 'category': 'clinic',

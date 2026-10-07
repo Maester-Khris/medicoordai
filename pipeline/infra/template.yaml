@@ -176,27 +176,29 @@ Resources:
 
   # ── INGESTION FUNCTIONS ───────────────────────────────────────────────────
 
-  PlacesEnricher:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: medicoord-places-enricher
-      CodeUri: ../functions/places-enricher/
-      Handler: handler.lambda_handler
-      Role: !GetAtt IngestionRole.Arn
-      MemorySize: 512
-      Layers:
-        - !Ref RequestsLayer
-      Environment:
-        Variables:
-          GOOGLE_PLACES_KEY: '{{resolve:ssm:/medicoord/prod/google_places_key}}'
-          S3_PREFIX: raw/places/
-      Events:
-        Schedule:
-          Type: Schedule
-          Properties:
-            Schedule: rate(7 days)
-            Name: medicoord-places-enricher-schedule
-            Enabled: true
+  # LEGACY / DISABLED 2026-10: Google Places key expired; code moved to pipeline/legacy/google-places-enricher/.
+  # Replaced by backend/scripts/demo_seed/enrich_facilities_geoapify.py (manual run).
+  #   PlacesEnricher:
+  #     Type: AWS::Serverless::Function
+  #     Properties:
+  #       FunctionName: medicoord-places-enricher
+  #       CodeUri: ../functions/places-enricher/
+  #       Handler: handler.lambda_handler
+  #       Role: !GetAtt IngestionRole.Arn
+  #       MemorySize: 512
+  #       Layers:
+  #         - !Ref RequestsLayer
+  #       Environment:
+  #         Variables:
+  #           GOOGLE_PLACES_KEY: '{{resolve:ssm:/medicoord/prod/google_places_key}}'
+  #           S3_PREFIX: raw/places/
+  #       Events:
+  #         Schedule:
+  #           Type: Schedule
+  #           Properties:
+  #             Schedule: rate(7 days)
+  #             Name: medicoord-places-enricher-schedule
+  #             Enabled: true
 
   ErWaitScraper:
     Type: AWS::Serverless::Function
@@ -415,9 +417,10 @@ Resources:
 # ── OUTPUTS ────────────────────────────────────────────────────────────────
 Outputs:
 
-  PlacesEnricherArn:
-    Description: Places enricher ingestion function ARN
-    Value: !GetAtt PlacesEnricher.Arn
+  # LEGACY / DISABLED 2026-10 (see PlacesEnricher above)
+  #   PlacesEnricherArn:
+  #     Description: Places enricher ingestion function ARN
+  #     Value: !GetAtt PlacesEnricher.Arn
 
   PlacesProcessorArn:
     Description: Places processor function ARN
