@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Tooltip, Popup } from 'react-leaflet'
 import { useMapEvents } from 'react-leaflet'
 import type { Facility, TriageUIState } from '../../../../shared/types'
 import { useBreakpoint } from '../../hooks/useBreakpoint'
+import { useConfig } from '../../hooks/useConfig'
 import { cnTowerPos, cartoTileUrl, INACTIVE_TRIAGE, buildTriageCandidates } from './config/constants'
 import { cnTowerIcon, userIcon, manualPinIcon } from './config/icons'
 import { useGeolocation } from '../../hooks/useGeolocation'
@@ -39,6 +40,7 @@ const CHIP_LABEL: Record<CategoryFilter, string> = {
 }
 
 export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear }: MapPanelProps) {
+  const config = useConfig()
   const isMobile = useBreakpoint()
   const pinnedIdRef = useRef<string | null>(null)
 
@@ -203,7 +205,7 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
           gap: 3,
           pointerEvents: 'auto'
         }}>
-          {(['car', 'bike', 'bus'] as const).map(mode => {
+          {(['car', 'bike', 'bus'] as const).filter(mode => config.modes_enabled.includes(mode)).map(mode => {
             const isActive = travelMode === mode
             const icons = { car: 'ti ti-car', bike: 'ti ti-bike', bus: 'ti ti-bus' }
             const labels = { car: 'Drive', bike: 'Cycle', bus: 'Transit' }

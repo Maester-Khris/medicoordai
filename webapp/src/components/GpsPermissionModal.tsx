@@ -1,8 +1,9 @@
 interface GpsPermissionModalProps {
   onDismiss: () => void
+  dismissLabel?: string
 }
 
-export function GpsPermissionModal({ onDismiss }: GpsPermissionModalProps) {
+export function GpsPermissionModal({ onDismiss, dismissLabel = "Got it" }: GpsPermissionModalProps) {
   return (
     <>
       <div
@@ -110,7 +111,7 @@ export function GpsPermissionModal({ onDismiss }: GpsPermissionModalProps) {
             cursor: "pointer",
           }}
         >
-          Got it
+          {dismissLabel}
         </button>
       </div>
     </>

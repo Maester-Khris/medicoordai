@@ -1,5 +1,7 @@
 // webapp/src/components/mobile/MobileLayout.tsx
 import { useState, useCallback, useEffect } from 'react'
+import { useConfig } from "../../hooks/useConfig"
+import { FALLBACK_NOTICE, resolveDemoCoords } from "../../lib/demoLocation"
 import { motion, AnimatePresence } from 'motion/react'
 import type {
   Facility,
@@ -54,6 +56,8 @@ export function MobileLayout({
   createSession,
 }: MobileLayoutProps) {
   const { user } = useAuth()
+  const config = useConfig()
+  const [usingFallbackLocation, setUsingFallbackLocation] = useState(false)
   const geo = useGeolocation()
   const { triage, applyTriageResult, reset: triageReset } = useTriageState()
   const { getDirections } = useNextActions(triage.severity)
@@ -99,6 +103,10 @@ export function MobileLayout({
     let coords = geo.coords
     if (!coords) coords = await geo.requestOnce()
 
+    const located = resolveDemoCoords(coords, config)
+    coords = located.coords
+    setUsingFallbackLocation(located.usedFallback)
+
     let sid = activeSessionId
     if (!sid) {
       const session = await createSession(text)
@@ -140,7 +148,7 @@ export function MobileLayout({
     } else {
       setProgressStage('idle')
     }
-  }, [omniValue, user, geo, activeSessionId, createSession, sendMessage, handleApplyTriage])
+  }, [omniValue, user, geo, activeSessionId, createSession, sendMessage, handleApplyTriage, config])
 
   const handleTabChange = useCallback((tab: MobileTab) => {
     setActiveTab(tab)
@@ -203,6 +211,7 @@ export function MobileLayout({
                 inputDisabled={!user}
                 onChipSelect={v => { if (user) setOmniValue(v) }}
                 progressStage={progressStage}
+                locationNotice={usingFallbackLocation ? FALLBACK_NOTICE : null}
               />
             </div>
           </motion.div>

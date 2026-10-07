@@ -17,6 +17,7 @@ interface BottomSheetProps {
   inputDisabled: boolean
   onChipSelect: (text: string) => void
   progressStage: 'idle' | 'typing' | 'analyzing' | 'complete'
+  locationNotice: string | null
 }
 
 function MessageBubble({ msg }: { msg: Message }) {
@@ -48,6 +49,7 @@ export function BottomSheet({
   inputDisabled,
   onChipSelect,
   progressStage,
+  locationNotice,
 }: BottomSheetProps) {
   const expandedH = Math.round(window.innerHeight * 0.85)
   const slideOffset = expandedH - COLLAPSED_H // y when collapsed
@@ -177,7 +179,7 @@ export function BottomSheet({
           className="font-mono text-[9px]"
           style={{ color: 'rgba(133,164,177,0.60)' }}
         >
-          🔒 SECURE &amp; CONFIDENTIAL · LOCATION SYNCED
+          {locationNotice ?? <>🔒 SECURE &amp; CONFIDENTIAL · LOCATION SYNCED</>}
         </span>
       </div>
     </motion.div>

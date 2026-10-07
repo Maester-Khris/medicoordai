@@ -3,6 +3,8 @@ import type { Message, Session, ConversationsCache, ChatMessageResponse, TriageR
 import { TriageCard } from "../../components/triage/TriageCard"
 import { ToolCallProgress } from "../../components/triage/ToolCallProgress"
 import type { GeolocationPermission } from "../../hooks/useGeolocation"
+import { useConfig } from "../../hooks/useConfig"
+import { FALLBACK_NOTICE, resolveDemoCoords } from "../../lib/demoLocation"
 
 interface AuthUser {
   id: string
@@ -64,6 +66,8 @@ export function ChatPanel({
   onTriageResult,
   onNewConversation,
 }: ChatPanelProps) {
+  const config = useConfig()
+  const [usingFallbackLocation, setUsingFallbackLocation] = useState(false)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
   const [localMessages, setLocalMessages] = useState<Message[]>([])
   const [content, setContent] = useState("")
@@ -114,6 +118,10 @@ export function ChatPanel({
         coords = await geo.requestOnce()
       }
     }
+
+    const located = resolveDemoCoords(coords, config)
+    coords = located.coords
+    setUsingFallbackLocation(located.usedFallback)
 
     let sid = activeSessionId
     if (!sid) {
@@ -509,7 +517,11 @@ export function ChatPanel({
           </div>
         </div>
 
-        {geo.permission === "denied" ? (
+        {usingFallbackLocation ? (
+          <p className="text-[10px] font-semibold text-center mt-2" style={{ color: '#7AA0B0' }}>
+            {FALLBACK_NOTICE}
+          </p>
+        ) : geo.permission === "denied" ? (
           <p className="text-[10px] font-semibold text-center mt-2" style={{ color: '#F59E0B' }}>
             ⚠ Location blocked — facility map routing unavailable
           </p>

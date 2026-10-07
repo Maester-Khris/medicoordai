@@ -50,7 +50,10 @@ function getCategoryLabel(category: string): string {
   }
 }
 
+import { useConfig } from "../../hooks/useConfig"
+
 export function TriageCard({ triage, emergencyContactPhone }: TriageCardProps) {
+  const config = useConfig()
   const { call911, messageEmergencyContact, getDirections, saveRecommendation } = useNextActions(triage.severity)
 
   if (!triage.active || !triage.severity) return null
@@ -199,7 +202,10 @@ export function TriageCard({ triage, emergencyContactPhone }: TriageCardProps) {
             </div>
 
             {/* Transit mode chips */}
-            <div className="grid grid-cols-3 gap-1.5 mb-3">
+            <div
+              className="grid gap-1.5 mb-3"
+              style={{ gridTemplateColumns: `repeat(${1 + Number(config.modes_enabled.includes("bike")) + Number(config.modes_enabled.includes("walk"))}, minmax(0, 1fr))` }}
+            >
               <div
                 style={{
                   padding: "6px 4px",
@@ -221,34 +227,38 @@ export function TriageCard({ triage, emergencyContactPhone }: TriageCardProps) {
                   </div>
                 )}
               </div>
-              <div
-                style={{
-                  padding: "6px 4px",
-                  borderRadius: 7,
-                  background: "rgba(0,210,255,0.07)",
-                  border: "1px solid rgba(0,210,255,0.22)",
-                  textAlign: "center",
-                }}
-              >
-                <div style={{ fontSize: 12, marginBottom: 2 }}>🚲</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#00D2FF", fontFamily: "var(--font-mono)" }}>
-                  {bikeMin !== null ? `${bikeMin} min` : "—"}
+              {config.modes_enabled.includes("bike") && (
+                <div
+                  style={{
+                    padding: "6px 4px",
+                    borderRadius: 7,
+                    background: "rgba(0,210,255,0.07)",
+                    border: "1px solid rgba(0,210,255,0.22)",
+                    textAlign: "center",
+                  }}
+                >
+                  <div style={{ fontSize: 12, marginBottom: 2 }}>🚲</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#00D2FF", fontFamily: "var(--font-mono)" }}>
+                    {bikeMin !== null ? `${bikeMin} min` : "—"}
+                  </div>
                 </div>
-              </div>
-              <div
-                style={{
-                  padding: "6px 4px",
-                  borderRadius: 7,
-                  background: "rgba(28,70,89,0.3)",
-                  border: "1px solid rgba(28,70,89,0.55)",
-                  textAlign: "center",
-                }}
-              >
-                <div style={{ fontSize: 12, marginBottom: 2 }}>🚶</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#7AA0B0", fontFamily: "var(--font-mono)" }}>
-                  {walkMin !== null ? `${walkMin} min` : "—"}
+              )}
+              {config.modes_enabled.includes("walk") && (
+                <div
+                  style={{
+                    padding: "6px 4px",
+                    borderRadius: 7,
+                    background: "rgba(28,70,89,0.3)",
+                    border: "1px solid rgba(28,70,89,0.55)",
+                    textAlign: "center",
+                  }}
+                >
+                  <div style={{ fontSize: 12, marginBottom: 2 }}>🚶</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#7AA0B0", fontFamily: "var(--font-mono)" }}>
+                    {walkMin !== null ? `${walkMin} min` : "—"}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Directions CTA — all non-emergent severities */}

@@ -111,7 +111,10 @@ function AppInner() {
     <>
       <Notification />
       {showGpsModal && (
-        <GpsPermissionModal onDismiss={() => setGpsModalDismissed(true)} />
+        <GpsPermissionModal
+          onDismiss={() => setGpsModalDismissed(true)}
+          dismissLabel={isGuest ? "Continue with downtown Toronto" : undefined}
+        />
       )}
       {showInstallModal && (
         <PWAInstallModal

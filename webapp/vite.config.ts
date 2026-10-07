@@ -19,5 +19,8 @@ export default defineConfig(() => {
         '@shared': path.resolve(__dirname, '../shared'),
       },
     },
+    test: {
+      exclude: ['node_modules/**', 'e2e/**'],
+    }
   }
 })
