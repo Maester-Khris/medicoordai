@@ -53,7 +53,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type", "Authorization", "X-Request-ID", "If-None-Match"],
+    allow_headers=["Content-Type", "Authorization", "X-Request-ID", "If-None-Match", "X-Guest-Id", "X-Internal"],
 )
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RequestIDMiddleware)
