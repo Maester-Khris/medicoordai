@@ -272,7 +272,7 @@ export default function LandingPage() {
         
         // Simulate step-by-step agent intent extraction
         setTimeout(() => {
-          let tags = ['[Intent: Find Care]']
+          const tags = ['[Intent: Find Care]']
           if (targetQuery.toLowerCase().includes('pediatrician')) {
             tags.push('[Specialty: Pediatrics]')
           } else if (targetQuery.toLowerCase().includes('cut')) {
@@ -284,7 +284,7 @@ export default function LandingPage() {
         }, 600)
 
         setTimeout(() => {
-          let tags = ['[Intent: Find Care]']
+          const tags = ['[Intent: Find Care]']
           if (targetQuery.toLowerCase().includes('pediatrician')) {
             tags.push('[Specialty: Pediatrics]')
             tags.push('[Constraint: Open Post-19:00]')

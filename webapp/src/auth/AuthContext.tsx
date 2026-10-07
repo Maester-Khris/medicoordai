@@ -3,6 +3,9 @@ import type { ReactNode } from "react"
 import { supabase } from "../lib/supabaseClient"
 import { authService } from "./authService"
 
+import { getConfig } from "../lib/config"
+import { captureInternalToken, getGuestId } from "../lib/guest"
+
 interface AuthUser {
   id: string
   email: string | undefined
@@ -16,6 +19,7 @@ export interface AuthNotification {
 export interface AuthContextValue {
   user: AuthUser | null
   loading: boolean
+  isGuest: boolean
   notification: AuthNotification | null
   clearNotification: () => void
   signInWithEmail: (email: string, password: string) => Promise<void>
@@ -46,22 +50,44 @@ export const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isGuest, setIsGuest] = useState(false)
   const [notification, setNotification] = useState<AuthNotification | null>(null)
 
   const clearNotification = useCallback(() => setNotification(null), [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      const session = data.session
-      setUser(session?.user ? { id: session.user.id, email: session.user.email } : null)
-      setLoading(false)
+    let cancelled = false
+    let unsubscribe = () => {}
+
+    void getConfig().then(config => {
+      if (cancelled) return
+
+      if (config.demo_mode) {
+        // Guest demo: the browser's random id stands in for the signed-in user everywhere.
+        captureInternalToken(window.location.search)
+        setUser({ id: getGuestId(), email: undefined })
+        setIsGuest(true)
+        setLoading(false)
+        return
+      }
+
+      supabase.auth.getSession().then(({ data }) => {
+        if (cancelled) return
+        const session = data.session
+        setUser(session?.user ? { id: session.user.id, email: session.user.email } : null)
+        setLoading(false)
+      })
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ? { id: session.user.id, email: session.user.email } : null)
+      })
+      unsubscribe = () => subscription.unsubscribe()
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ? { id: session.user.id, email: session.user.email } : null)
-    })
-
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      unsubscribe()
+    }
   }, [])
 
   const signInWithEmail = async (email: string, password: string) => {
@@ -90,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signOut = async () => {
+    if (isGuest) return
     setNotification(null)
     await authService.signOut()
     setUser(null)
@@ -97,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, notification, clearNotification,
+      user, loading, isGuest, notification, clearNotification,
       signInWithEmail, signUpWithEmail, signInWithGoogle, signOut
     }}>
       {children}
