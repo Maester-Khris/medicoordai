@@ -82,7 +82,7 @@ export function ChatPanel({
   const [pastConversationsOpen, setPastConversationsOpen] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [progressStage, setProgressStage] = useState<ProgressStage>("idle")
-  const suggestions = localMessages.length === 0 ? FALLBACK_STARTERS : []
+  const starters = config.starter_prompts.length > 0 ? config.starter_prompts : FALLBACK_STARTERS
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef(false)
@@ -114,9 +114,9 @@ export function ChatPanel({
     setPastConversationsOpen(false)
   }
 
-  const handleSend = async () => {
-    if (!content.trim() || !user) return
-    const text = content.trim()
+  const handleSend = async (starter?: string) => {
+    const text = (starter ?? content).trim()
+    if (!text || !user || isBusy) return
     setContent("")
 
     let coords = geo.coords
@@ -406,11 +406,11 @@ export function ChatPanel({
             </p>
           </div>
           <div className="flex flex-col gap-2.5 w-full z-10">
-            <MedicalNotice />
-            {suggestions.map(s => (
+            {starters.map(s => (
               <button
                 key={s}
-                onClick={() => { if (user && !isBusy) setContent(s) }}
+                data-testid="starter-prompt"
+                onClick={() => { void handleSend(s) }}
                 className="w-full flex items-center gap-3 text-left text-sm font-medium transition-all rounded-xl"
                 style={{
                   padding: '10px 14px',
@@ -523,8 +523,8 @@ export function ChatPanel({
           </span>
           <div className="pr-1 pl-1">
             <button
-              disabled={!user || !content.trim()}
-              onClick={handleSend}
+              disabled={!user || !content.trim() || isBusy}
+              onClick={() => { void handleSend() }}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-95"
               style={{
                 color: '#061219',
@@ -556,6 +556,7 @@ export function ChatPanel({
             Secure &amp; confidential · Location synced
           </p>
         )}
+        <MedicalNotice />
       </div>
     </div>
   )

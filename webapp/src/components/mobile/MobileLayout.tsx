@@ -51,11 +51,7 @@ const STATE_2_LOGS = [
   { tag: 'CAPAC', message: 'WALK-IN AVAILABILITY: HIGH (EST. WAIT = 30 MIN)' },
 ]
 
-const FALLBACK_STARTERS = [
-  "I have a fever and sore throat",
-  "I cut my finger and it won't stop bleeding",
-  "I need a COVID test",
-]
+const FALLBACK_STARTERS = ['I have a fever', 'Chest pain', 'Sore throat', 'Dizziness']
 
 export function MobileLayout({
   facilities,
@@ -88,7 +84,7 @@ export function MobileLayout({
   // Reset on user logout
   useEffect(() => {
     if (!user) geo.setCoords(null)
-  }, [user, geo])
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleNewConversation = useCallback(() => {
     triageReset()
@@ -223,12 +219,12 @@ export function MobileLayout({
                 messages={messages}
                 omniValue={omniValue}
                 onOmniChange={setOmniValue}
-                onSend={() => handleSend()}
+                onSend={() => { void handleSend() }}
                 inputDisabled={!user || isBusy}
-                onChipSelect={(v) => handleSend(v)}
+                onChipSelect={v => { void handleSend(v) }}
                 progressStage={progressStage}
                 locationNotice={usingFallbackLocation ? FALLBACK_NOTICE : null}
-                starterPrompts={messages.length === 0 ? FALLBACK_STARTERS : []}
+                starterPrompts={config.starter_prompts.length > 0 ? config.starter_prompts : FALLBACK_STARTERS}
                 busyText={isBusy ? busyMessage(busyUntil, Date.now()) : null}
               />
             </div>
