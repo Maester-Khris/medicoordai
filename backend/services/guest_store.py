@@ -106,7 +106,7 @@ def get_past_conversations(
 
 
 def get_older_messages(guest_id: str, session_id: str, before_id: str, limit: int = 20) -> list[dict]:
-    if not (_is_uuid(session_id) and _is_uuid(before_id)):
+    if not (_is_uuid(guest_id) and _is_uuid(session_id) and _is_uuid(before_id)):
         return []
     rows = demo_db.fetch_all(
         f"""

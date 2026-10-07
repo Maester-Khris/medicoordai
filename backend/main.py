@@ -10,8 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, JSONResponse
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from starlette.concurrency import run_in_threadpool
-from services.facilities import get_all_facilities, apply_wait_filter
-from services.wait_times import get_wait_minutes_map
+from services.facilities import get_all_facilities, apply_wait_filter, annotate_wait_details
+from services.wait_times import get_wait_map, get_wait_minutes_map
 from db import supabase_rpc
 from models import NearbyFacilityResult
 from middleware.auth import AuthMiddleware, get_current_user
@@ -137,8 +137,10 @@ async def facilities(
     if severity:
         data = [r for r in data if severity in r.get("accepted_severity", [])]
 
-    wait_map = await run_in_threadpool(get_wait_minutes_map)
-    data = apply_wait_filter(data, "id", max_wait_minutes, wait_map)
+    wait_info = await run_in_threadpool(get_wait_map)
+    wait_minutes = {fid: info["wait_minutes"] for fid, info in wait_info.items()}
+    data = apply_wait_filter(data, "id", max_wait_minutes, wait_minutes)
+    data = annotate_wait_details(data, "id", wait_info)
 
     filtered_etag = f'"{hashlib.sha256(json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()[:32]}"'
 
