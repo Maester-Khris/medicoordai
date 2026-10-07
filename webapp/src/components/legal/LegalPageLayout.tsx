@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { LoginModal } from '../auth/LoginModal'
 import { useDocumentHead } from '../../hooks/useDocumentHead'
+import { useAuth } from '../../auth/useAuth'
 
 interface LegalPageLayoutProps {
   title: string
@@ -14,6 +15,7 @@ interface LegalPageLayoutProps {
 
 export function LegalPageLayout({ title, description, lastUpdated, children }: LegalPageLayoutProps) {
   useDocumentHead(title, description)
+  const { isGuest, loading } = useAuth()
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalTab, setModalTab] = useState<'signin' | 'signup'>('signin')
@@ -44,7 +46,7 @@ export function LegalPageLayout({ title, description, lastUpdated, children }: L
             </span>
           </Link>
 
-          <div className="flex items-center gap-3 min-[360px]:gap-6">
+          <div className="flex items-center gap-3 min-[360px]:gap-6" style={{ visibility: isGuest || loading ? 'hidden' : 'visible' }}>
             <button onClick={openSignIn} className="text-xs min-[360px]:text-label-md font-medium text-[#7AA0B0] hover:text-[#00D2FF] transition-colors cursor-pointer bg-transparent border-none">
               Sign in
             </button>

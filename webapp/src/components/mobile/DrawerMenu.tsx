@@ -84,12 +84,12 @@ function SignOutIcon() {
 }
 
 export function DrawerMenu({ isOpen, onClose }: DrawerMenuProps) {
-  const { user, signOut } = useAuth()
+  const { user, signOut, isGuest } = useAuth()
   const navigate = useNavigate()
 
   const email = user?.email ?? ''
-  const initials = email ? email[0].toUpperCase() : '?'
-  const displayName = email ? formatDisplayName(email) : ''
+  const initials = isGuest ? 'G' : email ? email[0].toUpperCase() : '?'
+  const displayName = isGuest ? 'Guest' : email ? formatDisplayName(email) : ''
 
   const handleHome = () => {
     onClose()
@@ -202,53 +202,57 @@ export function DrawerMenu({ isOpen, onClose }: DrawerMenuProps) {
         <div style={{ height: 1, background: 'rgba(28, 70, 89, 0.40)', margin: '0 20px' }} />
 
         {/* My profile */}
-        <button
-          onClick={handleProfile}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '0 20px',
-            minHeight: 44,
-            width: '100%',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            textAlign: 'left',
-            color: '#E2F1F5',
-            fontFamily: 'var(--font-sans)',
-          }}
-        >
-          <ProfileIcon />
-          <span style={{ flex: 1, fontSize: 14 }}>My profile</span>
-          <span style={{ color: '#85A4B1' }}>
-            <ChevronRightIcon />
-          </span>
-        </button>
+        {!isGuest && (
+          <button
+            onClick={handleProfile}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '0 20px',
+              minHeight: 44,
+              width: '100%',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+              color: '#E2F1F5',
+              fontFamily: 'var(--font-sans)',
+            }}
+          >
+            <ProfileIcon />
+            <span style={{ flex: 1, fontSize: 14 }}>My profile</span>
+            <span style={{ color: '#85A4B1' }}>
+              <ChevronRightIcon />
+            </span>
+          </button>
+        )}
 
 
 
         {/* Sign out */}
-        <button
-          onClick={handleSignOut}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '0 20px',
-            minHeight: 44,
-            width: '100%',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            textAlign: 'left',
-            color: '#FF7B93',
-            fontFamily: 'var(--font-sans)',
-          }}
-        >
-          <SignOutIcon />
-          <span style={{ flex: 1, fontSize: 14 }}>Sign out</span>
-        </button>
+        {!isGuest && (
+          <button
+            onClick={handleSignOut}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              padding: '0 20px',
+              minHeight: 44,
+              width: '100%',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+              color: '#FF7B93',
+              fontFamily: 'var(--font-sans)',
+            }}
+          >
+            <SignOutIcon />
+            <span style={{ flex: 1, fontSize: 14 }}>Sign out</span>
+          </button>
+        )}
       </div>
     </>
   )

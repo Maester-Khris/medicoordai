@@ -29,7 +29,7 @@ const GLASS_PANEL: React.CSSProperties = {
 }
 
 export default function Home({ facilities, facilitiesLoading, conversationsCache, sendMessage, createSession, loadOlderMessages }: HomeProps) {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const { profile } = useProfile()
   const geo = useGeolocation()
   const { triage, applyTriageResult, reset: triageReset } = useTriageState()
@@ -55,7 +55,7 @@ export default function Home({ facilities, facilitiesLoading, conversationsCache
       <LoginModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} defaultTab={modalTab} />
 
       <WebNavBar
-        rightContent={user ? (
+        rightContent={isGuest ? null : user ? (
           <UserMenu />
         ) : (
           <>

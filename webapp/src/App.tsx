@@ -31,7 +31,9 @@ import { useAuth } from './auth/useAuth'
 import { useProfile } from './hooks/useProfile'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
+  // Guests have no account pages: send them to the app instead of the landing page.
+  if (isGuest) return <Navigate to="/app" replace />
   // ponytail: no loading guard — redirect on null, tolerate auth flash in phase 1
   if (!user) return <Navigate to="/" replace />
   return <>{children}</>
@@ -43,7 +45,7 @@ function LandingRoute() {
 
 function AppInner() {
   const isMobile = useBreakpoint()
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const { profile, refetch: refetchProfile } = useProfile()
   const { facilities, loading: facilitiesLoading } = useFacilities()
   const { cache, sendMessage, createSession, loadOlderMessages } = useConversations()
@@ -65,16 +67,17 @@ function AppInner() {
     permissionState,
     requesting,
     requestPermission,
-  } = useNotificationPermission(user?.id ?? null)
+  } = useNotificationPermission(isGuest ? null : user?.id ?? null)
 
   const [permissionPromptDismissed, setPermissionPromptDismissed] = useState(false)
   const [installConfirmed, setInstallConfirmed] = useState(installState === "standalone")
 
-  const showOnboarding = Boolean(user && profile && !profile.getting_started_done)
+  const showOnboarding = Boolean(!isGuest && user && profile && !profile.getting_started_done)
 
   const showGpsModal = geo.permission === "denied" && !gpsModalDismissed && !showOnboarding
 
   const showInstallModal =
+    !isGuest &&
     !installModalDismissed &&
     installState !== "standalone" &&
     (platform === "ios_safari" || platform === "android_chrome" || isIosNonSafari) &&
@@ -82,6 +85,7 @@ function AppInner() {
     !showOnboarding
 
   const showPermissionPrompt =
+    !isGuest &&
     !showInstallModal &&
     isPushSupported &&
     permissionState !== "granted" &&
