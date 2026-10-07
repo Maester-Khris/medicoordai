@@ -20,6 +20,7 @@ from graph.factory import close_graph_provider, get_graph_provider
 from observability import init_observability, verify_metrics_token, RequestIDMiddleware, _registry
 from routers.chat import router as chat_router
 from routers.notifications import router as notifications_router
+from routers.demo import router as demo_router
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,7 @@ app.add_middleware(RequestIDMiddleware)
 init_observability(app)
 app.include_router(chat_router)
 app.include_router(notifications_router)
+app.include_router(demo_router)
 
 
 @app.get("/metrics")
