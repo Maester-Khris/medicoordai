@@ -1,7 +1,7 @@
 // webapp/src/components/mobile/MobileLayout.tsx
 import { useState, useCallback, useEffect } from 'react'
 import { useConfig } from "../../hooks/useConfig"
-import { FALLBACK_NOTICE, resolveDemoCoords } from "../../lib/demoLocation"
+import { FALLBACK_NOTICE, requestLocation, resolveDemoCoords } from "../../lib/demoLocation"
 import { motion, AnimatePresence } from 'motion/react'
 import type {
   Facility,
@@ -101,7 +101,7 @@ export function MobileLayout({
     setOmniValue('')
 
     let coords = geo.coords
-    if (!coords) coords = await geo.requestOnce()
+    if (!coords) coords = await requestLocation(geo.requestOnce, config)
 
     const located = resolveDemoCoords(coords, config)
     coords = located.coords

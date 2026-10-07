@@ -24,3 +24,17 @@ export function resolveDemoCoords(
   if (coords && isInToronto(coords)) return { coords, usedFallback: false }
   return { coords: config.downtown_fallback, usedFallback: true }
 }
+
+// A visitor who ignores the browser's location prompt would otherwise wait out the full
+// geolocation timeout (20 s) before the downtown fallback applies.
+export const DEMO_LOCATION_WAIT_MS = 5000
+
+/** Asks for the position; in demo mode gives up after DEMO_LOCATION_WAIT_MS and resolves null. */
+export function requestLocation(
+  requestOnce: () => Promise<LatLng | null>,
+  config: AppConfig,
+): Promise<LatLng | null> {
+  if (!config.demo_mode) return requestOnce()
+  const giveUp = new Promise<null>(resolve => { setTimeout(() => resolve(null), DEMO_LOCATION_WAIT_MS) })
+  return Promise.race([requestOnce(), giveUp])
+}

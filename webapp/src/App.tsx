@@ -31,10 +31,12 @@ import { useAuth } from './auth/useAuth'
 import { useProfile } from './hooks/useProfile'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isGuest } = useAuth()
+  const { user, isGuest, loading } = useAuth()
+  // Until /config and auth resolve we cannot tell a guest from a signed-out visitor;
+  // redirecting now would send a guest (or a signed-in user on a deep link) to the landing page.
+  if (loading) return null
   // Guests have no account pages: send them to the app instead of the landing page.
   if (isGuest) return <Navigate to="/app" replace />
-  // ponytail: no loading guard — redirect on null, tolerate auth flash in phase 1
   if (!user) return <Navigate to="/" replace />
   return <>{children}</>
 }

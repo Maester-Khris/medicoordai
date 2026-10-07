@@ -4,7 +4,7 @@ import { TriageCard } from "../../components/triage/TriageCard"
 import { ToolCallProgress } from "../../components/triage/ToolCallProgress"
 import type { GeolocationPermission } from "../../hooks/useGeolocation"
 import { useConfig } from "../../hooks/useConfig"
-import { FALLBACK_NOTICE, resolveDemoCoords } from "../../lib/demoLocation"
+import { FALLBACK_NOTICE, requestLocation, resolveDemoCoords } from "../../lib/demoLocation"
 
 interface AuthUser {
   id: string
@@ -113,9 +113,9 @@ export function ChatPanel({
     let coords = geo.coords
     if (!coords) {
       if (profile?.location_preference === 'always') {
-        coords = await geo.requestOnce()
+        coords = await requestLocation(geo.requestOnce, config)
       } else if (!activeSessionId) {
-        coords = await geo.requestOnce()
+        coords = await requestLocation(geo.requestOnce, config)
       }
     }
 
