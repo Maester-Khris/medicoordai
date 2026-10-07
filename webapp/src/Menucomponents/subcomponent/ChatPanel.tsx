@@ -1,3 +1,5 @@
+import { FeedbackControl } from "../../components/triage/FeedbackControl"
+import { useAuth } from "../../auth/useAuth"
 import { useState, useRef, useEffect, useCallback } from "react"
 import type { Message, Session, ConversationsCache, ChatMessageResponse, TriageResult, TriageUIState } from "@shared/types"
 import { TriageCard } from "../../components/triage/TriageCard"
@@ -5,6 +7,8 @@ import { ToolCallProgress } from "../../components/triage/ToolCallProgress"
 import type { GeolocationPermission } from "../../hooks/useGeolocation"
 import { useConfig } from "../../hooks/useConfig"
 import { FALLBACK_NOTICE, requestLocation, resolveDemoCoords } from "../../lib/demoLocation"
+import { MedicalNotice } from "../../components/MedicalNotice"
+import { busyMessage } from "../../lib/busy"
 
 interface AuthUser {
   id: string
@@ -33,11 +37,12 @@ interface ChatPanelProps {
   geo: GeoProps
   profile: ProfileProps | null
   triage: TriageUIState
-  onTriageResult: (result: TriageResult, coords: { lat: number; lng: number } | null) => Promise<void>
+  onTriageResult: (result: TriageResult, coords: { lat: number; lng: number } | null, sessionId?: string | null) => Promise<void>
   onNewConversation: () => void
+  busyUntil: number | null
 }
 
-const SUGGESTIONS = [
+const FALLBACK_STARTERS = [
   "I have a fever and sore throat",
   "Chest pain and shortness of breath",
   "Twisted my ankle — it's swollen",
@@ -65,8 +70,11 @@ export function ChatPanel({
   triage,
   onTriageResult,
   onNewConversation,
+  busyUntil,
 }: ChatPanelProps) {
   const config = useConfig()
+  const isBusy = busyUntil !== null
+  const { isGuest } = useAuth()
   const [usingFallbackLocation, setUsingFallbackLocation] = useState(false)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
   const [localMessages, setLocalMessages] = useState<Message[]>([])
@@ -74,6 +82,7 @@ export function ChatPanel({
   const [pastConversationsOpen, setPastConversationsOpen] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [progressStage, setProgressStage] = useState<ProgressStage>("idle")
+  const suggestions = localMessages.length === 0 ? FALLBACK_STARTERS : []
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef(false)
@@ -156,7 +165,7 @@ export function ChatPanel({
       ])
       if (response.triage) {
         setProgressStage("analyzing")
-        await onTriageResult(response.triage, coords)
+        await onTriageResult(response.triage, coords, sid)
         setProgressStage("complete")
         setTimeout(() => setProgressStage("idle"), 800)
       } else {
@@ -355,6 +364,9 @@ export function ChatPanel({
                         triage={triage}
                         emergencyContactPhone={profile?.emergency_contact_phone ?? null}
                       />
+                      {isGuest && activeSessionId && triage.recommendedFacility && (
+                        <FeedbackControl sessionId={activeSessionId} messageId={msg.id} />
+                      )}
                     </div>
                   )}
                 </div>
@@ -394,10 +406,11 @@ export function ChatPanel({
             </p>
           </div>
           <div className="flex flex-col gap-2.5 w-full z-10">
-            {SUGGESTIONS.map(s => (
+            <MedicalNotice />
+            {suggestions.map(s => (
               <button
                 key={s}
-                onClick={() => { if (user) setContent(s) }}
+                onClick={() => { if (user && !isBusy) setContent(s) }}
                 className="w-full flex items-center gap-3 text-left text-sm font-medium transition-all rounded-xl"
                 style={{
                   padding: '10px 14px',
@@ -431,6 +444,16 @@ export function ChatPanel({
         </div>
       )}
 
+      {busyUntil !== null && (
+        <div
+          role="status"
+          data-testid="busy-banner"
+          className="mx-4 mb-2 rounded-lg text-[12px] font-medium"
+          style={{ padding: '8px 12px', color: '#E2F1F5', background: 'rgba(0,210,255,0.08)', border: '1px solid rgba(0,210,255,0.3)' }}
+        >
+          {busyMessage(busyUntil, Date.now())}
+        </div>
+      )}
       {/* Progress trace */}
       <ToolCallProgress stage={progressStage} />
 

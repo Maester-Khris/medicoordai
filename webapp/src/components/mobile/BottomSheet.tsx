@@ -5,6 +5,8 @@ import type { Message } from '@shared/types'
 import { OmniInputBox } from './OmniInputBox'
 import { SuggestionChips } from './SuggestionChips'
 
+import { MedicalNotice } from '../MedicalNotice'
+
 const COLLAPSED_H = 220
 const BOTTOM_NAV_H = 64
 const SPRING = { type: 'spring' as const, stiffness: 300, damping: 28 }
@@ -18,6 +20,8 @@ interface BottomSheetProps {
   onChipSelect: (text: string) => void
   progressStage: 'idle' | 'typing' | 'analyzing' | 'complete'
   locationNotice: string | null
+  busyText: string | null
+  starterPrompts: string[]
 }
 
 function MessageBubble({ msg }: { msg: Message }) {
@@ -50,6 +54,8 @@ export function BottomSheet({
   onChipSelect,
   progressStage,
   locationNotice,
+  busyText,
+  starterPrompts,
 }: BottomSheetProps) {
   const expandedH = Math.round(window.innerHeight * 0.85)
   const slideOffset = expandedH - COLLAPSED_H // y when collapsed
@@ -160,8 +166,14 @@ export function BottomSheet({
 
       {/* Suggestion chips */}
       <div className="flex-none px-4 mb-3">
-        <SuggestionChips onSelect={onChipSelect} disabled={inputDisabled} />
+        <SuggestionChips chips={starterPrompts} onSelect={onChipSelect} disabled={inputDisabled} />
       </div>
+
+      {busyText && (
+        <div role="status" data-testid="busy-banner" className="flex-none px-4 mb-2 text-[12px]" style={{ color: '#E2F1F5' }}>
+          {busyText}
+        </div>
+      )}
 
       {/* Omni input */}
       <div className="flex-none px-4 mb-2">
@@ -181,6 +193,7 @@ export function BottomSheet({
         >
           {locationNotice ?? <>🔒 SECURE &amp; CONFIDENTIAL · LOCATION SYNCED</>}
         </span>
+        <MedicalNotice />
       </div>
     </motion.div>
   )

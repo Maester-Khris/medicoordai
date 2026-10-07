@@ -22,6 +22,7 @@ import { useAuth } from '../../auth/useAuth'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useTriageState } from '../../hooks/useTriageState'
 import { useNextActions } from '../../hooks/useNextActions'
+import { busyMessage } from '../../lib/busy'
 
 interface MobileLayoutProps {
   facilities: Facility[]
@@ -34,6 +35,7 @@ interface MobileLayoutProps {
   ) => Promise<ChatMessageResponse | null>
   createSession: (firstMessage: string) => Promise<Session | null>
   loadOlderMessages: (sessionId: string, beforeId: string) => Promise<Message[]>
+  busyUntil: number | null
 }
 
 type ProgressStage = 'idle' | 'typing' | 'analyzing' | 'complete'
@@ -49,13 +51,20 @@ const STATE_2_LOGS = [
   { tag: 'CAPAC', message: 'WALK-IN AVAILABILITY: HIGH (EST. WAIT = 30 MIN)' },
 ]
 
+const FALLBACK_STARTERS = [
+  "I have a fever and sore throat",
+  "I cut my finger and it won't stop bleeding",
+  "I need a COVID test",
+]
+
 export function MobileLayout({
   facilities,
   facilitiesLoading,
   sendMessage,
   createSession,
+  busyUntil,
 }: MobileLayoutProps) {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const config = useConfig()
   const [usingFallbackLocation, setUsingFallbackLocation] = useState(false)
   const geo = useGeolocation()
@@ -74,11 +83,12 @@ export function MobileLayout({
 
   // Mode derived from triage state
   const mode = triage.active ? 'recommendation' : 'browse'
+  const isBusy = busyUntil !== null
 
   // Reset on user logout
   useEffect(() => {
     if (!user) geo.setCoords(null)
-  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, geo])
 
   const handleNewConversation = useCallback(() => {
     triageReset()
@@ -90,14 +100,15 @@ export function MobileLayout({
 
   const handleApplyTriage = useCallback(async (
     result: TriageResult,
-    coords: { lat: number; lng: number } | null
+    coords: { lat: number; lng: number } | null,
+    sessionId: string,
   ) => {
-    await applyTriageResult(result, coords)
+    await applyTriageResult(result, coords, sessionId)
   }, [applyTriageResult])
 
-  const handleSend = useCallback(async () => {
-    if (!omniValue.trim() || !user) return
-    const text = omniValue.trim()
+  const handleSend = useCallback(async (starter?: string) => {
+    const text = (starter ?? omniValue).trim()
+    if (!text || !user || busyUntil !== null) return
     setOmniValue('')
 
     let coords = geo.coords
@@ -139,7 +150,7 @@ export function MobileLayout({
       ])
       if (response.triage) {
         setProgressStage('analyzing')
-        await handleApplyTriage(response.triage, coords)
+        await handleApplyTriage(response.triage, coords, sid)
         setProgressStage('complete')
         setTimeout(() => setProgressStage('idle'), 800)
       } else {
@@ -148,7 +159,7 @@ export function MobileLayout({
     } else {
       setProgressStage('idle')
     }
-  }, [omniValue, user, geo, activeSessionId, createSession, sendMessage, handleApplyTriage, config])
+  }, [omniValue, user, geo, activeSessionId, createSession, sendMessage, handleApplyTriage, config, busyUntil])
 
   const handleTabChange = useCallback((tab: MobileTab) => {
     setActiveTab(tab)
@@ -156,6 +167,11 @@ export function MobileLayout({
       handleNewConversation()
     }
   }, [mode, handleNewConversation])
+
+  const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
+  const feedback = isGuest && activeSessionId && lastAssistant
+    ? { sessionId: activeSessionId, messageId: lastAssistant.id }
+    : null
 
   return (
     // Full-viewport shell — map underneath everything
@@ -207,11 +223,13 @@ export function MobileLayout({
                 messages={messages}
                 omniValue={omniValue}
                 onOmniChange={setOmniValue}
-                onSend={handleSend}
-                inputDisabled={!user}
-                onChipSelect={v => { if (user) setOmniValue(v) }}
+                onSend={() => handleSend()}
+                inputDisabled={!user || isBusy}
+                onChipSelect={(v) => handleSend(v)}
                 progressStage={progressStage}
                 locationNotice={usingFallbackLocation ? FALLBACK_NOTICE : null}
+                starterPrompts={messages.length === 0 ? FALLBACK_STARTERS : []}
+                busyText={isBusy ? busyMessage(busyUntil, Date.now()) : null}
               />
             </div>
           </motion.div>
@@ -231,6 +249,7 @@ export function MobileLayout({
           >
             <StreamingLogStrip logs={STATE_2_LOGS} />
             <FacilityCardPanel
+              feedback={feedback}
               triage={triage}
               onGetDirections={(name, lat, lng) => getDirections(name, lat, lng)}
             />

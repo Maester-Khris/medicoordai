@@ -50,7 +50,7 @@ function AppInner() {
   const { user, isGuest } = useAuth()
   const { profile, refetch: refetchProfile } = useProfile()
   const { facilities, loading: facilitiesLoading } = useFacilities()
-  const { cache, sendMessage, createSession, loadOlderMessages } = useConversations()
+  const { cache, busyUntil, sendMessage, createSession, loadOlderMessages } = useConversations()
   const geo = useGeolocation()
   const [gpsModalDismissed, setGpsModalDismissed] = useState(false)
 
@@ -103,6 +103,7 @@ function AppInner() {
     sendMessage,
     createSession,
     loadOlderMessages,
+    busyUntil,
   }
 
   if (isMobile && showOnboarding) {
