@@ -2,6 +2,8 @@ import logging
 import os
 import hashlib
 import json
+import demo_db
+from config import demo_mode
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,6 +26,11 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    if demo_mode():
+        try:
+            demo_db.open_pool()
+        except Exception as exc:
+            logger.warning("demo_db_pool_open_failed", extra={"error_type": type(exc).__name__})
     try:
         data = get_all_facilities()
         set_cached_facilities(data)
@@ -32,6 +39,7 @@ async def lifespan(_app: FastAPI):
         logger.warning("cache_warm_failed", extra={"error_type": type(exc).__name__})
     yield
     close_graph_provider()
+    demo_db.close_pool()
 
 
 app = FastAPI(title="MediCoord AI API", version="0.1.0", lifespan=lifespan)
@@ -78,6 +86,14 @@ def health() -> dict:
         "status": "ok",
         "llmProvider": os.environ.get("LLM_PROVIDER", "groq"),
     }
+    result["demoMode"] = demo_mode()
+    if demo_mode():
+        try:
+            demo_db.fetch_one("select 1 as ok")
+            result["demoDb"] = "ok"
+        except Exception as exc:
+            result["demoDb"] = "unreachable"
+            logger.warning("demo_db_health_failed", extra={"error_type": type(exc).__name__})
     # Doubles as a keep-alive ping for AuraDB's free-tier 72h auto-pause
     # window (graph/snomed_neo4j/provider.py) — meant to be polled by an
     # external cronjob, not just a status check.
