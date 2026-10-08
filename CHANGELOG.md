@@ -763,23 +763,26 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 ### Scope (sprint 1, in order)
 
-- [ ] Spec/design session: `/app` 404 (likely Vercel routing), pipeline-to-demo-database feed
-- [ ] Railway Postgres (PostGIS-capable) with a restricted app role; schema for facilities, `wait_times`, `guests`, guest-keyed `sessions`/`messages`, `feedback`, events
+- [x] Spec/design session: `/app` 404 (likely Vercel routing), pipeline-to-demo-database feed
+- [x] Railway Postgres (PostGIS-capable) with a restricted app role; schema for facilities, `wait_times`, `guests`, guest-keyed `sessions`/`messages`, `feedback`, events
 - [ ] (Phase 0) One-time facility load from Supabase; worker dual-writes to Supabase and the demo database
-- [ ] (Phase 0) Worker rewrite: strict hospital-only matching, one name per facility, predicted ranges flagged, bounded `wait_times`, batched sinks, Sentry alerts, bad-data cleanup (built and tested; real run and cleanup pending approval)
-- [ ] Expose `raw_wait` and `predicted` through the API and show the range on the front (the API returns only `wait_minutes` today)
-- [ ] Backend data layer on the new database (real driver replaces the REST helpers)
-- [ ] Guest identity under `DEMO_MODE`; profile lookup skipped for guests
-- [ ] Frontend: `/config`, no sign-in UI/onboarding/route guard for guests, `/app` fixed
-- [ ] "Use downtown Toronto" when geolocation is denied or outside the city
-- [ ] Hide bike/bus modes until sprint 2 (their ETAs are multipliers, not real routes)
-- [ ] Rate limit per guest (10) and per IP (30) per 10 minutes; clear "busy" message on 429 and LLM quota errors
-- [ ] Feedback UI (thumbs + free text) on the recommendation message
-- [ ] Minimal events: session started, recommendation shown, route drawn; internal-tester marker on guest rows
-- [ ] Starter prompts, visible not-medical-advice/911 notice, updated disclosure page, 30-day chat-text purge
-- [ ] Delete the hardcoded Geoapify key file and rotate that key
+- [ ] (Phase 0) Worker rewrite: strict hospital-only matching, one name per facility, predicted ranges flagged, bounded `wait_times`, batched sinks, Sentry alerts, bad-data cleanup (built and tested; real run and cleanup wait for the `preview` merge and Railway worker redeploy)
+- [x] Expose `raw_wait` and `predicted` through the API and show the range on the front (the API returns only `wait_minutes` today)
+- [x] Backend data layer on the new database (real driver replaces the REST helpers)
+- [x] Guest identity under `DEMO_MODE`; profile lookup skipped for guests
+- [x] Frontend: `/config`, no sign-in UI/onboarding/route guard for guests, `/app` fixed
+- [x] "Use downtown Toronto" when geolocation is denied or outside the city
+- [x] Hide bike/bus modes until sprint 2 (their ETAs are multipliers, not real routes)
+- [x] Rate limit per guest (10) and per IP (30) per 10 minutes; clear "busy" message on 429 and LLM quota errors
+- [x] Feedback UI (thumbs + free text) on the recommendation message
+- [x] Minimal events: session started, recommendation shown, route drawn; internal-tester marker on guest rows
+- [x] Starter prompts, visible not-medical-advice/911 notice, updated disclosure page, 30-day chat-text purge
+- [x] Delete the hardcoded Geoapify key file (`webapp/src/Menucomponents/utils/geoapify.ts`, no importers; the live code reads `VITE_GEOAPIFY_API_KEY`). Rotation skipped (decided 2026-10-08): the key is read-only and the risk negligible
 - [ ] Deployed Playwright smoke test: landing → starter → chat → recommendation → route drawn → feedback
 - [ ] Update `CLAUDE.md` (Supabase "non-negotiable / out of scope" lines) and this changelog
+
+
+**Status 2026-10-08:** code for tasks 1–15 committed on `feat/guest-demo-core` (`/app` 404 fix is fe75076, still to be verified on production). Open: deployed Playwright smoke test, `CLAUDE.md` update, remote migration 0004 and `DEMO_MODE` on Railway/Vercel, merge to `preview`, worker redeploy plus three-sink check and bad-data cleanup re-run.
 
 ### Known and accepted until the Postgres move
 
