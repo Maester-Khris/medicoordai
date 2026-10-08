@@ -91,9 +91,29 @@ def test_signed_in_users_cannot_post_guest_feedback_or_events() -> None:
 
 def test_route_drawn_event_is_recorded() -> None:
     with patch.object(demo.guest_store, "record_event", return_value=True) as record:
+        resp = _client().post("/events", json={"type": "route_drawn", "session_id": SID, "mode": "bus"})
+    assert resp.status_code == 204
+    record.assert_called_once_with(GUEST, "route_drawn", SID, "bus", None)
+
+
+def test_route_drawn_without_a_mode_is_still_accepted() -> None:
+    with patch.object(demo.guest_store, "record_event", return_value=True) as record:
         resp = _client().post("/events", json={"type": "route_drawn", "session_id": SID})
     assert resp.status_code == 204
-    record.assert_called_once_with(GUEST, "route_drawn", SID)
+    record.assert_called_once_with(GUEST, "route_drawn", SID, None, None)
+
+
+def test_mode_changed_event_is_recorded_with_its_duration() -> None:
+    with patch.object(demo.guest_store, "record_event", return_value=True) as record:
+        resp = _client().post(
+            "/events", json={"type": "mode_changed", "session_id": SID, "mode": "walk", "duration_ms": 1234}
+        )
+    assert resp.status_code == 204
+    record.assert_called_once_with(GUEST, "mode_changed", SID, "walk", 1234)
+
+
+def test_mode_changed_without_a_mode_is_422() -> None:
+    assert _client().post("/events", json={"type": "mode_changed", "session_id": SID}).status_code == 422
 
 
 def test_event_for_foreign_session_is_404() -> None:

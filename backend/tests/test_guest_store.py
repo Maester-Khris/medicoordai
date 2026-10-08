@@ -36,6 +36,7 @@ def guest(monkeypatch: pytest.MonkeyPatch):
 
     yield make
     demo_db.close_pool()
+    admin.execute("delete from events where guest_id = any(%s::uuid[])", (created,))
     admin.execute("delete from guests where id = any(%s::uuid[])", (created,))
     admin.execute("delete from sessions where title like 'pytest-%'")
     admin.close()
@@ -172,3 +173,30 @@ def test_purge_deletes_sessions_older_than_30_days_and_keeps_feedback(guest) -> 
     assert remaining == [{"id": new["id"]}]
     assert demo_db.fetch_one("select count(*) as n from messages where session_id = %s", (old["id"],)) == {"n": 0}
     assert demo_db.fetch_one("select count(*) as n from feedback where message_id = %s", (reply["id"],)) == {"n": 1}
+
+
+def test_route_drawn_stores_its_mode(guest) -> None:
+    gid = guest()
+    session = guest_store.create_session(gid, "pytest-event-mode")
+    assert guest_store.record_event(gid, "route_drawn", session["id"], "bike") is True
+    row = demo_db.fetch_one(
+        "select mode, duration_ms from events where session_id = %s and type = 'route_drawn'", (session["id"],)
+    )
+    assert row == {"mode": "bike", "duration_ms": None}
+
+
+def test_mode_changed_repeats_but_route_drawn_does_not(guest) -> None:
+    gid = guest()
+    session = guest_store.create_session(gid, "pytest-event-repeat")
+    guest_store.record_event(gid, "route_drawn", session["id"], "car")
+    guest_store.record_event(gid, "route_drawn", session["id"], "bike")
+    guest_store.record_event(gid, "mode_changed", session["id"], "bike", 900)
+    guest_store.record_event(gid, "mode_changed", session["id"], "walk", 450)
+    rows = demo_db.fetch_all(
+        "select type, mode, duration_ms from events where session_id = %s order by id", (session["id"],)
+    )
+    assert rows == [
+        {"type": "route_drawn", "mode": "car", "duration_ms": None},
+        {"type": "mode_changed", "mode": "bike", "duration_ms": 900},
+        {"type": "mode_changed", "mode": "walk", "duration_ms": 450},
+    ]

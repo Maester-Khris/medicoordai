@@ -42,7 +42,9 @@ async def post_feedback(body: FeedbackRequest, actor: object = Depends(get_actor
 @router.post("/events", status_code=204)
 async def post_event(body: GuestEventRequest, actor: object = Depends(get_actor)) -> Response:
     guest_id = _guest_id(actor)
-    recorded = await run_in_threadpool(guest_store.record_event, guest_id, body.type, str(body.session_id))
+    recorded = await run_in_threadpool(
+        guest_store.record_event, guest_id, body.type, str(body.session_id), body.mode, body.duration_ms
+    )
     if not recorded:
         raise HTTPException(404, "Session not found")
     return Response(status_code=204)
