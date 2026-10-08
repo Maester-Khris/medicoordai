@@ -726,7 +726,7 @@ technical trigger for it is real (not scale/file-size alone).
 
 ---
 
-## [Sprint 20 — In Progress] · Guest Demo Launch — Sprint 1: guest session, demo database, feedback
+## [Sprint 20 — Closed] · Guest Demo Launch — Sprint 1: guest session, demo database, feedback
 
 **Started — 2026-10-04 · branch: `feat/guest-demo-core`.** First of a multi-sprint demo launch. Goal: a public,
 sign-in-free guest demo that produces real user evidence (interviews keep asking "did you get user feedback?",
@@ -782,7 +782,12 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 - [ ] Update `CLAUDE.md` (Supabase "non-negotiable / out of scope" lines) and this changelog
 
 
-**Status 2026-10-08:** code for tasks 1–15 committed on `feat/guest-demo-core` (`/app` 404 fix is fe75076, still to be verified on production). Open: deployed Playwright smoke test, `CLAUDE.md` update, remote migration 0004 and `DEMO_MODE` on Railway/Vercel, merge to `preview`, worker redeploy plus three-sink check and bad-data cleanup re-run.
+**Closed 2026-10-08 (PR #52 merged to `preview`).** Verified on the preview deployment:
+- Migration 0004 was already on `medicoord-db-demo`; the grants and RLS verify passed on all seven tables for both roles. `DEMO_MODE=true` is on the Railway API service (`/health` and `/config` report demo mode, `modes_enabled: ["car"]`).
+- Deployed smoke test passed against `https://medicoordai-git-preview-nkops-projects.vercel.app` (landing → starter → recommendation → route drawn → feedback, `/events` and `/feedback` 204). Its guest row was marked `is_internal`.
+- First real run of the rewritten worker (16:32 UTC): 16 of 35 hospitals matched (4 live, 6 predicted), wrote 10 rows to demo Postgres, 4 live rows to Supabase, 16 to Redis; no sink failed.
+- Bad-data cleanup re-run with `--apply`: 7,609 non-hospital Supabase `wait_times` rows, 30 Redis hash fields and the `scraper:unresolved_places` set removed; a second dry run finds nothing.
+- Geoapify key rotation skipped on purpose (read-only key). Not yet done: promote `preview` to `main`, and watch the first 10 guest sessions against the line in the sand above.
 
 ### Known and accepted until the Postgres move
 
