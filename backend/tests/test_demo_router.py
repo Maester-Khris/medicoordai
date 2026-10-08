@@ -40,7 +40,7 @@ def test_config_in_demo_mode(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DEMO_MODE", "true")
     monkeypatch.delenv("DEMO_STARTER_PROMPTS", raising=False)
     body = _client().get("/config").json()
-    assert body["demo_mode"] is True and body["modes_enabled"] == ["car"]
+    assert body["demo_mode"] is True and body["modes_enabled"] == ["car", "bike", "bus", "walk"]
     assert body["downtown_fallback"] == {"lat": 43.6532, "lng": -79.3832}
     assert len(body["starter_prompts"]) == 3
 

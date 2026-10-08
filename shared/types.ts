@@ -186,8 +186,29 @@ export interface FeedbackRequest {
 }
 
 export interface GuestEventRequest {
-  type:       "route_drawn"
-  session_id: string
+  type:         "route_drawn" | "mode_changed"
+  session_id:   string
+  mode?:        TravelModeKey   // required for mode_changed; sent with route_drawn
+  duration_ms?: number          // mode_changed only: click to route redrawn, 0..120000
+}
+
+export interface RoutesRequest {
+  origin:       { lat: number; lng: number }
+  facility_ids: string[]        // 1 to 3, unique
+  mode:         TravelModeKey
+}
+
+export interface CandidateRoute {
+  facility_id: string
+  eta_minutes: number | null             // null when this candidate has no route
+  distance_km: number | null
+  geometry:    [number, number][] | null // [lat, lng] pairs
+}
+
+export interface RoutesResponse {
+  mode:                TravelModeKey
+  routes:              CandidateRoute[]  // same order as facility_ids
+  fastest_facility_id: string | null
 }
 
 export interface BusyResponse {

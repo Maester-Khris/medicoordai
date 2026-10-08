@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
 from starlette.concurrency import run_in_threadpool
 
-from config import ALL_MODES, DEMO_MODES, DOWNTOWN_TORONTO, demo_mode, starter_prompts
+from config import DOWNTOWN_TORONTO, demo_mode, modes_enabled, starter_prompts
 from middleware.auth import get_actor
 from models import AppConfig, FeedbackRequest, GuestEventRequest
 from services import guest_store
@@ -23,7 +23,7 @@ def get_config() -> AppConfig:
         demo_mode=on,
         starter_prompts=starter_prompts(),
         downtown_fallback=DOWNTOWN_TORONTO,
-        modes_enabled=DEMO_MODES if on else ALL_MODES,
+        modes_enabled=modes_enabled(),
     )
 
 
