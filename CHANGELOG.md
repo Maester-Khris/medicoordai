@@ -805,11 +805,51 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 ## [Sprint 21 — In Progress] · Guest Demo Launch — Sprint 2: demo user experience
 
 **Started — 2026-10-08 · branch: `feat/demo-user-experience`.** Second sprint of the guest demo launch, building on
-Sprint 20 (guest sessions, demo database, feedback, deployed smoke test). Scope is not fixed yet: it is formalized in
-the spec/design session that comes next. Starting candidates from the Sprint 20 "next sprints" list and the
-2026-10-08 product-thinker session: real vehicle modes with route redraw, routing calls moved to the backend, latency
-work, moderated test sessions, the LiteLLM gateway spike, and the GraphRAG infrastructure side-track (Neo4j instance
-recreated, default left on the static provider).
+Sprint 20 (guest sessions, demo database, feedback, deployed smoke test). Two phases: the guest-facing experience,
+then performance tracking and measurement. Plan for the second phase: `artifacts/2026-10-08-min-perf-tracking.md`.
+
+### Decisions (2026-10-08)
+
+- No promotion to `main` in this sprint. Railway and Vercel serve the `preview` branch; before real tests the demo domain is pointed at `preview`. `main` is promoted once every demo-launch sprint is done.
+- GraphRAG is not put in front of guests. Only its timing hook is added now, so the next sprint measures it without new code. Recreating the Neo4j instance and the LiteLLM gateway spike are side-tracks that never block the scope below.
+- Proximity search is fixed in this sprint: `GET /facilities/nearby` has no demo branch and returns 500 (the Supabase function references a missing column), so the radius chips silently show every facility.
+- Load tests target the `medicoordai-staging` service and run before any guest gets the link. `/facilities/nearby` joins the workload mix only after the fix.
+- Chat load is ramped through several steps until a threshold fails (a breakpoint, not a fixed ceiling); the report states what failed first. The LLM provider for that test is an open decision, taken when it runs: Groq's free tier (30 requests and 8,000 tokens per minute, 200,000 tokens per day) cannot carry it, Groq's next tier up was ruled out (enterprise account, out of scope) and Anthropic tokens were judged too expensive.
+- The one-hour soak is in, on the non-LLM mix. Load generator: k6, run from a laptop.
+- Recruiting, moderated sessions and reading guest analytics happen after the sprint; they are not dev steps.
+
+### Scope, in order
+
+**Phase 1 — guest experience (one spec, plan and implementation turn)**
+
+- [ ] Baseline read, no code: route latency and error rate, Web Vitals in Sentry, journey timings from message and event timestamps; check the Railway worker count and whether the Grafana push is still live
+- [ ] Routing calls moved to the backend with a timeout and a fallback; `VITE_GEOAPIFY_API_KEY` out of the browser bundle
+- [ ] Real vehicle modes: mode change re-selects among the top candidates and redraws the route; hidden mode buttons re-enabled; mode recorded on the `route_drawn` event
+- [ ] Mode-change latency measured in the browser (click to route redrawn)
+- [ ] Proximity search on the demo database (demo branch for `/facilities/nearby`)
+- [ ] Sandbox links hidden in demo mode (the page already redirects guests)
+- [ ] End-to-end: mixed filter chips including a radius, mode change and redraw, no sandbox link for guests
+
+**Phase 2 — performance tracking and measurement**
+
+- [ ] Latency histograms with one shape for the LLM call, routing and the graph call (the last records nothing until the instance is back); LLM outcome counter (errors, 429s); pool stats exported
+- [ ] Demo pool size from an environment variable (hardcoded to 5 today), default set from the load test
+- [ ] Rate-limit values from environment variables, defaults unchanged, raised on staging only
+- [ ] `pg_stat_statements` enabled on the demo database (admin step, needs a restart)
+- [ ] Grafana Cloud access re-established, or `/metrics` read directly during tests
+- [ ] Test A, non-LLM: smoke, average load, breakpoint, one-hour soak
+- [ ] Test B, chat: concurrent turns ramped to the breakpoint
+- [ ] Profiling protocol (py-spy, or the Sentry profiler if attaching is blocked)
+- [ ] Web Vitals at the 75th percentile compared with the published "good" thresholds
+- [ ] Report: environment, mix, one row per load step, breakpoint and first bottleneck
+- [ ] Latency fix, only if the report or the journey timings show one dominant cost
+
+**Exit:** deployed to `preview`, smoke test passing.
+
+### Side-tracks (do not block the scope)
+
+- LiteLLM gateway one-day spike; ships to guests only if it passes.
+- Neo4j: find why the instance was deleted, recreate, repopulate, keep-alive, default left on the static provider, fail-open fallback, internal-only override. Guest-facing random assignment is a later sprint.
 
 ---
 
