@@ -128,3 +128,7 @@ backend/scripts/snomed_ingest/depth_flagging_report.json
 
 backend/.env.demo.local
 backend/script.demo.local.sh
+.playwright-mcp/
+webapp/test-results/
+.agents/skills/
+.claude/skills/
