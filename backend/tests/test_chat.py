@@ -19,7 +19,7 @@ from fastapi.testclient import TestClient
 
 from services.chat import generate_session_title
 from routers.chat import _ser, router as chat_router
-from middleware.auth import get_current_user
+from middleware.auth import get_current_user, get_actor
 import cache_chat
 from cache_chat import (
     set_user_cache,
@@ -39,12 +39,13 @@ FAKE_SESSION_ID = "00000000-0000-0000-0000-000000000002"
 class _FakeUser:
     id = FAKE_USER_ID
     email = "test@example.com"
+    is_guest = False
 
 
 def _make_test_app(authenticated: bool = True) -> FastAPI:
     app = FastAPI()
     if authenticated:
-        app.dependency_overrides[get_current_user] = lambda: _FakeUser()
+        app.dependency_overrides[get_actor] = lambda: _FakeUser()
     app.include_router(chat_router)
     return app
 
@@ -465,3 +466,101 @@ class TestSendMessageRoutingShadowDispatch:
         assert resp.status_code == 200
         mock_log.assert_not_called()
 
+
+# ── Guest demo behaviour ──────────────────────────────────────────────────────
+
+class _FakeGuest:
+    id = FAKE_USER_ID_STR
+    email = None
+    is_guest = True
+
+
+def _guest_client() -> TestClient:
+    app = FastAPI()
+    app.dependency_overrides[get_actor] = lambda: _FakeGuest()
+    app.include_router(chat_router)
+    return TestClient(app)
+
+
+_TRIAGE_RESULT = {
+    "response": "Go to Toronto General.", "severity": "urgent", "reasoning": "r",
+    "recommended_facility": {"id": "f1", "name": "TGH", "category": "hospital", "address": "a",
+                             "lat": 43.6, "lng": -79.3, "distanceKm": 1.0},
+    "nearby_facilities": [], "turn_type": "triage",
+}
+
+
+def _msg(role: str) -> dict:
+    return {"id": f"m-{role}", "session_id": FAKE_SESSION_ID, "user_id": FAKE_USER_ID_STR,
+            "role": role, "content": "x", "created_at": "2026-10-07T00:00:00Z"}
+
+
+class TestGuestChat:
+    def test_rate_limited_guest_gets_busy_and_nothing_is_stored(self):
+        with patch("routers.chat.check_rate_limit", return_value=120), \
+             patch("routers.chat.add_message") as add:
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+        assert resp.status_code == 429 and resp.json() == {"code": "busy", "retry_after": 120}
+        add.assert_not_called()
+
+    def test_llm_quota_error_maps_to_busy(self):
+        class Quota(Exception):
+            status_code = 429
+
+        agent = MagicMock()
+        agent.respond.side_effect = Quota("rate limit")
+        with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.add_message", return_value=_msg("user")), \
+             patch("services.llm_agent.LLMAgent", return_value=agent):
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+        assert resp.status_code == 429 and resp.json() == {"code": "busy", "retry_after": 60}
+
+    def test_guest_skips_profile_lookup_and_records_recommendation(self):
+        agent = MagicMock()
+        agent.respond.return_value = _TRIAGE_RESULT
+        with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.add_message", side_effect=[_msg("user"), _msg("assistant")]), \
+             patch("services.llm_agent.LLMAgent", return_value=agent), \
+             patch("db.supabase_select") as profile_lookup, \
+             patch("routers.chat.guest_store.record_event") as record, \
+             patch("routers.chat.should_sample", return_value=False):
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+        assert resp.status_code == 200
+        profile_lookup.assert_not_called()
+        assert agent.respond.call_args.kwargs["user_profile"] is None
+        record.assert_called_once_with(FAKE_USER_ID_STR, "recommendation_shown", FAKE_SESSION_ID)
+
+    def test_foreign_session_is_404(self):
+        from services.guest_store import SessionNotFound
+        with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.add_message", side_effect=SessionNotFound("s")):
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+        assert resp.status_code == 404
+
+    def test_new_guest_session_records_session_started(self):
+        session = {"id": FAKE_SESSION_ID, "user_id": FAKE_USER_ID_STR, "title": "hi",
+                   "created_at": "2026-10-07T00:00:00Z", "updated_at": "2026-10-07T00:00:00Z"}
+        with patch("routers.chat.create_session", return_value=session), \
+             patch("routers.chat.guest_store.record_event") as record:
+            resp = _guest_client().post("/chat/sessions", json={"first_message": "hi"})
+        assert resp.status_code == 200
+        record.assert_called_once_with(FAKE_USER_ID_STR, "session_started", FAKE_SESSION_ID)
+
+    def test_event_failure_does_not_fail_the_request(self):
+        session = {"id": FAKE_SESSION_ID, "user_id": FAKE_USER_ID_STR, "title": "hi",
+                   "created_at": "2026-10-07T00:00:00Z", "updated_at": "2026-10-07T00:00:00Z"}
+        with patch("routers.chat.create_session", return_value=session), \
+             patch("routers.chat.guest_store.record_event", side_effect=RuntimeError("db")):
+            assert _guest_client().post("/chat/sessions", json={"first_message": "hi"}).status_code == 200
+
+    def test_signed_in_user_is_not_rate_limited(self):
+        agent = MagicMock()
+        agent.respond.return_value = {**_TRIAGE_RESULT, "turn_type": "followup", "recommended_facility": None}
+        with patch("routers.chat.check_rate_limit") as limit, \
+             patch("routers.chat.add_message", side_effect=[_msg("user"), _msg("assistant")]), \
+             patch("services.llm_agent.LLMAgent", return_value=agent), \
+             patch("db.supabase_select", return_value=None):
+            resp = TestClient(_make_test_app()).post(
+                "/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+        assert resp.status_code == 200
+        limit.assert_not_called()

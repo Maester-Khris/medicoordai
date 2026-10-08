@@ -1,6 +1,7 @@
 // webapp/src/components/mobile/TransitModeGrid.tsx
 import { Car, Bicycle, Person } from '@phosphor-icons/react'
-import type { RouteResult } from '@shared/types'
+import type { RouteResult, TravelModeKey } from '@shared/types'
+import { useConfig } from '../../hooks/useConfig'
 
 export type TransitMode = 'drive' | 'cycle' | 'walk'
 
@@ -16,6 +17,8 @@ const CELLS: TransitCell[] = [
   { mode: 'walk',  Icon: Person,  label: 'WALK'  },
 ]
 
+const MODE_KEY: Record<TransitMode, TravelModeKey> = { drive: 'car', cycle: 'bike', walk: 'walk' }
+
 const CELL_STYLE: Record<TransitMode, { bg: string; border: string; color: string }> = {
   drive: { bg: 'rgba(72,246,193,0.15)',  border: 'rgba(72,246,193,0.60)',  color: '#48F6C1' },
   cycle: { bg: 'rgba(0,210,255,0.10)',   border: 'rgba(0,210,255,0.40)',   color: '#00D2FF' },
@@ -29,6 +32,8 @@ interface TransitModeGridProps {
 }
 
 export function TransitModeGrid({ routes, activeMode, onModeChange }: TransitModeGridProps) {
+  const config = useConfig()
+  const cells = CELLS.filter(cell => config.modes_enabled.includes(MODE_KEY[cell.mode]))
   const driveRoute = routes[0]
 
   const getEta = (mode: TransitMode): string => {
@@ -39,8 +44,8 @@ export function TransitModeGrid({ routes, activeMode, onModeChange }: TransitMod
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2 mt-3">
-      {CELLS.map(({ mode, Icon, label }) => {
+    <div className="grid gap-2 mt-3" style={{ gridTemplateColumns: `repeat(${cells.length}, minmax(0, 1fr))` }}>
+      {cells.map(({ mode, Icon, label }) => {
         const isActive = activeMode === mode
         const style = isActive ? CELL_STYLE[mode] : CELL_STYLE.walk
         return (

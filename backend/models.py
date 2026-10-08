@@ -1,3 +1,4 @@
+from typing import Literal
 from enum import Enum
 from uuid import UUID
 from datetime import datetime
@@ -33,6 +34,8 @@ class Facility(BaseModel):
     business_status:      str | None = None
     weekday_hours:        list[str] | None = None
     wait_minutes:         int | None = None
+    raw_wait:             str | None = None
+    predicted:            bool = False
 
 
 class SessionBase(BaseModel):
@@ -118,3 +121,26 @@ class Profile(BaseModel):
     blood_type:              str | None = None
     medical_chat_opt_in:     bool
 
+
+class LatLng(BaseModel):
+    lat: float
+    lng: float
+
+
+class AppConfig(BaseModel):
+    demo_mode:         bool
+    starter_prompts:   list[str]
+    downtown_fallback: LatLng
+    modes_enabled:     list[Literal["car", "bike", "bus", "walk"]]
+
+
+class FeedbackRequest(BaseModel):
+    session_id: UUID
+    message_id: UUID
+    thumb:      Literal["up", "down"]
+    comment:    str | None = Field(default=None, max_length=2000)
+
+
+class GuestEventRequest(BaseModel):
+    type:       Literal["route_drawn"]
+    session_id: UUID

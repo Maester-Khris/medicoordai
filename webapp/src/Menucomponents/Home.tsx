@@ -17,6 +17,7 @@ interface HomeProps {
   sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<ChatMessageResponse | null>
   createSession: (firstMessage: string) => Promise<Session | null>
   loadOlderMessages: (sessionId: string, beforeId: string) => Promise<Message[]>
+  busyUntil: number | null
 }
 
 const GLASS_PANEL: React.CSSProperties = {
@@ -28,8 +29,8 @@ const GLASS_PANEL: React.CSSProperties = {
   borderRadius: 12,
 }
 
-export default function Home({ facilities, facilitiesLoading, conversationsCache, sendMessage, createSession, loadOlderMessages }: HomeProps) {
-  const { user } = useAuth()
+export default function Home({ facilities, facilitiesLoading, conversationsCache, sendMessage, createSession, loadOlderMessages, busyUntil }: HomeProps) {
+  const { user, isGuest } = useAuth()
   const { profile } = useProfile()
   const geo = useGeolocation()
   const { triage, applyTriageResult, reset: triageReset } = useTriageState()
@@ -55,7 +56,7 @@ export default function Home({ facilities, facilitiesLoading, conversationsCache
       <LoginModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} defaultTab={modalTab} />
 
       <WebNavBar
-        rightContent={user ? (
+        rightContent={isGuest ? null : user ? (
           <UserMenu />
         ) : (
           <>
@@ -108,6 +109,7 @@ export default function Home({ facilities, facilitiesLoading, conversationsCache
             triage={triage}
             onTriageResult={applyTriageResult}
             onNewConversation={handleNewConversation}
+            busyUntil={busyUntil}
           />
         </div>
 

@@ -43,6 +43,8 @@ export interface Facility {
   business_status?:     string | null;
   weekday_hours?:       string[] | null;
   wait_minutes?:        number | null;
+  raw_wait?:            string | null;
+  predicted?:           boolean;
 }
 
 // ── Proximity ─────────────────────────────────────────────────────────────────
@@ -161,4 +163,34 @@ export interface TriageUIState {
   routes:                RouteResult[]
   recommendedFacilityId: string | null
   roadGeometry:          [number, number][] | null
+}
+
+// ── Guest demo ────────────────────────────────────────────────────────────────
+
+export type TravelModeKey = "car" | "bike" | "bus" | "walk"
+
+export interface AppConfig {
+  demo_mode:         boolean
+  starter_prompts:   string[]
+  downtown_fallback: { lat: number; lng: number }
+  modes_enabled:     TravelModeKey[]
+}
+
+export type Thumb = "up" | "down"
+
+export interface FeedbackRequest {
+  session_id: string
+  message_id: string
+  thumb:      Thumb
+  comment?:   string | null
+}
+
+export interface GuestEventRequest {
+  type:       "route_drawn"
+  session_id: string
+}
+
+export interface BusyResponse {
+  code:        "busy"
+  retry_after: number
 }

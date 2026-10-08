@@ -6,12 +6,12 @@ import type { Profile } from "@shared/types"
 export type { Profile }
 
 export function useProfile() {
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(false)
 
   const refetch = async () => {
-    if (!user) { setProfile(null); return }
+    if (!user || isGuest) { setProfile(null); return }
     setLoading(true)
     const { data } = await supabase
       .from('profile')
@@ -25,10 +25,10 @@ export function useProfile() {
   useEffect(() => {
     refetch()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
+  }, [user, isGuest])
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return
+    if (!user || isGuest) return
     const { data, error } = await supabase
       .from('profile')
       .update(updates)

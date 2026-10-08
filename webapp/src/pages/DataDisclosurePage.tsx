@@ -4,6 +4,27 @@ import { LegalPageLayout } from '../components/legal/LegalPageLayout'
 export default function DataDisclosurePage() {
   const disclosureItems = [
     {
+      data: 'Guest demo: random browser ID',
+      badge: 'No account',
+      why: 'The public demo needs no sign-in. A random ID created in your browser keeps your conversations together and counts messages for the usage limit.',
+      stored: 'In your browser (local storage) and in our demo database. It is not linked to your name, email or IP address. Clearing your browser data starts a new, empty guest.',
+      shared: 'Never shared.'
+    },
+    {
+      data: 'Guest demo: chat text',
+      badge: 'Deleted after 30 days',
+      why: 'Shown back to you when you return in the same browser, and reviewed by the team to improve recommendations.',
+      stored: 'Demo database (Railway, PostgreSQL). Each conversation and its messages are deleted 30 days after the conversation started.',
+      shared: 'Sent to the language-model provider (Groq) to generate replies. Not sold or shared otherwise.'
+    },
+    {
+      data: 'Guest demo: feedback and usage events',
+      badge: 'Kept',
+      why: 'Your thumbs up/down and optional comment, and three counters (conversation started, recommendation shown, route drawn), tell us whether the demo works.',
+      stored: 'Demo database, linked only to the random browser ID. No IP address is stored; it is used for ten minutes, in hashed form, to limit abuse.',
+      shared: 'Never shared.'
+    },
+    {
       data: 'Email address',
       badge: 'Account',
       why: 'Used for account creation, secure authentication, and profile identification.',
@@ -58,7 +79,7 @@ export default function DataDisclosurePage() {
     <LegalPageLayout
       title="Data Disclosure"
       description="An itemized breakdown of every piece of data MediCoord AI collects, why it's collected, where it's stored, and who it's shared with."
-      lastUpdated="June 24, 2026"
+      lastUpdated="October 7, 2026"
     >
       <p className="text-sm md:text-body-md text-[#85A4B1] leading-relaxed">
         MediCoord AI is built on real Canadian public health data — no simulated locations, no synthetic wait times.

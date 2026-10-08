@@ -71,6 +71,11 @@ function assertOutputHtml(route, html) {
 async function main() {
   const template = await readFile(path.join(distDir, 'index.html'), 'utf-8')
 
+  // dist/index.html is about to be overwritten with the prerendered landing page. Client-only
+  // routes (/app, /setup, ...) need the empty shell instead, so keep a copy for the Vercel
+  // catch-all rewrite (vercel.json -> /spa; cleanUrls serves spa.html there).
+  await writeFile(path.join(distDir, 'spa.html'), template, 'utf-8')
+
   const vite = await createServer({
     root,
     server: { middlewareMode: true },

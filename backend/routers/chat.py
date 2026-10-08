@@ -5,7 +5,11 @@ from fastapi import APIRouter, Depends, Request, Header, BackgroundTasks
 from fastapi.responses import JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
 
-from middleware.auth import get_current_user
+from fastapi import HTTPException
+
+from middleware.auth import get_actor
+from services import guest_store
+from services.rate_limit import LLM_BUSY_RETRY_SECONDS, busy_response, check_rate_limit, client_ip
 from models import CreateSessionRequest, SendMessageRequest
 from services.chat import (
     generate_session_title, create_session, add_message,
@@ -37,10 +41,24 @@ def _trunc_uid(uid: str) -> str:
     return uid[:8] + "..."
 
 
+def _is_guest(actor: object) -> bool:
+    return bool(getattr(actor, "is_guest", False))
+
+
+async def _record_guest_event(actor: object, event_type: str, session_id: str) -> None:
+    """Best-effort: an event that cannot be written never fails the request."""
+    if not _is_guest(actor):
+        return
+    try:
+        await run_in_threadpool(guest_store.record_event, str(actor.id), event_type, session_id)  # type: ignore[attr-defined]
+    except Exception as exc:
+        logger.warning("guest_event_failed", extra={"event_type": event_type, "error_type": type(exc).__name__})
+
+
 @router.get("/sessions")
 async def past_conversations(
     if_none_match: str = Header(default=""),
-    current_user: object = Depends(get_current_user),
+    current_user: object = Depends(get_actor),
 ) -> Response:
     """
     Returns the 5 most recent sessions with their 20 latest messages each.
@@ -74,7 +92,7 @@ async def past_conversations(
 async def create_new_session(
     body: CreateSessionRequest,
     request: Request,
-    current_user: object = Depends(get_current_user),
+    current_user: object = Depends(get_actor),
 ) -> dict:
     """Creates a new chat session. Title is derived from the first message."""
     user_id = str(current_user.id)  # type: ignore[attr-defined]
@@ -82,6 +100,7 @@ async def create_new_session(
 
     session = create_session(user_id=user_id, title=title)
     append_session_to_cache(user_id, session)
+    await _record_guest_event(current_user, "session_started", str(session["id"]))
 
     logger.info(
         "session created",
@@ -94,13 +113,13 @@ async def create_new_session(
     return _ser(session)
 
 
-@router.post("/message")
+@router.post("/message", response_model=None)
 async def send_message(
     body: SendMessageRequest,
     request: Request,
     background_tasks: BackgroundTasks,
-    current_user: object = Depends(get_current_user),
-) -> dict:
+    current_user: object = Depends(get_actor),
+) -> Response | dict:
     """
     Saves a user message, runs the LLM triage agent, saves the assistant response.
     Returns user message, assistant message, and triage result (null on follow-up turns).
@@ -109,13 +128,22 @@ async def send_message(
     session_id = str(body.session_id)
     request_id = getattr(request.state, "request_id", None)
 
+    if _is_guest(current_user):
+        retry_after = await run_in_threadpool(check_rate_limit, user_id, client_ip(request))
+        if retry_after is not None:
+            return busy_response(retry_after)
+
     # Fetch history from cache for context window
     cache_entry, _ = get_user_cache(user_id)
     history: list[dict] = []
     if cache_entry:
         history = cache_entry.get("messages", {}).get(session_id, [])
 
-    user_msg = add_message(session_id=session_id, user_id=user_id, role="user", content=body.content)
+    try:
+        user_msg = add_message(session_id=session_id, user_id=user_id, role="user", content=body.content)
+    except guest_store.SessionNotFound:
+        raise HTTPException(404, "Session not found") from None
+
     append_message_to_cache(user_id, session_id, user_msg)
 
     try:
@@ -124,15 +152,16 @@ async def send_message(
         agent = LLMAgent()
 
         user_profile: dict | None = None
-        try:
-            user_profile = await run_in_threadpool(
-                supabase_select,
-                "profile",
-                params={"user_id": f"eq.{user_id}", "select": "allergies,conditions,blood_type,medical_chat_opt_in"},
-                single=True,
-            )  # type: ignore[assignment]
-        except Exception as exc:
-            logger.warning("profile_fetch_failed", extra={"request_id": request_id, "error": str(exc)})
+        if not _is_guest(current_user):
+            try:
+                user_profile = await run_in_threadpool(
+                    supabase_select,
+                    "profile",
+                    params={"user_id": f"eq.{user_id}", "select": "allergies,conditions,blood_type,medical_chat_opt_in"},
+                    single=True,
+                )  # type: ignore[assignment]
+            except Exception as exc:
+                logger.warning("profile_fetch_failed", extra={"request_id": request_id, "error": str(exc)})
 
         result = agent.respond(
             user_message=body.content,
@@ -142,6 +171,9 @@ async def send_message(
             user_profile=user_profile,
         )
     except Exception as exc:
+        if getattr(exc, "status_code", None) == 429:  # provider quota: Groq and Anthropic both expose status_code
+            logger.warning("llm_quota_exhausted", extra={"request_id": request_id})
+            return busy_response(LLM_BUSY_RETRY_SECONDS)
         import sentry_sdk
         sentry_sdk.capture_exception(exc)
         logger.error("llm_agent_failed", extra={"request_id": request_id, "error": str(exc)})
@@ -182,6 +214,9 @@ async def send_message(
             "nearby_facilities": result["nearby_facilities"],
         }
 
+    if triage and triage["recommended_facility"]:
+        await _record_guest_event(current_user, "recommendation_shown", session_id)
+
     if (
         triage
         and triage["recommended_facility"]
@@ -199,14 +234,14 @@ async def load_older_messages(
     session_id: str,
     before_id: str,
     request: Request,
-    current_user: object = Depends(get_current_user),
+    current_user: object = Depends(get_actor),
 ) -> dict:
     """
     Cursor-based pagination — returns messages older than `before_id`.
     Always hits Supabase; older messages are not cached.
     """
     user_id = str(current_user.id)  # type: ignore[attr-defined]
-    messages = get_older_messages(session_id=session_id, before_id=before_id)
+    messages = get_older_messages(session_id=session_id, before_id=before_id, user_id=user_id)
 
     cached, _ = get_user_cache(user_id)
     if cached:
@@ -228,7 +263,7 @@ async def load_older_messages(
 @router.post("/sessions/invalidate")
 async def invalidate_cache(
     request: Request,
-    current_user: object = Depends(get_current_user),
+    current_user: object = Depends(get_actor),
 ) -> dict:
     """Clears the server-side chat cache for the user — call on logout."""
     user_id = str(current_user.id)  # type: ignore[attr-defined]

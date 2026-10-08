@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react"
 import type { TriageUIState, TriageResult, RouteResult, FacilityCandidate } from "../../../shared/types"
+import { postRouteDrawn } from "../lib/guestEvents"
 
 const GEOAPIFY_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY as string | undefined
 const DEFAULT_STATE: TriageUIState = {
@@ -22,6 +23,7 @@ export function useTriageState() {
   const applyTriageResult = useCallback(async (
     result: TriageResult,
     userCoords: { lat: number; lng: number } | null,
+    sessionId?: string | null,
   ) => {
     if (!result.recommended_facility) {
       setTriage({
@@ -63,6 +65,9 @@ export function useTriageState() {
         if (bestFacility && userCoords) {
           roadGeometry = await fetchRoadGeometry(userCoords, bestFacility)
         }
+
+        // Only real road geometry counts as "route drawn"; the straight-line fallback does not.
+        if (roadGeometry && sessionId) void postRouteDrawn(sessionId)
 
         setTriage(prev => ({
           ...prev,

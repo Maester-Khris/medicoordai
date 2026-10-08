@@ -19,7 +19,7 @@ medicoordai/
 - **Backend:** Python 3.11, FastAPI
 - **AI:** Groq (primary, free tier) or Anthropic Claude — controlled via feature flag `LLM_PROVIDER`
 - **Routing:** Geoapify Route Matrix API
-- **Auth / DB:** Supabase — not in scope for current phase, do not scaffold yet
+- **DB:** Railway Postgres (`medicoord-db-demo`) for the guest demo; Supabase stays the legacy store until the later Postgres move. **Auth:** none (guest-only) under `DEMO_MODE`
 - **Env vars:** Doppler — all `run` commands must use `doppler run --`
 - **Frontend deploy:** Vercel (preview on PR, production on main)
 - **Backend deploy:** Railway (web service + cron/worker services; deploy via Railway CLI from `backend/`)
@@ -49,15 +49,17 @@ doppler run -- npm run test
 ```
 If env vars are already exported in the shell session, skip Doppler.
 Never hardcode secrets. Never use a raw `.env` file in commands.
+`DEMO_MODE=true` is set on the API service only (the wait-time worker does not read it).
 
 
 ## Current Scope (Phase 1)
 **In scope:** User ↔ chatbot interaction only.
 - Symptom input → severity classification → facility routing → map response
 - `/triage` endpoint and LLM tool orchestration
+- Guest demo (sprint 20): `DEMO_MODE`, `/config`, `/feedback`, `/events`, guest ids via `X-Guest-Id`
 
 **Out of scope (do not implement or scaffold):**
-- Supabase auth or database integration
+- New Supabase work (auth, new tables); the demo uses guest ids on Railway Postgres
 - Emergency contact notifications
 - Predictive analytics tab
 - Admin dashboard

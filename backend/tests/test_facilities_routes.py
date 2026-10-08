@@ -17,6 +17,11 @@ import pytest
 import main
 
 
+def _info(**minutes: int) -> dict:
+    """{'a': 10} -> the get_wait_map() shape."""
+    return {fid: {"wait_minutes": m, "raw_wait": None, "predicted": False} for fid, m in minutes.items()}
+
+
 class TestFacilitiesRoute:
     def test_max_wait_minutes_filters_results(self):
         fake_data = [
@@ -24,7 +29,7 @@ class TestFacilitiesRoute:
             {"id": "b", "category": "hospital", "accepted_severity": ["urgent"]},
         ]
         with patch("main.get_cached_facilities", return_value=(fake_data, None)), \
-             patch("main.get_wait_minutes_map", return_value={"a": 10, "b": 60}):
+             patch("main.get_wait_map", return_value=_info(a=10, b=60)):
             request = type("FakeRequest", (), {"headers": {}})()
             response = asyncio.run(main.facilities(request, max_wait_minutes=30))
 
@@ -38,7 +43,7 @@ class TestFacilitiesRoute:
             {"id": "b", "category": "hospital", "accepted_severity": ["urgent"]},
         ]
         with patch("main.get_cached_facilities", return_value=(fake_data, None)), \
-             patch("main.get_wait_minutes_map", return_value={"a": 10, "b": 60}):
+             patch("main.get_wait_map", return_value=_info(a=10, b=60)):
             request = type("FakeRequest", (), {"headers": {}})()
             response = asyncio.run(main.facilities(request))
 
@@ -57,7 +62,7 @@ class TestFacilitiesRoute:
         with patch("main.get_cached_facilities", return_value=([], "etag-empty")), \
              patch("main.get_all_facilities", return_value=fake_fresh_data), \
              patch("main.set_cached_facilities") as mock_set, \
-             patch("main.get_wait_minutes_map", return_value={"a": 10}):
+             patch("main.get_wait_map", return_value=_info(a=10)):
             request = type("FakeRequest", (), {"headers": {}})()
             response = asyncio.run(main.facilities(request))
 
@@ -65,6 +70,17 @@ class TestFacilitiesRoute:
         ids = [r["id"] for r in data]
         assert ids == ["a"]
         mock_set.assert_called_once_with(fake_fresh_data)
+
+    def test_facilities_carry_raw_wait_and_predicted(self):
+        fake_data = [{"id": "a", "category": "hospital", "accepted_severity": ["urgent"]}]
+        wait = {"a": {"wait_minutes": None, "raw_wait": "45m–2h", "predicted": True}}
+        with patch("main.get_cached_facilities", return_value=(fake_data, None)), \
+             patch("main.get_wait_map", return_value=wait):
+            request = type("FakeRequest", (), {"headers": {}})()
+            response = asyncio.run(main.facilities(request, max_wait_minutes=30))
+        body = json.loads(response.body)
+        assert body == [{"id": "a", "category": "hospital", "accepted_severity": ["urgent"],
+                         "wait_minutes": None, "raw_wait": "45m–2h", "predicted": True}]
 
 
 class TestFacilitiesNearbyRoute:
@@ -123,7 +139,7 @@ class TestFacilitiesRouteUsesThreadpool:
     def test_wait_minutes_map_call_is_offloaded_to_threadpool(self):
         fake_data = [{"id": "a", "category": "hospital", "accepted_severity": ["urgent"]}]
         with patch("main.get_cached_facilities", return_value=(fake_data, None)), \
-             patch("main.get_wait_minutes_map", return_value={"a": 10}) as mock_get_wait, \
+             patch("main.get_wait_map", return_value=_info(a=10)) as mock_get_wait, \
              patch("main.run_in_threadpool", side_effect=self._run_inline) as mock_threadpool:
             request = type("FakeRequest", (), {"headers": {}})()
             asyncio.run(main.facilities(request))

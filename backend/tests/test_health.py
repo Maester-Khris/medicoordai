@@ -42,3 +42,21 @@ def test_health_reports_neo4j_unreachable_when_ping_fails():
         resp = client.get("/health")
     assert resp.status_code == 200
     assert resp.json()["neo4j"] == "unreachable"
+
+def test_health_reports_demo_db_unreachable(monkeypatch):
+    import main
+    monkeypatch.setenv("DEMO_MODE", "true")
+
+    def boom(*_args, **_kwargs):
+        raise RuntimeError("down")
+
+    monkeypatch.setattr(main.demo_db, "fetch_one", boom)
+    body = main.health()
+    assert body["demoMode"] is True and body["demoDb"] == "unreachable"
+
+
+def test_health_omits_demo_db_when_flag_off(monkeypatch):
+    import main
+    monkeypatch.delenv("DEMO_MODE", raising=False)
+    body = main.health()
+    assert body["demoMode"] is False and "demoDb" not in body

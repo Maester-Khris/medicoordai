@@ -726,6 +726,77 @@ technical trigger for it is real (not scale/file-size alone).
 
 ---
 
+## [Sprint 20 — In Progress] · Guest Demo Launch — Sprint 1: guest session, demo database, feedback
+
+**Started — 2026-10-04 · branch: `feat/guest-demo-core`.** First of a multi-sprint demo launch. Goal: a public,
+sign-in-free guest demo that produces real user evidence (interviews keep asking "did you get user feedback?",
+and sign-in slows our own testing). Scenario: chat → facility recommendation → route drawn on the map. Reference
+design: the `fintech-prod` repo's pre-launch demo sprint (guest ids, `DEMO_MODE`, per-guest/IP rate limit,
+feedback capture, deployed smoke test). Decisions and the sprint-1 list were worked out in a product-thinker
+session; the spec/design session comes next.
+
+### Decisions
+
+- Guest-only, sign-in hidden completely. Ships on `main` behind `DEMO_MODE` (no demo branch); the frontend learns the flag from a `/config` endpoint.
+- One metric: % of guest sessions that reach a drawn route (counter-metric: thumbs-down rate). Line in the sand for the first 10 guest sessions: ≥ 60% reach a route and ≥ 5 leave feedback; under 30% reaching a route means fix onboarding first.
+- Feedback = thumbs plus free text, stored per guest and turn.
+- New Railway Postgres demo database `medicoord-db-demo`, PostGIS-capable template so the later proximity-search feature needs no second migration. Supabase is **not touched** before the demo; leaving Supabase is a later sprint.
+- Facilities come from the `facilities_clean` table (the one the backend serves). The Railway worker (`workers/scraper.py`, cron every 15 min) will **dual-write** new facilities and `wait_times` to Supabase and `medicoord-db-demo` until the full Postgres move. The AWS pipeline's EventBridge/Step Functions schedule was never saved, so it only runs by hand and the Railway worker is the live pipeline: the demo database is fed by a one-time load plus the worker, and enrichment/dbt runs stay manual (run against both databases when needed). Note: The enrichment script is ported to Geoapify (since Google Places expired), but Geoapify doesn't cover all initial attributes Google Places added (e.g. `business_status`). We will look for a replacement later.
+- Chat text kept 30 days (purged on new-guest arrival), feedback and event rows kept, no raw IPs stored; the data-disclosure page is updated to match.
+- LLM stays Groq with the existing direct SDKs in this sprint.
+
+### Phase 0 — data foundation (first, before the spec session)
+
+Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time data is currently wrong (provincial hospitals averaged onto unrelated Toronto facilities, wait times written to non-hospital rows, expired Google Places key), so it is fixed and observed first; the rest of the sprint builds on it.
+
+1. **Done 2026-10-05:** minimal schema deployed on Railway `medicoord-db-demo` (PostgreSQL 18.6) through Alembic (`migrations/postgres/`, revisions `0001`–`0003`, rehearsed on a local throwaway Postgres 18 first). One `facilities` table in the cleaned shape (provider-neutral `place_id`, `weekday_hours` kept as text, no PostGIS yet) and a one-row-per-facility `wait_times` (no history) that can only reference hospital-category facilities, enforced by a composite foreign key. Two least-privilege roles (backend: read-only; worker: insert facilities, upsert `wait_times`; neither can delete, truncate, create objects or update facilities) with RLS enabled and explicit per-role policies. Driven by `backend/script.demo.local.sh` (git-ignored, reads `backend/.env.demo.local`). Facility load done the same day with `backend/scripts/demo_seed/seed_facilities.py` (`seed export` reads Supabase over REST into untracked `artifacts/demo-seed/`; `seed load` is an idempotent upsert on id, rehearsed locally first): 308 rows (35 hospitals, 99 ambulatory, 174 residential), Supabase ids preserved, place ids shared by several facilities (an artefact of the old Google lookup) kept only on an unambiguous hospital row.
+2. Fix the whole wait-time worker (`workers/scraper.py`):
+   - Google Places removed from the worker (the API key expired). **The worker no longer creates facilities** (decided 2026-10-05): a scraped name is never turned into a facility, because a geocoder guess is the riskiest step; the few genuinely missing Toronto hospitals (e.g. Birchmount) are added with the manual Geoapify enrichment script (restored from `stash@{0}`, to be ported to the demo database). `GEOAPIFY_API_KEY` stays set on the services for that script.
+   - Three independent sinks, each a single batched write: demo Postgres (one `unnest` upsert), Supabase (one POST), Redis (one pipeline). A failing sink never blocks the others, is reported to Sentry, and makes the run exit non-zero (the worker had no alerting before). Each service reads its own connection string, `POSTGRES_DB_URL_APP` / `POSTGRES_DB_URL_WORKER`, set in Doppler (a Doppler sync limit prevents a worker-only config, so both services receive both).
+   - Matching: a scraped name must share all its distinctive words with exactly one hospital (Jaccard ≥ 0.6, clear lead over the runner-up) or be in the reviewed alias file `workers/hospital_aliases.json`; one value per source per facility. Replaces the fuzzy match that mapped e.g. Kingston/Brantford/Hamilton General onto Toronto General.
+   - **ERstat "Predicted" ranges are kept, flagged** (decided 2026-10-05; it replaces the first decision to ignore them, reversed after a dry run at 07:00 Toronto time showed ERstat with 47 live, 95 predicted and 35 no-data rows out of 177, and only 4 of the 16 matched Toronto hospitals with a live wait). Migration `0003`: `wait_times.predicted boolean`, `wait_minutes` nullable (NULL, never 0, for a predicted range), `raw_wait` holds the display text (`45m–2h`), and a check keeps the two shapes from mixing. Live data always beats a predicted range and is never averaged with it. NULL minutes already pass every wait filter in the backend. The Supabase sink receives live rows only (its schema is left untouched); Redis gets everything, with a `predicted` flag.
+   - `wait_times` growth bounded: one row per facility in the demo database (upsert); Supabase keeps inserting history, hospitals only, until the Postgres move.
+   - One-time cleanup of the bad data: wait-time rows for non-hospital facilities in Supabase and the Redis hash, and the `scraper:unresolved_places` Redis set.
+3. **Deferred (decided 2026-10-07):** first real run of the rewritten worker and its three-sink check happen when the code is merged to `preview` and the Railway worker is redeployed, after sprint 1 is done. Until then the old worker keeps running on Railway. The one-time bad-data cleanup was already run; re-run it right after the redeploy in case the old worker contaminated the data again.
+4. **Done 2026-10-05:** Geoapify gap-fill script ported to demo database (`enrich_facilities_geoapify.py`). Executed remote apply to fill missing `phone`, `weekday_hours`, and `place_id`. 11 matched, 122 rejected by strict Jaccard/proximity checks to prevent bad overwrites.
+5. Then the spec/design session and the rest of sprint 1.
+
+### Scope (sprint 1, in order)
+
+- [x] Spec/design session: `/app` 404 (likely Vercel routing), pipeline-to-demo-database feed
+- [x] Railway Postgres (PostGIS-capable) with a restricted app role; schema for facilities, `wait_times`, `guests`, guest-keyed `sessions`/`messages`, `feedback`, events
+- [ ] (Phase 0) One-time facility load from Supabase; worker dual-writes to Supabase and the demo database
+- [ ] (Phase 0) Worker rewrite: strict hospital-only matching, one name per facility, predicted ranges flagged, bounded `wait_times`, batched sinks, Sentry alerts, bad-data cleanup (built and tested; real run and cleanup wait for the `preview` merge and Railway worker redeploy)
+- [x] Expose `raw_wait` and `predicted` through the API and show the range on the front (the API returns only `wait_minutes` today)
+- [x] Backend data layer on the new database (real driver replaces the REST helpers)
+- [x] Guest identity under `DEMO_MODE`; profile lookup skipped for guests
+- [x] Frontend: `/config`, no sign-in UI/onboarding/route guard for guests, `/app` fixed
+- [x] "Use downtown Toronto" when geolocation is denied or outside the city
+- [x] Hide bike/bus modes until sprint 2 (their ETAs are multipliers, not real routes)
+- [x] Rate limit per guest (10) and per IP (30) per 10 minutes; clear "busy" message on 429 and LLM quota errors
+- [x] Feedback UI (thumbs + free text) on the recommendation message
+- [x] Minimal events: session started, recommendation shown, route drawn; internal-tester marker on guest rows
+- [x] Starter prompts, visible not-medical-advice/911 notice, updated disclosure page, 30-day chat-text purge
+- [x] Delete the hardcoded Geoapify key file (`webapp/src/Menucomponents/utils/geoapify.ts`, no importers; the live code reads `VITE_GEOAPIFY_API_KEY`). Rotation skipped (decided 2026-10-08): the key is read-only and the risk negligible
+- [ ] Deployed Playwright smoke test: landing → starter → chat → recommendation → route drawn → feedback
+- [ ] Update `CLAUDE.md` (Supabase "non-negotiable / out of scope" lines) and this changelog
+
+
+**Status 2026-10-08:** code for tasks 1–15 committed on `feat/guest-demo-core` (`/app` 404 fix is fe75076, still to be verified on production). Open: deployed Playwright smoke test, `CLAUDE.md` update, remote migration 0004 and `DEMO_MODE` on Railway/Vercel, merge to `preview`, worker redeploy plus three-sink check and bad-data cleanup re-run.
+
+### Known and accepted until the Postgres move
+
+- On Supabase, `wait_times` and `facilities_clean` have RLS off and `anon` has write grants, so anyone with the public anon key can modify them via REST. Left as-is on purpose; resolved by the move to raw Postgres.
+- `GET /facilities/nearby` errors in production (`nearby_facilities()` references a `coordinates` column that does not exist on `facilities_clean`) and nothing calls it. Proximity search stays a core feature, out of this sprint.
+
+### Next sprints in this demo launch (not this sprint)
+
+- **Sprint 2:** real vehicle modes (all Geoapify modes, mode change re-selects among the top candidates, latency work), moderated test sessions.
+- **Sprint 2 or 3 — LLM gateway:** self-deployed **static** LiteLLM proxy as its own Railway service (`config.yaml`, no Postgres/Redis, pinned image digest, private network only; the API holds only the proxy URL and master key; primary and fallback as separate model names; one retry layer). It ships to guests only after a one-day spike passes (tool tests and the 27-vignette harness through the gateway on both providers, forced Groq 429 and `tool_use_failed`, proxy memory measured on Railway). Rollback is the existing `LLM_PROVIDER` flag. Not the Railway one-click template (DB-backed, floating tag).
+- **After the demo:** the `GRAPH_RAG_PROVIDER` improvement sprint; Supabase → raw Postgres move.
+
+---
+
 ## [Deferred — v2.1+] · Core Product Features
 
 **These are the next product milestones after Sprint 5 and 6 close.**

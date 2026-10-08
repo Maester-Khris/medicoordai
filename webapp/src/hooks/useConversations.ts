@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useAuth } from "../auth/useAuth"
 import { apiFetch } from "../lib/apiClient"
-import type { Message, Session, ConversationsCache, ChatMessageResponse } from "@shared/types"
+import type { Message, Session, ConversationsCache, ChatMessageResponse, BusyResponse } from "@shared/types"
 
 export type { Message, Session, ConversationsCache, ChatMessageResponse }
 
@@ -9,6 +9,7 @@ interface UseConversationsResult {
   cache: ConversationsCache | null
   loading: boolean
   error: string | null
+  busyUntil: number | null
   sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<ChatMessageResponse | null>
   createSession: (firstMessage: string) => Promise<Session | null>
   loadOlderMessages: (sessionId: string, beforeId: string) => Promise<Message[]>
@@ -20,6 +21,10 @@ export function useConversations(): UseConversationsResult {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const etagRef = useRef<string | null>(null)
+  const [busyUntil, setBusyUntil] = useState<number | null>(null)
+  const busyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (busyTimerRef.current) clearTimeout(busyTimerRef.current) }, [])
 
   useEffect(() => {
     if (!user) { setCache(null); etagRef.current = null; return }
@@ -75,6 +80,14 @@ export function useConversations(): UseConversationsResult {
         ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
       }),
     })
+    if (res.status === 429) {
+      const body = await res.json().catch(() => null) as BusyResponse | null
+      const waitMs = Math.max(1, body?.retry_after ?? 60) * 1000
+      setBusyUntil(Date.now() + waitMs)
+      if (busyTimerRef.current) clearTimeout(busyTimerRef.current)
+      busyTimerRef.current = setTimeout(() => setBusyUntil(null), waitMs)
+      return null
+    }
     if (!res.ok) return null
     const data: ChatMessageResponse = await res.json()
     setCache((prev: ConversationsCache | null) => {
@@ -103,5 +116,5 @@ export function useConversations(): UseConversationsResult {
     return data.messages
   }
 
-  return { cache, loading, error, sendMessage, createSession, loadOlderMessages }
+  return { cache, loading, error, busyUntil, sendMessage, createSession, loadOlderMessages }
 }

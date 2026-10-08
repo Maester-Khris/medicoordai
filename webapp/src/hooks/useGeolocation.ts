@@ -145,6 +145,7 @@ export function useGeolocation(): UseGeolocationResult {
             setPermission("denied")
           }
           setRequesting(false)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ;(window as any).lastGeoError = err
           resolve(null)
         },

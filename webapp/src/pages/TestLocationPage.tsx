@@ -29,6 +29,7 @@ export default function TestLocationPage() {
 
       if (!result) {
         // window.lastGeoError is set synchronously before resolve(null) — safe to read here
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const raw = (window as any).lastGeoError;
         if (raw) {
           const label = GEO_ERROR_CODES[raw.code] ?? `UNKNOWN(${raw.code})`;

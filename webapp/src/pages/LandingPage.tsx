@@ -166,7 +166,7 @@ function interpolatePath(path: { left: string; top: string }[], progress: number
 
 export default function LandingPage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalTab, setModalTab] = useState<'signin' | 'signup'>('signin')
 
@@ -272,7 +272,7 @@ export default function LandingPage() {
         
         // Simulate step-by-step agent intent extraction
         setTimeout(() => {
-          let tags = ['[Intent: Find Care]']
+          const tags = ['[Intent: Find Care]']
           if (targetQuery.toLowerCase().includes('pediatrician')) {
             tags.push('[Specialty: Pediatrics]')
           } else if (targetQuery.toLowerCase().includes('cut')) {
@@ -284,7 +284,7 @@ export default function LandingPage() {
         }, 600)
 
         setTimeout(() => {
-          let tags = ['[Intent: Find Care]']
+          const tags = ['[Intent: Find Care]']
           if (targetQuery.toLowerCase().includes('pediatrician')) {
             tags.push('[Specialty: Pediatrics]')
             tags.push('[Constraint: Open Post-19:00]')
@@ -364,7 +364,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3 min-[360px]:gap-6">
-            {user ? (
+            {!loading && (user ? (
               <button
                 onClick={() => navigate('/app')}
                 className="text-xs min-[360px]:text-label-md font-medium text-[#7AA0B0] hover:text-[#00D2FF] transition-colors cursor-pointer"
@@ -375,7 +375,7 @@ export default function LandingPage() {
               <button onClick={openSignIn} className="text-xs min-[360px]:text-label-md font-medium text-[#7AA0B0] hover:text-[#00D2FF] transition-colors cursor-pointer">
                 Sign in
               </button>
-            )}
+            ))}
             <button
               onClick={user ? () => navigate('/app') : openSignUp}
               className="px-2.5 py-1.5 min-[360px]:px-4 min-[360px]:py-2 text-xs min-[360px]:text-label-md font-semibold text-[#061219] rounded-lg bg-[#48F6C1] hover:bg-[#3ce0ad] shadow-sm transition-all duration-250 cursor-pointer active:scale-95"

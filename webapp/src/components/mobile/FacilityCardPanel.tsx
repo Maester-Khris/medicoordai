@@ -4,10 +4,12 @@ import { motion } from 'motion/react'
 import { MapPin } from '@phosphor-icons/react'
 import type { TriageUIState } from '@shared/types'
 import { TransitModeGrid, type TransitMode } from './TransitModeGrid'
+import { FeedbackControl } from '../triage/FeedbackControl'
 
 interface FacilityCardPanelProps {
   triage: TriageUIState
   onGetDirections: (name: string, lat: number, lng: number) => void
+  feedback: { sessionId: string; messageId: string } | null
 }
 
 function monogram(name: string): string {
@@ -30,7 +32,7 @@ const SECONDARY_ETA_COLOR: Record<string, string> = {
   emergent: '#FF7B93',
 }
 
-export function FacilityCardPanel({ triage, onGetDirections }: FacilityCardPanelProps) {
+export function FacilityCardPanel({ triage, onGetDirections, feedback }: FacilityCardPanelProps) {
   const [activeMode, setActiveMode] = useState<TransitMode>('drive')
 
   const facility = triage.recommendedFacility
@@ -133,6 +135,7 @@ export function FacilityCardPanel({ triage, onGetDirections }: FacilityCardPanel
         >
           Get Directions →
         </button>
+        {feedback && <FeedbackControl sessionId={feedback.sessionId} messageId={feedback.messageId} />}
       </div>
 
       {/* Secondary facilities */}

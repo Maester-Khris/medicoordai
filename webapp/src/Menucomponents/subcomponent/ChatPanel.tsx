@@ -1,8 +1,14 @@
+import { FeedbackControl } from "../../components/triage/FeedbackControl"
+import { useAuth } from "../../auth/useAuth"
 import { useState, useRef, useEffect, useCallback } from "react"
 import type { Message, Session, ConversationsCache, ChatMessageResponse, TriageResult, TriageUIState } from "@shared/types"
 import { TriageCard } from "../../components/triage/TriageCard"
 import { ToolCallProgress } from "../../components/triage/ToolCallProgress"
 import type { GeolocationPermission } from "../../hooks/useGeolocation"
+import { useConfig } from "../../hooks/useConfig"
+import { FALLBACK_NOTICE, requestLocation, resolveDemoCoords } from "../../lib/demoLocation"
+import { MedicalNotice } from "../../components/MedicalNotice"
+import { busyMessage } from "../../lib/busy"
 
 interface AuthUser {
   id: string
@@ -31,11 +37,12 @@ interface ChatPanelProps {
   geo: GeoProps
   profile: ProfileProps | null
   triage: TriageUIState
-  onTriageResult: (result: TriageResult, coords: { lat: number; lng: number } | null) => Promise<void>
+  onTriageResult: (result: TriageResult, coords: { lat: number; lng: number } | null, sessionId?: string | null) => Promise<void>
   onNewConversation: () => void
+  busyUntil: number | null
 }
 
-const SUGGESTIONS = [
+const FALLBACK_STARTERS = [
   "I have a fever and sore throat",
   "Chest pain and shortness of breath",
   "Twisted my ankle — it's swollen",
@@ -63,13 +70,19 @@ export function ChatPanel({
   triage,
   onTriageResult,
   onNewConversation,
+  busyUntil,
 }: ChatPanelProps) {
+  const config = useConfig()
+  const isBusy = busyUntil !== null
+  const { isGuest } = useAuth()
+  const [usingFallbackLocation, setUsingFallbackLocation] = useState(false)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
   const [localMessages, setLocalMessages] = useState<Message[]>([])
   const [content, setContent] = useState("")
   const [pastConversationsOpen, setPastConversationsOpen] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [progressStage, setProgressStage] = useState<ProgressStage>("idle")
+  const starters = config.starter_prompts.length > 0 ? config.starter_prompts : FALLBACK_STARTERS
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const loadMoreRef = useRef(false)
@@ -101,19 +114,23 @@ export function ChatPanel({
     setPastConversationsOpen(false)
   }
 
-  const handleSend = async () => {
-    if (!content.trim() || !user) return
-    const text = content.trim()
+  const handleSend = async (starter?: string) => {
+    const text = (starter ?? content).trim()
+    if (!text || !user || isBusy) return
     setContent("")
 
     let coords = geo.coords
     if (!coords) {
       if (profile?.location_preference === 'always') {
-        coords = await geo.requestOnce()
+        coords = await requestLocation(geo.requestOnce, config)
       } else if (!activeSessionId) {
-        coords = await geo.requestOnce()
+        coords = await requestLocation(geo.requestOnce, config)
       }
     }
+
+    const located = resolveDemoCoords(coords, config)
+    coords = located.coords
+    setUsingFallbackLocation(located.usedFallback)
 
     let sid = activeSessionId
     if (!sid) {
@@ -148,7 +165,7 @@ export function ChatPanel({
       ])
       if (response.triage) {
         setProgressStage("analyzing")
-        await onTriageResult(response.triage, coords)
+        await onTriageResult(response.triage, coords, sid)
         setProgressStage("complete")
         setTimeout(() => setProgressStage("idle"), 800)
       } else {
@@ -347,6 +364,9 @@ export function ChatPanel({
                         triage={triage}
                         emergencyContactPhone={profile?.emergency_contact_phone ?? null}
                       />
+                      {isGuest && activeSessionId && triage.recommendedFacility && (
+                        <FeedbackControl sessionId={activeSessionId} messageId={msg.id} />
+                      )}
                     </div>
                   )}
                 </div>
@@ -386,10 +406,11 @@ export function ChatPanel({
             </p>
           </div>
           <div className="flex flex-col gap-2.5 w-full z-10">
-            {SUGGESTIONS.map(s => (
+            {starters.map(s => (
               <button
                 key={s}
-                onClick={() => { if (user) setContent(s) }}
+                data-testid="starter-prompt"
+                onClick={() => { void handleSend(s) }}
                 className="w-full flex items-center gap-3 text-left text-sm font-medium transition-all rounded-xl"
                 style={{
                   padding: '10px 14px',
@@ -423,6 +444,16 @@ export function ChatPanel({
         </div>
       )}
 
+      {busyUntil !== null && (
+        <div
+          role="status"
+          data-testid="busy-banner"
+          className="mx-4 mb-2 rounded-lg text-[12px] font-medium"
+          style={{ padding: '8px 12px', color: '#E2F1F5', background: 'rgba(0,210,255,0.08)', border: '1px solid rgba(0,210,255,0.3)' }}
+        >
+          {busyMessage(busyUntil, Date.now())}
+        </div>
+      )}
       {/* Progress trace */}
       <ToolCallProgress stage={progressStage} />
 
@@ -492,8 +523,8 @@ export function ChatPanel({
           </span>
           <div className="pr-1 pl-1">
             <button
-              disabled={!user || !content.trim()}
-              onClick={handleSend}
+              disabled={!user || !content.trim() || isBusy}
+              onClick={() => { void handleSend() }}
               className="w-8 h-8 rounded-lg flex items-center justify-center transition-all active:scale-95"
               style={{
                 color: '#061219',
@@ -509,7 +540,11 @@ export function ChatPanel({
           </div>
         </div>
 
-        {geo.permission === "denied" ? (
+        {usingFallbackLocation ? (
+          <p className="text-[10px] font-semibold text-center mt-2" style={{ color: '#7AA0B0' }}>
+            {FALLBACK_NOTICE}
+          </p>
+        ) : geo.permission === "denied" ? (
           <p className="text-[10px] font-semibold text-center mt-2" style={{ color: '#F59E0B' }}>
             ⚠ Location blocked — facility map routing unavailable
           </p>
@@ -521,6 +556,7 @@ export function ChatPanel({
             Secure &amp; confidential · Location synced
           </p>
         )}
+        <MedicalNotice />
       </div>
     </div>
   )

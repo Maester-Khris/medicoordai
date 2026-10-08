@@ -124,3 +124,11 @@ backend/scripts/snomed_ingest/anchor_batches/
 # Task 4 depth_flagging.py output -- intermediate, regeneratable build artifact,
 # regenerate via depth_flagging.py against the live graph
 backend/scripts/snomed_ingest/depth_flagging_report.json
+
+
+backend/.env.demo.local
+backend/script.demo.local.sh
+.playwright-mcp/
+webapp/test-results/
+.agents/skills/
+.claude/skills/
