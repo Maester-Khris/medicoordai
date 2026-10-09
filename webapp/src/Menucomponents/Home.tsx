@@ -33,7 +33,7 @@ export default function Home({ facilities, facilitiesLoading, conversationsCache
   const { user, isGuest } = useAuth()
   const { profile } = useProfile()
   const geo = useGeolocation()
-  const { triage, applyTriageResult, reset: triageReset } = useTriageState()
+  const { triage, applyTriageResult, changeMode, reset: triageReset } = useTriageState()
   const [sessionKey, setSessionKey] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalTab, setModalTab] = useState<"signin" | "signup">("signin")
@@ -120,6 +120,7 @@ export default function Home({ facilities, facilitiesLoading, conversationsCache
             facilitiesLoading={facilitiesLoading}
             triage={triage}
             onClear={handleNewConversation}
+            onModeChange={mode => { void changeMode(mode) }}
           />
         </div>
       </div>

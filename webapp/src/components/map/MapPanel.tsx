@@ -2,7 +2,7 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { MapContainer, TileLayer, Marker, Tooltip, Popup } from 'react-leaflet'
 import { useMapEvents } from 'react-leaflet'
-import type { Facility, TriageUIState } from '../../../../shared/types'
+import type { Facility, TravelModeKey, TriageUIState } from '../../../../shared/types'
 import { useBreakpoint } from '../../hooks/useBreakpoint'
 import { useConfig } from '../../hooks/useConfig'
 import { cnTowerPos, cartoTileUrl, INACTIVE_TRIAGE, buildTriageCandidates } from './config/constants'
@@ -29,6 +29,7 @@ interface MapPanelProps {
   verticalLegend?: boolean
   sizeVersion?: number
   onClear?: () => void
+  onModeChange?: (mode: TravelModeKey) => void
 }
 
 // Short labels for filter chips
@@ -39,7 +40,7 @@ const CHIP_LABEL: Record<CategoryFilter, string> = {
   residential: 'Residential',
 }
 
-export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear }: MapPanelProps) {
+export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange }: MapPanelProps) {
   const config = useConfig()
   const isMobile = useBreakpoint()
   const pinnedIdRef = useRef<string | null>(null)
@@ -49,7 +50,8 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
   const recommendedId = activeTriage.recommendedFacilityId
 
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all")
-  const [travelMode, setTravelMode] = useState<'car' | 'bike' | 'bus'>('car')
+  const travelMode = activeTriage.travelMode
+  const routeLoading = activeTriage.routeLoading
 
   const geo = useGeolocation()
 
@@ -171,7 +173,7 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
           <Marker position={cnTowerPos} icon={cnTowerIcon}>
             <Tooltip className="text-[13px] font-semibold" direction="top">CN Tower Area</Tooltip>
           </Marker>
-          <RoadRouteLayer travelMode={travelMode} />
+          <RoadRouteLayer />
           <FacilityMarkerLayer
             displayedFacilities={displayedFacilities}
             triageCandidates={triageCandidates}
@@ -205,14 +207,19 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
           gap: 3,
           pointerEvents: 'auto'
         }}>
-          {(['car', 'bike', 'bus'] as const).filter(mode => config.modes_enabled.includes(mode)).map(mode => {
+          {(['car', 'bike', 'bus', 'walk'] as const).filter(mode => config.modes_enabled.includes(mode)).map(mode => {
             const isActive = travelMode === mode
-            const icons = { car: 'ti ti-car', bike: 'ti ti-bike', bus: 'ti ti-bus' }
-            const labels = { car: 'Drive', bike: 'Cycle', bus: 'Transit' }
+            const icons = { car: 'ti ti-car', bike: 'ti ti-bike', bus: 'ti ti-bus', walk: 'ti ti-walk' }
+            const labels = { car: 'Drive', bike: 'Cycle', bus: 'Transit', walk: 'Walk' }
             return (
               <button
                 key={mode}
-                onClick={() => setTravelMode(mode)}
+                type="button"
+                data-testid={`mode-${mode}`}
+                aria-pressed={isActive}
+                aria-busy={isActive && routeLoading}
+                disabled={routeLoading}
+                onClick={() => onModeChange?.(mode)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -224,7 +231,8 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
                   color: isActive ? '#061219' : '#A0B8C4',
                   fontSize: 11,
                   fontWeight: 600,
-                  cursor: 'pointer',
+                  cursor: routeLoading ? 'progress' : 'pointer',
+                  opacity: routeLoading && !isActive ? 0.5 : 1,
                   transition: 'all 0.2s',
                 }}
                 onMouseEnter={e => {
@@ -464,6 +472,7 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
             <div ref={proxRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setProxDropdownOpen(!proxDropdownOpen)}
+                data-testid="proximity-toggle"
                 style={{
                   display: 'flex',
                   alignItems: 'center',

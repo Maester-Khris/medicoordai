@@ -64,7 +64,7 @@ export function MobileLayout({
   const config = useConfig()
   const [usingFallbackLocation, setUsingFallbackLocation] = useState(false)
   const geo = useGeolocation()
-  const { triage, applyTriageResult, reset: triageReset } = useTriageState()
+  const { triage, applyTriageResult, changeMode, reset: triageReset } = useTriageState()
   const { getDirections } = useNextActions(triage.severity)
 
   // Chat state (previously in AiAssistantTab)
@@ -193,6 +193,7 @@ export function MobileLayout({
           verticalLegend
           sizeVersion={0}
           onClear={handleNewConversation}
+          onModeChange={mode => { void changeMode(mode) }}
         />
       </div>
 
