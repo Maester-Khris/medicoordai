@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, ShieldCheck, ChartBar, Globe, Flask, PlayIcon, PauseIcon } from '@phosphor-icons/react'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { useDocumentHead } from '../hooks/useDocumentHead'
+import { useConfig } from '../hooks/useConfig'
 
 interface PipelineStep {
   id: string
@@ -294,6 +295,7 @@ function PatientFlowPipeline() {
 }
 
 export default function ForInvestorsPage() {
+  const config = useConfig()
   useDocumentHead(
     'For Investors & Health System Operators',
     "City-wide patient coordination, real-time and at scale. How MediCoord AI routes hundreds of patients simultaneously across Toronto's health network."
@@ -410,6 +412,7 @@ export default function ForInvestorsPage() {
               Run a simulated patient load across the city network. Watch priority queue dispatch and load rebalancing in real time. No PHI, no live infrastructure required.
             </p>
           </div>
+          {!config.demo_mode && (
           <Link
             to="/sandbox"
             className="flex-none inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-[#061219] bg-[#00D2FF] hover:bg-[#00b4db] rounded-xl shadow-sm transition-all duration-200 active:scale-95 whitespace-nowrap"
@@ -417,6 +420,7 @@ export default function ForInvestorsPage() {
             Launch Sandbox Mode
             <ArrowRight className="w-4 h-4" />
           </Link>
+          )}
         </div>
 
         {/* Trust row */}

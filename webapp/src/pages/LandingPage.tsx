@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { LoginModal } from '../components/auth/LoginModal'
 import { useAuth } from '../auth/useAuth'
+import { useConfig } from '../hooks/useConfig'
 import { useDocumentHead } from '../hooks/useDocumentHead'
 import { loadAnalytics } from '../lib/analytics'
 import {
@@ -165,6 +166,7 @@ function interpolatePath(path: { left: string; top: string }[], progress: number
 }
 
 export default function LandingPage() {
+  const config = useConfig()
   const navigate = useNavigate()
   const { user, loading } = useAuth()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -870,6 +872,7 @@ export default function LandingPage() {
                 The closest clinic isn't always the fastest option. We combine travel time and current wait queues to find the one where you'll be seen soonest.
               </p>
             </div>
+            {!config.demo_mode && (
             <div className="mt-auto pt-6 border-t border-[#1C4659]/30 flex items-center justify-between">
               <span className="text-xs text-[#7AA0B0] font-mono">See multi-facility load balancing:</span>
               <Link
@@ -880,6 +883,7 @@ export default function LandingPage() {
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
+            )}
           </div>
 
           {/* Card 2: Technical Architecture & Prowess */}
