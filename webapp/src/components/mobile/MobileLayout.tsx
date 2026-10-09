@@ -248,6 +248,7 @@ export function MobileLayout({
             <FacilityCardPanel
               feedback={feedback}
               triage={triage}
+              onModeChange={mode => { void changeMode(mode) }}
               onGetDirections={(name, lat, lng) => getDirections(name, lat, lng)}
             />
           </motion.div>
