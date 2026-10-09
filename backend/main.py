@@ -21,6 +21,7 @@ from observability import init_observability, verify_metrics_token, RequestIDMid
 from routers.chat import router as chat_router
 from routers.notifications import router as notifications_router
 from routers.demo import router as demo_router
+from routers.routes import router as routes_router
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ init_observability(app)
 app.include_router(chat_router)
 app.include_router(notifications_router)
 app.include_router(demo_router)
+app.include_router(routes_router)
 
 
 @app.get("/metrics")

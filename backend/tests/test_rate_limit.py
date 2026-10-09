@@ -99,3 +99,32 @@ def test_busy_response_shape() -> None:
     resp = rate_limit.busy_response(120)
     assert resp.status_code == 429 and resp.headers["retry-after"] == "120"
     assert json.loads(resp.body) == {"code": "busy", "retry_after": 120}
+
+def test_buckets_do_not_share_counters(fake_redis) -> None:
+    for _ in range(10):
+        assert rate_limit.check_rate_limit("g1", "1.1.1.1", now=0.0) is None
+    assert rate_limit.check_rate_limit("g1", "1.1.1.1", now=0.0) == 600  # chat bucket is full
+    assert rate_limit.check_rate_limit(
+        "g1", "1.1.1.1", now=0.0,
+        bucket="routes", guest_limit=rate_limit.ROUTES_GUEST_LIMIT, ip_limit=rate_limit.ROUTES_IP_LIMIT,
+    ) is None
+
+
+def test_routes_bucket_uses_its_own_limits(fake_redis) -> None:
+    def call() -> int | None:
+        return rate_limit.check_rate_limit(
+            "g1", "2.2.2.2", now=0.0,
+            bucket="routes", guest_limit=rate_limit.ROUTES_GUEST_LIMIT, ip_limit=rate_limit.ROUTES_IP_LIMIT,
+        )
+
+    assert rate_limit.ROUTES_GUEST_LIMIT == 60 and rate_limit.ROUTES_IP_LIMIT == 180
+    for _ in range(60):
+        assert call() is None
+    assert call() == 600
+
+
+def test_keys_are_namespaced_by_bucket(fake_redis) -> None:
+    rate_limit.check_rate_limit("g1", "3.3.3.3", now=0.0)
+    rate_limit.check_rate_limit("g1", "3.3.3.3", now=0.0, bucket="routes")
+    assert any(key.startswith("rl:chat:guest:g1:") for key in fake_redis.counts)
+    assert any(key.startswith("rl:routes:guest:g1:") for key in fake_redis.counts)

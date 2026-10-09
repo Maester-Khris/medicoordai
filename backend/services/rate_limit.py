@@ -1,4 +1,4 @@
-"""Fixed-window rate limit for the demo chat (the only route that spends LLM quota).
+"""Fixed-window rate limit for the demo: chat (LLM quota) and routes (Geoapify quota), one bucket each.
 
 Per guest and per IP, in Redis. The IP is hashed before it becomes a key and the key lives one
 window; it is never written to Postgres or to logs. If Redis is unreachable the limiter allows
@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 WINDOW_SECONDS = 600
 GUEST_LIMIT = 10
 IP_LIMIT = 30
+# One conversation can change travel mode several times, so routes get six times the chat allowance.
+ROUTES_GUEST_LIMIT = 60
+ROUTES_IP_LIMIT = 180
 LLM_BUSY_RETRY_SECONDS = 60
 
 
@@ -32,14 +35,22 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def check_rate_limit(guest_id: str, ip: str, now: float | None = None) -> int | None:
-    """Counts this request. Returns seconds until the window ends when over a limit, else None."""
+def check_rate_limit(
+    guest_id: str,
+    ip: str,
+    now: float | None = None,
+    *,
+    bucket: str = "chat",
+    guest_limit: int = GUEST_LIMIT,
+    ip_limit: int = IP_LIMIT,
+) -> int | None:
+    """Counts this request in `bucket`. Returns seconds until the window ends when over a limit, else None."""
     now = time.time() if now is None else now
     window = int(now // WINDOW_SECONDS)
     ip_hash = hashlib.sha256(ip.encode()).hexdigest()[:32]
     limits = [
-        (f"rl:guest:{guest_id}:{window}", GUEST_LIMIT),
-        (f"rl:ip:{ip_hash}:{window}", IP_LIMIT),
+        (f"rl:{bucket}:guest:{guest_id}:{window}", guest_limit),
+        (f"rl:{bucket}:ip:{ip_hash}:{window}", ip_limit),
     ]
     try:
         pipe = redis_client.pipeline()
