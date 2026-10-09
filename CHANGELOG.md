@@ -846,6 +846,10 @@ then performance tracking and measurement. Plan for the second phase: `artifacts
 
 **Exit:** deployed to `preview`, smoke test passing.
 
+### Pending at deploy
+
+- [ ] **Migration 0005 on `medicoord-db-demo` — not applied.** It was applied on 2026-10-09 and rolled back the same day (remote is at `0004`). It is not additive: the narrowed unique index on `events` no longer matches the `on conflict` clause of the previous backend, which then cannot write any event row (chat keeps working, events are lost). Apply it in the same window as the backend deploy: `./backend/script.demo.local.sh migrate upgrade head`, then `verify`, then deploy the backend, then the web app, then the smoke suite. Rehearsed locally in both directions; the remote upgrade and downgrade both ran cleanly.
+
 ### Side-tracks (do not block the scope)
 
 - LiteLLM gateway one-day spike; ships to guests only if it passes.

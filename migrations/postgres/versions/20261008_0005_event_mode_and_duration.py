@@ -4,7 +4,9 @@
 that can repeat within a session and carries how long the redraw took in the browser. The unique
 index that keeps one row per session and type is narrowed so it does not apply to `mode_changed`.
 
-Additive for the running API: the 0004 insert statement keeps working after this upgrade.
+Not additive for the running API: the 0004 insert names the old index predicate in its
+`on conflict` clause, which no longer matches. Apply this together with the backend that carries
+the matching statement (services/guest_store.py), not ahead of it.
 
 Revision ID: 0005
 Revises: 0004
