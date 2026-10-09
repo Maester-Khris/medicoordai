@@ -102,6 +102,70 @@ Liveness check. Used by Railway to confirm the service is running.
 
 ---
 
+### POST `/routes`
+
+Travel routes from the caller's position to up to three candidate facilities, for one travel
+mode. One Geoapify Routing call per candidate, made in parallel by the backend. The browser never
+calls Geoapify.
+
+**Auth:** guest (`X-Guest-Id`) under `DEMO_MODE`, otherwise a signed-in user.
+**Rate limit (guests):** 60 per guest and 180 per IP per 600 s, separate from the chat limit.
+
+Request:
+
+```json
+{ "origin": { "lat": 43.6532, "lng": -79.3832 }, "facility_ids": ["<id>", "<id>"], "mode": "bike" }
+```
+
+`facility_ids`: 1 to 3, unique, resolved against the server's facility list. `mode`: `car`,
+`bike`, `bus` or `walk` (Geoapify `drive`, `bicycle`, `transit`, `walk`).
+
+Response 200:
+
+```json
+{
+  "mode": "bike",
+  "routes": [
+    { "facility_id": "<id>", "eta_minutes": 34, "distance_km": 9.8, "geometry": [[43.65, -79.38], [43.66, -79.39]] },
+    { "facility_id": "<id>", "eta_minutes": null, "distance_km": null, "geometry": null }
+  ],
+  "fastest_facility_id": "<id>"
+}
+```
+
+`geometry` is a list of `[lat, lng]` pairs. A candidate that could not be routed has nulls.
+
+| Status | Meaning |
+|---|---|
+| 422 | Invalid body, or a mode that is not enabled |
+| 404 | A facility id is unknown |
+| 429 | Guest over the routes limit (`{"code": "busy", "retry_after": <seconds>}`) |
+| 502 | No candidate could be routed |
+| 503 | Routing not configured, or the facility list is not loaded |
+
+### POST `/events`
+
+Guest-only measurement events. Body:
+
+```json
+{ "type": "mode_changed", "session_id": "<uuid>", "mode": "walk", "duration_ms": 840 }
+```
+
+| `type` | `mode` | `duration_ms` | Rows per session |
+|---|---|---|---|
+| `route_drawn` | optional | not allowed | one |
+| `mode_changed` | required | optional, 0–120000, browser time from click to redraw | many |
+
+Returns 204. `session_started` and `recommendation_shown` are written by the server and cannot be
+posted.
+
+### GET `/facilities/nearby`
+
+Query: `lat`, `lng`, `radius_m` (default 5000, capped at 50000), optional `category`, optional
+`max_wait_minutes`. Returns up to 50 facilities, nearest first. Under `DEMO_MODE` the search runs
+on the in-memory facility list with a straight-line distance; the three `eta_*_min` fields are
+fixed-speed estimates kept for the response shape and are not travel times from a routing engine.
+
 ## Shared Types Reference
 
 Canonical definitions live in `shared/types.ts`. Replicated here for documentation.
@@ -208,7 +272,7 @@ This tool is implemented server-side: when the LLM calls it, the backend execute
 
 **Endpoint:** `POST https://api.geoapify.com/v1/routematrix`  
 **Called by:** Backend only (never frontend)  
-**Auth:** `GEOAPIFY_API_KEY` env var injected via Doppler  
+**Auth:** `GEOAPIFY_API_KEY` env var injected via Doppler, used by the backend only. There is no browser key.
 **Mode:** `drive`  
 **Sources:** `[{ lat: userLat, lon: userLng }]`  
 **Targets:** All facilities whose `acceptedSeverity` includes the classified severity level

@@ -823,12 +823,21 @@ then performance tracking and measurement. Plan for the second phase: `artifacts
 **Phase 1 — guest experience (one spec, plan and implementation turn)**
 
 - [ ] Baseline read, no code: route latency and error rate, Web Vitals in Sentry, journey timings from message and event timestamps; check the Railway worker count and whether the Grafana push is still live
-- [ ] Routing calls moved to the backend with a timeout and a fallback; `VITE_GEOAPIFY_API_KEY` out of the browser bundle
-- [ ] Real vehicle modes: mode change re-selects among the top candidates and redraws the route; hidden mode buttons re-enabled; mode recorded on the `route_drawn` event
-- [ ] Mode-change latency measured in the browser (click to route redrawn)
-- [ ] Proximity search on the demo database (demo branch for `/facilities/nearby`)
-- [ ] Sandbox links hidden in demo mode (the page already redirects guests)
-- [ ] End-to-end: mixed filter chips including a radius, mode change and redraw, no sandbox link for guests
+- [x] Routing calls moved to the backend with a timeout and a fallback; `VITE_GEOAPIFY_API_KEY` out of the browser bundle
+- [x] Real vehicle modes: mode change re-selects among the top candidates and redraws the route; hidden mode buttons re-enabled; mode recorded on the `route_drawn` event
+- [x] Mode-change latency measured in the browser (click to route redrawn)
+- [x] Proximity search on the demo database (demo branch for `/facilities/nearby`)
+- [x] Sandbox links hidden in demo mode (the page already redirects guests)
+- [x] End-to-end: mixed filter chips including a radius, mode change and redraw, no sandbox link for guests
+
+Phase 1 as built (2026-10-08): `POST /routes` makes one Geoapify Routing call per candidate in
+parallel (Route Matrix rejects the transit mode), so the browser holds the road shape of every
+candidate and switching facility needs no request; each mode's result is kept for the current
+recommendation. Bus uses Geoapify `transit`. Migration 0005 adds `mode` and `duration_ms` to
+`events` and a repeatable `mode_changed` type. Routes have their own guest rate limit (60 per
+guest, 180 per IP per 10 minutes). The end-to-end scenarios are written; they pass only once the
+branch is deployed. Spec and plan: `docs/superpowers/specs/2026-10-08-guest-demo-sprint2-phase1-design.md`,
+`docs/superpowers/plans/2026-10-08-guest-demo-sprint2-phase1.md`.
 
 **Phase 2 — performance tracking and measurement**
 
