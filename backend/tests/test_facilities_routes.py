@@ -161,3 +161,45 @@ class TestFacilitiesRouteUsesThreadpool:
                 "facility_types": None, "result_limit": 50,
             },
         )
+
+class TestFacilitiesNearbyDemoBranch:
+    ROW = {
+        "facility_id": "a", "facility_name": "A", "category": "hospital", "address": "1 Main St",
+        "phone": None, "is_operational": True, "distance_m": 800,
+        "eta_walk_min": 10, "eta_transit_min": 2, "eta_drive_min": 1,
+    }
+
+    def test_demo_mode_reads_the_cache_and_never_calls_supabase(self, monkeypatch):
+        monkeypatch.setenv("DEMO_MODE", "true")
+        with patch("main.find_facilities_within", return_value=[self.ROW]) as within, \
+             patch("main.supabase_rpc") as rpc, \
+             patch("main.get_wait_minutes_map", return_value={"a": 25}):
+            result = asyncio.run(main.facilities_nearby(lat=43.6, lng=-79.4, radius_m=10000, category="hospital"))
+
+        within.assert_called_once_with(43.6, -79.4, 10000, "hospital")
+        rpc.assert_not_called()
+        assert result == [{**self.ROW, "wait_minutes": 25}]
+
+    def test_demo_mode_applies_the_wait_filter(self, monkeypatch):
+        monkeypatch.setenv("DEMO_MODE", "true")
+        with patch("main.find_facilities_within", return_value=[self.ROW]), \
+             patch("main.get_wait_minutes_map", return_value={"a": 90}):
+            assert asyncio.run(main.facilities_nearby(lat=43.6, lng=-79.4, max_wait_minutes=30)) == []
+
+    def test_demo_mode_with_an_empty_cache_is_503(self, monkeypatch):
+        from fastapi import HTTPException
+
+        monkeypatch.setenv("DEMO_MODE", "true")
+        with patch("main.find_facilities_within", return_value=None):
+            with pytest.raises(HTTPException) as exc_info:
+                asyncio.run(main.facilities_nearby(lat=43.6, lng=-79.4))
+        assert exc_info.value.status_code == 503
+
+    def test_without_demo_mode_the_supabase_function_is_still_called(self, monkeypatch):
+        monkeypatch.delenv("DEMO_MODE", raising=False)
+        with patch("main.find_facilities_within") as within, \
+             patch("main.supabase_rpc", return_value=[]) as rpc, \
+             patch("main.get_wait_minutes_map", return_value={}):
+            assert asyncio.run(main.facilities_nearby(lat=43.6, lng=-79.4)) == []
+        within.assert_not_called()
+        rpc.assert_called_once()

@@ -12,6 +12,7 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from starlette.concurrency import run_in_threadpool
 from services.facilities import get_all_facilities, apply_wait_filter, annotate_wait_details
 from services.wait_times import get_wait_map, get_wait_minutes_map
+from services.proximity import find_facilities_within
 from db import supabase_rpc
 from models import NearbyFacilityResult
 from middleware.auth import AuthMiddleware, get_current_user
@@ -165,20 +166,27 @@ async def facilities_nearby(
     category: str | None = None,
     max_wait_minutes: int | None = None,
 ) -> list[NearbyFacilityResult]:
-    try:
-        data = await run_in_threadpool(
-            supabase_rpc,
-            "nearby_facilities",
-            {
-                "user_lat":       lat,
-                "user_lng":       lng,
-                "radius_m":       min(radius_m, 50000),
-                "facility_types": [category] if category else None,
-                "result_limit":   50,
-            },
-        ) or []
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"proximity search failed: {exc}") from exc
+    if demo_mode():
+        # The demo database has no PostGIS: filter the in-memory facility list instead.
+        found = find_facilities_within(lat, lng, radius_m, category)
+        if found is None:
+            raise HTTPException(status_code=503, detail="Facilities unavailable")
+        data = found
+    else:
+        try:
+            data = await run_in_threadpool(
+                supabase_rpc,
+                "nearby_facilities",
+                {
+                    "user_lat":       lat,
+                    "user_lng":       lng,
+                    "radius_m":       min(radius_m, 50000),
+                    "facility_types": [category] if category else None,
+                    "result_limit":   50,
+                },
+            ) or []
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=f"proximity search failed: {exc}") from exc
 
     wait_map = await run_in_threadpool(get_wait_minutes_map)
     return apply_wait_filter(data, "facility_id", max_wait_minutes, wait_map)
