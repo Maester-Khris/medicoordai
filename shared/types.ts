@@ -151,6 +151,7 @@ export interface RouteResult {
   facilityId:  string
   etaMinutes:  number
   distanceKm:  number
+  geometry:    [number, number][] | null
 }
 
 export interface TriageUIState {
@@ -163,6 +164,8 @@ export interface TriageUIState {
   routes:                RouteResult[]
   recommendedFacilityId: string | null
   roadGeometry:          [number, number][] | null
+  travelMode:            TravelModeKey
+  routeLoading:          boolean
 }
 
 // ── Guest demo ────────────────────────────────────────────────────────────────

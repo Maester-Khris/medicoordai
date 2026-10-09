@@ -17,6 +17,8 @@ export const INACTIVE_TRIAGE: TriageUIState = {
   routes:                [],
   recommendedFacilityId: null,
   roadGeometry:          null,
+  travelMode:            "car",
+  routeLoading:          false,
 }
 
 export function buildTriageCandidates(triage: TriageUIState): FacilityCandidate[] {
