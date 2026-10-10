@@ -875,6 +875,17 @@ git-ignored `artifacts/perf/2026-10-10-phase2-report.md`):
 - **Provider fallback** verified with real calls: an invalid Groq key falls through to `claude-haiku-5-5`, visible in the log and in `llm_calls_total`.
 - 40 threads and a database pool of 5 are implementation limits, not capacity numbers. Next sprint: async chat path, conversation and facility state out of process memory, admission control with a waiting state in the UI, the wait-time cache, and the soak on the final code.
 
+Carried to the next sprint (demo scaling, target 1,000 to 2,000 concurrent chat turns):
+
+- [ ] Async chat path: async provider clients and agent.
+- [ ] Facility list serialised once per request instead of twice (the largest CPU cost in the map profile).
+- [ ] Conversation history and the facility cache out of process memory (Redis in front of Postgres); metrics that work across replicas. Horizontal scaling is tested locally with Docker Compose, since the Railway plan does not allow several replicas.
+- [ ] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
+- [ ] Database pool size chosen from measurement (5 today).
+- [ ] Wait-time data kept in memory for a short time instead of one Redis call per map request (decision still open).
+- [ ] One-hour soak and the chat breakpoint, on the final code.
+- [ ] Final tasks: a new `METRICS_BEARER_TOKEN` generated locally and set on both the `python-api` and staging services; how to register it on the Grafana Cloud side, and the scrape job itself, are open.
+
 **Exit:** deployed to `preview`, smoke test passing.
 
 ### Pending at deploy
