@@ -802,6 +802,31 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 ---
 
+## [Sprint 22 — Started] · Guest Demo Launch — Sprint 3: demo scaling
+
+**Started — 2026-10-10 · branch: `feat/demo-scaling`.** Third sprint of the guest demo launch. Goal: 1,000 to 2,000 concurrent chat turns, with numbers that hold up under review. Baseline and profile: Sprint 21 phase 2 (below).
+
+### Scope
+
+- [ ] Async chat path: the providers' own async clients instead of the thread pool.
+- [ ] Facility list serialised once per request instead of twice.
+- [ ] Conversation history and the facility cache out of process memory (Redis in front of Postgres); metrics that work across replicas. Horizontal scaling proved with a local Docker Compose test.
+- [ ] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
+- [ ] Database pool size chosen from measurement (5 today).
+- [ ] Wait-time in-memory cache: decision still open, read path unchanged until decided.
+- [ ] One-hour soak and the chat breakpoint, on the final code.
+- [ ] Final tasks: a new `METRICS_BEARER_TOKEN` generated locally, set on `python-api` and staging, registered in Grafana Cloud with its scrape job.
+
+### Also open
+
+- [ ] Real-call test of the OpenAI client with gpt-4o-mini (only run against a fake SDK so far).
+- [ ] Doppler `stg` `ANTHROPIC_MODEL=claude-haiku-4-5` against the code default `claude-haiku-5-5`.
+- [ ] Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel (owner, sprint end).
+- [ ] Decide: API and Redis in the same region; box size (2 vCPU / 2 GB discussed).
+- [ ] Before the first load test: delete the load-test guest rows from the demo database; one non-internal guest row (`8fe1df4f`) is unexplained and is not to be deleted without asking.
+
+---
+
 ## [Sprint 21 — Closed] · Guest Demo Launch — Sprint 2: demo user experience
 
 **Started — 2026-10-08 · branch: `feat/demo-user-experience`.** Second sprint of the guest demo launch, building on
