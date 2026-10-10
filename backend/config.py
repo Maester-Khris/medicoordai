@@ -1,6 +1,9 @@
 """Demo-mode switch and constants. Read through functions so tests can flip the environment."""
 import json
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 
 DOWNTOWN_TORONTO: dict[str, float] = {"lat": 43.6532, "lng": -79.3832}
 ALL_MODES: list[str] = ["car", "bike", "bus", "walk"]
@@ -38,3 +41,30 @@ def starter_prompts() -> list[str]:
 
 def internal_token() -> str:
     return os.environ.get("DEMO_INTERNAL_TOKEN", "").strip()
+
+
+def env_int(name: str, default: int, minimum: int = 1, maximum: int | None = None) -> int:
+    """An integer setting from the environment. A missing, malformed or out-of-range value
+    falls back to `default` with one warning: a bad setting must never stop the API from starting."""
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        logger.warning("env_setting_invalid", extra={"setting": name, "reason": "not an integer"})
+        return default
+    if value < minimum or (maximum is not None and value > maximum):
+        logger.warning("env_setting_invalid", extra={"setting": name, "reason": "out of range"})
+        return default
+    return value
+
+
+def llm_timeout_seconds() -> int:
+    return env_int("LLM_TIMEOUT_SECONDS", 30, minimum=1, maximum=300)
+
+
+def llm_provider_chain() -> list[str]:
+    """Ordered provider names from LLM_PROVIDER_CHAIN ("groq,openai,anthropic"); empty when unset."""
+    raw = os.environ.get("LLM_PROVIDER_CHAIN", "")
+    return [name.strip().lower() for name in raw.split(",") if name.strip()]
