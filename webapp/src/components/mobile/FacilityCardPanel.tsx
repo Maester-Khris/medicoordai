@@ -1,14 +1,14 @@
 // webapp/src/components/mobile/FacilityCardPanel.tsx
-import { useState } from 'react'
 import { motion } from 'motion/react'
 import { MapPin } from '@phosphor-icons/react'
-import type { TriageUIState } from '@shared/types'
-import { TransitModeGrid, type TransitMode } from './TransitModeGrid'
+import type { TravelModeKey, TriageUIState } from '@shared/types'
+import { TransitModeGrid } from './TransitModeGrid'
 import { FeedbackControl } from '../triage/FeedbackControl'
 
 interface FacilityCardPanelProps {
   triage: TriageUIState
   onGetDirections: (name: string, lat: number, lng: number) => void
+  onModeChange: (mode: TravelModeKey) => void
   feedback: { sessionId: string; messageId: string } | null
 }
 
@@ -32,10 +32,9 @@ const SECONDARY_ETA_COLOR: Record<string, string> = {
   emergent: '#FF7B93',
 }
 
-export function FacilityCardPanel({ triage, onGetDirections, feedback }: FacilityCardPanelProps) {
-  const [activeMode, setActiveMode] = useState<TransitMode>('drive')
-
+export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedback }: FacilityCardPanelProps) {
   const facility = triage.recommendedFacility
+  const recommendedRoute = triage.routes.find(r => r.facilityId === triage.recommendedFacilityId)
 
   if (!facility || !triage.active) return null
 
@@ -116,9 +115,10 @@ export function FacilityCardPanel({ triage, onGetDirections, feedback }: Facilit
 
         {/* Transit mode grid */}
         <TransitModeGrid
-          routes={triage.routes}
-          activeMode={activeMode}
-          onModeChange={setActiveMode}
+          etaMinutes={recommendedRoute?.etaMinutes ?? null}
+          activeMode={triage.travelMode}
+          loading={triage.routeLoading}
+          onModeChange={onModeChange}
         />
 
         {/* CTA button */}

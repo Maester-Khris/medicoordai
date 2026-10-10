@@ -1,10 +1,19 @@
-import type { TriageUIState } from "../../../../shared/types"
+import type { TravelModeKey, TriageUIState } from "../../../../shared/types"
 import { useNextActions } from "../../hooks/useNextActions"
 
 interface TriageCardProps {
   triage: TriageUIState
   emergencyContactPhone: string | null
+  onModeChange: (mode: TravelModeKey) => void
+  onSelectFacility: (facilityId: string) => void
 }
+
+const MODE_CHIPS: { key: TravelModeKey; emoji: string; label: string }[] = [
+  { key: "car",  emoji: "🚗", label: "Drive" },
+  { key: "bike", emoji: "🚲", label: "Cycle" },
+  { key: "bus",  emoji: "🚌", label: "Transit" },
+  { key: "walk", emoji: "🚶", label: "Walk" },
+]
 
 const SEV_CONFIG: Record<string, { label: string; color: string; borderColor: string; bgColor: string; glowColor: string }> = {
   emergent: {
@@ -52,7 +61,7 @@ function getCategoryLabel(category: string): string {
 
 import { useConfig } from "../../hooks/useConfig"
 
-export function TriageCard({ triage, emergencyContactPhone }: TriageCardProps) {
+export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSelectFacility }: TriageCardProps) {
   const config = useConfig()
   const { call911, messageEmergencyContact, getDirections, saveRecommendation } = useNextActions(triage.severity)
 
@@ -81,9 +90,7 @@ export function TriageCard({ triage, emergencyContactPhone }: TriageCardProps) {
   }))
 
   const monogram = recommended ? getMonogram(recommended.name) : ""
-  const distKm = recommendedRoute?.distanceKm ?? recommended?.distanceKm ?? 0
-  const bikeMin = distKm > 0 ? Math.max(2, Math.round((distKm / 12) * 60)) : null
-  const walkMin = distKm > 0 ? Math.max(5, Math.round((distKm / 5) * 60)) : null
+  const modeChips = MODE_CHIPS.filter(chip => config.modes_enabled.includes(chip.key))
 
   return (
     <div
@@ -201,64 +208,43 @@ export function TriageCard({ triage, emergencyContactPhone }: TriageCardProps) {
               </span>
             </div>
 
-            {/* Transit mode chips */}
+            {/* Travel mode chips: the active mode shows its real time, the others a dash */}
             <div
               className="grid gap-1.5 mb-3"
-              style={{ gridTemplateColumns: `repeat(${1 + Number(config.modes_enabled.includes("bike")) + Number(config.modes_enabled.includes("walk"))}, minmax(0, 1fr))` }}
+              style={{ gridTemplateColumns: `repeat(${modeChips.length}, minmax(0, 1fr))` }}
             >
-              <div
-                style={{
-                  padding: "6px 4px",
-                  borderRadius: 7,
-                  background: "rgba(72,246,193,0.09)",
-                  border: "1px solid rgba(72,246,193,0.3)",
-                  textAlign: "center",
-                }}
-              >
-                <div style={{ fontSize: 12, marginBottom: 2 }}>🚗</div>
-                <div style={{ fontSize: 10, fontWeight: 700, color: "#48F6C1", fontFamily: "var(--font-mono)" }}>
-                  {recommendedRoute
-                    ? `${recommendedRoute.etaMinutes} min`
-                    : distKm > 0 ? `~${distKm.toFixed(1)} km` : "—"}
-                </div>
-                {recommendedRoute && (
-                  <div style={{ fontSize: 8.5, color: "rgba(72,246,193,0.5)", fontFamily: "var(--font-mono)" }}>
-                    {recommendedRoute.distanceKm} km
-                  </div>
-                )}
-              </div>
-              {config.modes_enabled.includes("bike") && (
-                <div
-                  style={{
-                    padding: "6px 4px",
-                    borderRadius: 7,
-                    background: "rgba(0,210,255,0.07)",
-                    border: "1px solid rgba(0,210,255,0.22)",
-                    textAlign: "center",
-                  }}
-                >
-                  <div style={{ fontSize: 12, marginBottom: 2 }}>🚲</div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "#00D2FF", fontFamily: "var(--font-mono)" }}>
-                    {bikeMin !== null ? `${bikeMin} min` : "—"}
-                  </div>
-                </div>
-              )}
-              {config.modes_enabled.includes("walk") && (
-                <div
-                  style={{
-                    padding: "6px 4px",
-                    borderRadius: 7,
-                    background: "rgba(28,70,89,0.3)",
-                    border: "1px solid rgba(28,70,89,0.55)",
-                    textAlign: "center",
-                  }}
-                >
-                  <div style={{ fontSize: 12, marginBottom: 2 }}>🚶</div>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "#7AA0B0", fontFamily: "var(--font-mono)" }}>
-                    {walkMin !== null ? `${walkMin} min` : "—"}
-                  </div>
-                </div>
-              )}
+              {modeChips.map(chip => {
+                const isActive = triage.travelMode === chip.key
+                return (
+                  <button
+                    key={chip.key}
+                    type="button"
+                    data-testid={`card-mode-${chip.key}`}
+                    aria-label={chip.label}
+                    aria-pressed={isActive}
+                    disabled={triage.routeLoading}
+                    onClick={() => onModeChange(chip.key)}
+                    style={{
+                      padding: "6px 4px",
+                      borderRadius: 7,
+                      background: isActive ? "rgba(72,246,193,0.09)" : "rgba(28,70,89,0.3)",
+                      border: `1px solid ${isActive ? "rgba(72,246,193,0.3)" : "rgba(28,70,89,0.55)"}`,
+                      textAlign: "center",
+                      cursor: triage.routeLoading ? "progress" : "pointer",
+                    }}
+                  >
+                    <div style={{ fontSize: 12, marginBottom: 2 }}>{chip.emoji}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: isActive ? "#48F6C1" : "#7AA0B0", fontFamily: "var(--font-mono)" }}>
+                      {isActive && recommendedRoute ? `${recommendedRoute.etaMinutes} min` : "—"}
+                    </div>
+                    {isActive && recommendedRoute && (
+                      <div style={{ fontSize: 8.5, color: "rgba(72,246,193,0.5)", fontFamily: "var(--font-mono)" }}>
+                        {recommendedRoute.distanceKm} km
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Directions CTA — all non-emergent severities */}
@@ -363,12 +349,21 @@ export function TriageCard({ triage, emergencyContactPhone }: TriageCardProps) {
               Other nearby options
             </div>
             {otherFacilities.map(({ facility, route }) => (
-              <div
+              <button
                 key={facility.id ?? facility.name}
+                type="button"
+                data-testid="other-facility"
+                disabled={!route?.geometry}
+                onClick={() => onSelectFacility(facility.id)}
                 className="flex items-center justify-between"
                 style={{
+                  width: "100%",
                   padding: "5px 0",
+                  background: "none",
+                  border: "none",
                   borderTop: "0.5px solid rgba(28,70,89,0.3)",
+                  textAlign: "left",
+                  cursor: route?.geometry ? "pointer" : "default",
                 }}
               >
                 <span
@@ -400,7 +395,7 @@ export function TriageCard({ triage, emergencyContactPhone }: TriageCardProps) {
                         : "Care"}
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}

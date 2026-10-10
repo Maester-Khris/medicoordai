@@ -43,7 +43,7 @@ export default function DataDisclosurePage() {
       badge: 'In-session only',
       why: 'Used solely to find nearest emergency rooms and calculate live transit times.',
       stored: 'Not stored. Used in-memory during active requests and discarded.',
-      shared: 'Sent to the OSRM/Geoapify routing services to calculate travel time ETAs.'
+      shared: 'Sent by our server to the Geoapify routing service to calculate travel times and routes.'
     },
     {
       data: 'Emergency contact metadata',

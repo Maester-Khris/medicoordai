@@ -2,8 +2,7 @@ from typing import Literal
 from enum import Enum
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 class Severity(str, Enum):
     routine  = "routine"
@@ -122,6 +121,8 @@ class Profile(BaseModel):
     medical_chat_opt_in:     bool
 
 
+TravelMode = Literal["car", "bike", "bus", "walk"]
+
 class LatLng(BaseModel):
     lat: float
     lng: float
@@ -142,5 +143,48 @@ class FeedbackRequest(BaseModel):
 
 
 class GuestEventRequest(BaseModel):
-    type:       Literal["route_drawn"]
-    session_id: UUID
+    type:        Literal["route_drawn", "mode_changed"]
+    session_id:  UUID
+    mode:        TravelMode | None = None
+    duration_ms: int | None = Field(default=None, ge=0, le=120000)
+
+    @model_validator(mode="after")
+    def _fields_match_the_type(self) -> "GuestEventRequest":
+        if self.type == "mode_changed" and self.mode is None:
+            raise ValueError("mode is required for mode_changed")
+        if self.type != "mode_changed" and self.duration_ms is not None:
+            raise ValueError("duration_ms is only allowed for mode_changed")
+        return self
+
+
+class RoutesRequest(BaseModel):
+    origin:       LatLng
+    facility_ids: list[str] = Field(..., min_length=1, max_length=3)
+    mode:         TravelMode
+
+    @field_validator("origin")
+    @classmethod
+    def _origin_in_range(cls, origin: LatLng) -> LatLng:
+        if not (-90 <= origin.lat <= 90 and -180 <= origin.lng <= 180):
+            raise ValueError("origin is out of range")
+        return origin
+
+    @field_validator("facility_ids")
+    @classmethod
+    def _ids_are_unique(cls, ids: list[str]) -> list[str]:
+        if len(set(ids)) != len(ids):
+            raise ValueError("facility_ids must be unique")
+        return ids
+
+
+class CandidateRoute(BaseModel):
+    facility_id: str
+    eta_minutes: int | None = None
+    distance_km: float | None = None
+    geometry:    list[tuple[float, float]] | None = None
+
+
+class RoutesResponse(BaseModel):
+    mode:                TravelMode
+    routes:              list[CandidateRoute]
+    fastest_facility_id: str | None = None

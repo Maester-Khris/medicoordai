@@ -28,11 +28,15 @@ medicoordai/
 ## Running Commands
 
 ### Python virtualenv
-Always activate the pydev virtualenv before any Python or dbt command:
+`/home/niki/Documents/workenv/pydev/` is the only Python environment for this repo. Activate it before any Python command:
 ```bash
 source /home/niki/Documents/workenv/pydev/bin/activate
 ```
-This applies to all Python, pip, dbt, pytest, and uvicorn invocations.
+This applies to everything: python, pip, pytest, uvicorn, alembic, dbt, ruff, mypy, and one-off scripts or inline `python -` snippets.
+- Never use the system interpreter (`/usr/bin/python3`, `/usr/bin/pip`).
+- Never create another environment (`python -m venv`, `uv venv`, `poetry`, `pipenv`, `conda`) and never install with `--user` or `--break-system-packages`.
+- New dependencies go in `requirements.txt` and are installed into pydev.
+- This rule applies to every agent working in the repo, including delegated executors.
 
 ### Environment variables
 Inject environment variables via Doppler when they are not already exported:

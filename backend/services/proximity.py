@@ -54,3 +54,51 @@ def find_nearest_facilities(
         key=lambda x: x["distanceKm"],
     )
     return ranked[:top_n]
+
+# Same speeds (metres per second) as the Supabase function nearby_facilities(), so the demo branch
+# of GET /facilities/nearby keeps the response contract. The web app does not display these fields.
+WALK_MPS, TRANSIT_MPS, DRIVE_MPS = 1.4, 6.0, 11.0
+MAX_RADIUS_M = 50000
+NEARBY_LIMIT = 50
+
+
+def find_facilities_within(
+    lat: float,
+    lng: float,
+    radius_m: int,
+    category: str | None = None,
+) -> list[dict] | None:
+    """
+    Facilities within radius_m of the point, nearest first, in the NearbyFacilityResult shape.
+    Reads the in-memory facility cache (operational facilities only). Returns None when the
+    cache is empty.
+    """
+    facilities, _ = get_cached_facilities()
+    if not facilities:
+        return None
+
+    radius = min(radius_m, MAX_RADIUS_M)
+    rows: list[dict] = []
+    for f in facilities:
+        if category is not None and f.get("category") != category:
+            continue
+        if f.get("lat") is None or f.get("lng") is None:
+            continue
+        distance_m = round(haversine_km(lat, lng, f["lat"], f["lng"]) * 1000)
+        if distance_m > radius:
+            continue
+        rows.append({
+            "facility_id":     str(f["id"]),
+            "facility_name":   f["name"],
+            "category":        f["category"],
+            "address":         f.get("address") or "",
+            "phone":           f.get("phone"),
+            "is_operational":  True,
+            "distance_m":      distance_m,
+            "eta_walk_min":    round(distance_m / WALK_MPS / 60),
+            "eta_transit_min": round(distance_m / TRANSIT_MPS / 60),
+            "eta_drive_min":   round(distance_m / DRIVE_MPS / 60),
+        })
+
+    rows.sort(key=lambda row: row["distance_m"])
+    return rows[:NEARBY_LIMIT]

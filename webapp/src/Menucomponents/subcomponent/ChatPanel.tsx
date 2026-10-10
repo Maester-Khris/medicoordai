@@ -1,7 +1,7 @@
 import { FeedbackControl } from "../../components/triage/FeedbackControl"
 import { useAuth } from "../../auth/useAuth"
 import { useState, useRef, useEffect, useCallback } from "react"
-import type { Message, Session, ConversationsCache, ChatMessageResponse, TriageResult, TriageUIState } from "@shared/types"
+import type { Message, Session, ConversationsCache, ChatMessageResponse, TriageResult, TriageUIState, TravelModeKey } from "@shared/types"
 import { TriageCard } from "../../components/triage/TriageCard"
 import { ToolCallProgress } from "../../components/triage/ToolCallProgress"
 import type { GeolocationPermission } from "../../hooks/useGeolocation"
@@ -38,6 +38,8 @@ interface ChatPanelProps {
   profile: ProfileProps | null
   triage: TriageUIState
   onTriageResult: (result: TriageResult, coords: { lat: number; lng: number } | null, sessionId?: string | null) => Promise<void>
+  onModeChange: (mode: TravelModeKey) => void
+  onSelectFacility: (facilityId: string) => void
   onNewConversation: () => void
   busyUntil: number | null
 }
@@ -69,6 +71,8 @@ export function ChatPanel({
   profile,
   triage,
   onTriageResult,
+  onModeChange,
+  onSelectFacility,
   onNewConversation,
   busyUntil,
 }: ChatPanelProps) {
@@ -363,6 +367,8 @@ export function ChatPanel({
                       <TriageCard
                         triage={triage}
                         emergencyContactPhone={profile?.emergency_contact_phone ?? null}
+                        onModeChange={onModeChange}
+                        onSelectFacility={onSelectFacility}
                       />
                       {isGuest && activeSessionId && triage.recommendedFacility && (
                         <FeedbackControl sessionId={activeSessionId} messageId={msg.id} />

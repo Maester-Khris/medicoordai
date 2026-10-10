@@ -1,8 +1,11 @@
-import { useState, useCallback } from "react"
-import type { TriageUIState, TriageResult, RouteResult, FacilityCandidate } from "../../../shared/types"
-import { postRouteDrawn } from "../lib/guestEvents"
+import { useCallback, useRef, useState } from "react"
+import type { RoutesResponse, TravelModeKey, TriageResult, TriageUIState } from "../../../shared/types"
+import { postModeChanged, postRouteDrawn } from "../lib/guestEvents"
+import { fetchRoutes } from "../lib/routesClient"
+import { applyRoutes, candidateIds, promoteFacility } from "../lib/triageRoutes"
 
-const GEOAPIFY_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY as string | undefined
+const DEFAULT_MODE: TravelModeKey = "car"
+
 const DEFAULT_STATE: TriageUIState = {
   active: false,
   severity: null,
@@ -13,150 +16,123 @@ const DEFAULT_STATE: TriageUIState = {
   routes: [],
   recommendedFacilityId: null,
   roadGeometry: null,
+  travelMode: DEFAULT_MODE,
+  routeLoading: false,
 }
 
 export function useTriageState() {
   const [triage, setTriage] = useState<TriageUIState>(DEFAULT_STATE)
+  // The async actions below need the latest state, not the one captured when they started.
+  const stateRef = useRef<TriageUIState>(DEFAULT_STATE)
+  // One POST /routes answer per travel mode, for the current recommendation only.
+  const cacheRef = useRef(new Map<TravelModeKey, RoutesResponse>())
+  // Bumped on every new request: an answer whose number is no longer current is dropped.
+  const requestRef = useRef(0)
+  const sessionRef = useRef<string | null>(null)
 
-  const reset = useCallback(() => setTriage(DEFAULT_STATE), [])
+  const commit = useCallback((next: TriageUIState) => {
+    stateRef.current = next
+    setTriage(next)
+  }, [])
+
+  const reset = useCallback(() => {
+    requestRef.current += 1
+    cacheRef.current = new Map()
+    sessionRef.current = null
+    commit(DEFAULT_STATE)
+  }, [commit])
 
   const applyTriageResult = useCallback(async (
     result: TriageResult,
     userCoords: { lat: number; lng: number } | null,
     sessionId?: string | null,
   ) => {
+    const requestId = ++requestRef.current
+    cacheRef.current = new Map()
+    sessionRef.current = sessionId ?? null
+
     if (!result.recommended_facility) {
-      setTriage({
+      commit({
         ...DEFAULT_STATE,
         active: true,
         severity: result.severity,
         reasoning: result.reasoning,
         nearbyFacilities: result.nearby_facilities,
         userCoords,
-        roadGeometry: null,
       })
       return
     }
 
-    const allFacilities: FacilityCandidate[] = [
-      result.recommended_facility,
-      ...result.nearby_facilities,
-    ]
-
-    setTriage({
+    const base: TriageUIState = {
+      ...DEFAULT_STATE,
       active: true,
       severity: result.severity,
       reasoning: result.reasoning,
       recommendedFacility: result.recommended_facility,
       nearbyFacilities: result.nearby_facilities,
       userCoords,
-      routes: [],
       recommendedFacilityId: result.recommended_facility.id,
-      roadGeometry: null,
+      routeLoading: userCoords !== null,
+    }
+    commit(base)
+    if (!userCoords) return
+
+    const response = await fetchRoutes(userCoords, candidateIds(base), DEFAULT_MODE)
+    if (requestId !== requestRef.current) return
+    if (!response) {
+      commit({ ...stateRef.current, routeLoading: false })
+      return
+    }
+    cacheRef.current.set(DEFAULT_MODE, response)
+    const next = applyRoutes(stateRef.current, DEFAULT_MODE, response)
+    commit(next)
+    // Only real road geometry counts as "route drawn"; the straight-line fallback does not.
+    if (next.roadGeometry && sessionId) void postRouteDrawn(sessionId, DEFAULT_MODE)
+  }, [commit])
+
+  const changeMode = useCallback(async (mode: TravelModeKey) => {
+    const current = stateRef.current
+    if (!current.active || !current.userCoords || !current.recommendedFacility) return
+    if (current.routeLoading) return
+    // Same mode with routes already shown: nothing to do. Same mode without routes: a retry.
+    if (mode === current.travelMode && current.routes.length > 0) return
+
+    const cached = cacheRef.current.get(mode)
+    if (cached) {
+      commit(applyRoutes(current, mode, cached))
+      return
+    }
+
+    const requestId = ++requestRef.current
+    const startedAt = performance.now()
+    commit({ ...current, routeLoading: true })
+
+    const response = await fetchRoutes(current.userCoords, candidateIds(current), mode)
+    if (requestId !== requestRef.current) return
+    if (!response) {
+      // Keep the previous mode and its route on screen.
+      commit({ ...stateRef.current, routeLoading: false })
+      return
+    }
+    cacheRef.current.set(mode, response)
+    const next = applyRoutes(stateRef.current, mode, response)
+    commit(next)
+
+    const sessionId = sessionRef.current
+    if (!sessionId || !next.roadGeometry) return
+    // Measured on the next animation frame, after React has rendered and the map layer has redrawn.
+    requestAnimationFrame(() => {
+      void postModeChanged(sessionId, mode, performance.now() - startedAt)
+      void postRouteDrawn(sessionId, mode)
     })
+  }, [commit])
 
-    if (userCoords && GEOAPIFY_KEY) {
-      const routes = await fetchRouteMatrix(userCoords, allFacilities)
-      if (routes.length > 0) {
-        const sorted = [...routes].sort((a, b) => a.etaMinutes - b.etaMinutes)
-        const bestFacility = allFacilities.find(f => f.id === sorted[0].facilityId)
-        let roadGeometry: [number, number][] | null = null
+  const selectFacility = useCallback((facilityId: string) => {
+    const current = stateRef.current
+    const route = current.routes.find(r => r.facilityId === facilityId)
+    if (!route?.geometry) return
+    commit(promoteFacility(current, facilityId))
+  }, [commit])
 
-        if (bestFacility && userCoords) {
-          roadGeometry = await fetchRoadGeometry(userCoords, bestFacility)
-        }
-
-        // Only real road geometry counts as "route drawn"; the straight-line fallback does not.
-        if (roadGeometry && sessionId) void postRouteDrawn(sessionId)
-
-        setTriage(prev => ({
-          ...prev,
-          routes,
-          recommendedFacilityId: sorted[0].facilityId,
-          roadGeometry,
-        }))
-      }
-    }
-  }, [])
-
-  return { triage, applyTriageResult, reset }
-}
-
-async function fetchRouteMatrix(
-  userCoords: { lat: number; lng: number },
-  facilities: FacilityCandidate[],
-): Promise<RouteResult[]> {
-  if (!GEOAPIFY_KEY) {
-    console.error("[RouteMatrix] VITE_GEOAPIFY_API_KEY is not set — check Doppler config and restart with doppler run -- npm run dev")
-    return []
-  }
-
-  const sources = [{ location: [userCoords.lng, userCoords.lat] }]
-  const targets = facilities.map(f => ({ location: [f.lng, f.lat] }))
-
-  try {
-    const resp = await fetch(
-      `https://api.geoapify.com/v1/routematrix?apiKey=${GEOAPIFY_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "drive", sources, targets }),
-      }
-    )
-    if (!resp.ok) return []
-    const data = await resp.json()
-
-    return (data.sources_to_targets?.[0] ?? []).map(
-      (entry: { time: number; distance: number }, idx: number) => ({
-        facilityId: facilities[idx].id,
-        etaMinutes: Math.round((entry.time ?? 0) / 60),
-        distanceKm: Math.round((entry.distance ?? 0) / 100) / 10,
-      })
-    )
-  } catch (err) {
-    console.error("[RouteMatrix] fetch failed:", err)
-    return []
-  }
-}
-async function fetchRoadGeometry(
-  from: { lat: number; lng: number },
-  to: { lat: number; lng: number },
-): Promise<[number, number][] | null> {
-  if (!GEOAPIFY_KEY) return null
-  try {
-    const url =
-      `https://api.geoapify.com/v1/routing` +
-      `?waypoints=${from.lat},${from.lng}|${to.lat},${to.lng}` +
-      `&mode=drive` +
-      `&apiKey=${GEOAPIFY_KEY}`
-
-    const resp = await fetch(url)
-    if (!resp.ok) {
-      console.warn("[RoadGeometry] Geoapify routing failed:", resp.status)
-      return null
-    }
-
-    const data = await resp.json()
-    const geom = data.features?.[0]?.geometry
-    if (!geom) {
-      console.warn("[RoadGeometry] no geometry in response")
-      return null
-    }
-
-    // Geoapify returns MultiLineString (array of legs); LineString handled defensively.
-    const rings: [number, number][][] =
-      geom.type === "MultiLineString" ? geom.coordinates :
-        geom.type === "LineString" ? [geom.coordinates] :
-          []
-
-    const coords: [number, number][] = rings
-      .flat()
-      .map(([lng, lat]: [number, number]) => [lat, lng])
-
-    console.log("[RoadGeometry] points received:", coords.length)
-    return coords.length > 0 ? coords : null
-  } catch (err) {
-    console.error("[RoadGeometry] fetch error:", err)
-    return null
-  }
+  return { triage, applyTriageResult, changeMode, selectFacility, reset }
 }

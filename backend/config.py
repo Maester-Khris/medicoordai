@@ -4,7 +4,7 @@ import os
 
 DOWNTOWN_TORONTO: dict[str, float] = {"lat": 43.6532, "lng": -79.3832}
 ALL_MODES: list[str] = ["car", "bike", "bus", "walk"]
-DEMO_MODES: list[str] = ["car"]  # bike/bus/walk ETAs are multipliers, not routes (sprint 2)
+DEMO_MODES: list[str] = ["car", "bike", "bus", "walk"]  # every mode is a real route since sprint 21
 
 DEFAULT_STARTER_PROMPTS: list[str] = [
     "I have a fever and sore throat",
@@ -15,6 +15,10 @@ DEFAULT_STARTER_PROMPTS: list[str] = [
 
 def demo_mode() -> bool:
     return os.environ.get("DEMO_MODE", "").strip().lower() in ("1", "true")
+
+
+def modes_enabled() -> list[str]:
+    return DEMO_MODES if demo_mode() else ALL_MODES
 
 
 def starter_prompts() -> list[str]:

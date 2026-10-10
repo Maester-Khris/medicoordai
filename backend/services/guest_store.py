@@ -135,7 +135,13 @@ def upsert_feedback(guest_id: str, session_id: str, message_id: str, thumb: str,
     return written > 0
 
 
-def record_event(guest_id: str, event_type: str, session_id: str) -> bool:
+def record_event(
+    guest_id: str,
+    event_type: str,
+    session_id: str,
+    mode: str | None = None,
+    duration_ms: int | None = None,
+) -> bool:
     if not _is_uuid(session_id):
         return False
     owned = demo_db.fetch_one(
@@ -143,12 +149,13 @@ def record_event(guest_id: str, event_type: str, session_id: str) -> bool:
     )
     if owned is None:
         return False
+    # the conflict target must repeat the predicate of the partial unique index (revision 0005)
     demo_db.execute(
         """
-        insert into events (guest_id, session_id, type) values (%s, %s, %s)
-        on conflict (session_id, type) where session_id is not null do nothing
+        insert into events (guest_id, session_id, type, mode, duration_ms) values (%s, %s, %s, %s, %s)
+        on conflict (session_id, type) where session_id is not null and type <> 'mode_changed' do nothing
         """,
-        (guest_id, session_id, event_type),
+        (guest_id, session_id, event_type, mode, duration_ms),
     )
     return True
 
