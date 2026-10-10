@@ -2,6 +2,8 @@
 //
 //   SCENARIO   smoke | average | breakpoint | soak   (default smoke)
 //   AVG_RATE   requests per second for average and soak (default 10)
+//   RATES      breakpoint steps in requests per second (default 10,25,50,100,150,200);
+//              each step is a 15 s ramp plus a 2 minute hold
 //
 // Two streams run side by side:
 //   mix     GET /facilities, /facilities/nearby, /config, /health, by weight
@@ -13,6 +15,8 @@ import { BASE_URL, guestHeaders, pick, randomTorontoPoint, uuid4 } from './lib.j
 
 const SCENARIO = __ENV.SCENARIO || 'smoke';
 const AVG_RATE = Number(__ENV.AVG_RATE || 10);
+const RATES = (__ENV.RATES || '10,25,50,100,150,200').split(',').map((r) => Number(r.trim()));
+const STEP_SECONDS = 135;
 
 const ROUTES_PER_SECOND = { smoke: 0.2, average: 1, breakpoint: 2, soak: 0.5 };
 
@@ -28,8 +32,8 @@ const MIX = {
     ],
   },
   breakpoint: {
-    executor: 'ramping-arrival-rate', startRate: 10, timeUnit: '1s', preAllocatedVUs: 200, maxVUs: 1000,
-    stages: [10, 25, 50, 100, 150, 200].flatMap((rate) => [
+    executor: 'ramping-arrival-rate', startRate: RATES[0], timeUnit: '1s', preAllocatedVUs: 200, maxVUs: 2000,
+    stages: RATES.flatMap((rate) => [
       { target: rate, duration: '15s' },
       { target: rate, duration: '2m' },
     ]),
@@ -51,7 +55,7 @@ export const options = {
       // k6 wants whole numbers: 0.2 per second is 1 every 5 seconds.
       rate: routesRate >= 1 ? routesRate : 1,
       timeUnit: routesRate >= 1 ? '1s' : `${Math.round(1 / routesRate)}s`,
-      duration: SCENARIO === 'smoke' ? '1m' : SCENARIO === 'soak' ? '1h' : SCENARIO === 'average' ? '6m30s' : '13m30s',
+      duration: SCENARIO === 'smoke' ? '1m' : SCENARIO === 'soak' ? '1h' : SCENARIO === 'average' ? '6m30s' : `${RATES.length * STEP_SECONDS}s`,
       preAllocatedVUs: 10,
       maxVUs: 40,
       exec: 'routes',
@@ -70,6 +74,9 @@ export const options = {
   summaryTrendStats: ['avg', 'min', 'med', 'p(90)', 'p(95)', 'p(99)', 'max'],
 };
 
+// Browsers ask for compressed responses; without this the facility list travels at 127 KB instead
+// of 22 KB and the test measures the network link before the API.
+const GZIP = { 'Accept-Encoding': 'gzip' };
 const CATEGORIES = [null, 'hospital', 'ambulatory', 'residential'];
 const RADII = [5000, 10000, 25000, 50000];
 const MODES = ['car', 'bike', 'walk']; // no transit: slowest and the costliest on the provider
@@ -90,12 +97,12 @@ export function mix() {
   const roll = Math.random() * 100;
   let res;
   if (roll < 42) {
-    res = http.get(`${BASE_URL}/facilities`, { tags: { name: 'facilities' } });
+    res = http.get(`${BASE_URL}/facilities`, { headers: GZIP, tags: { name: 'facilities' } });
   } else if (roll < 74) {
     const point = randomTorontoPoint();
     const category = pick(CATEGORIES);
     const query = `lat=${point.lat}&lng=${point.lng}&radius_m=${pick(RADII)}` + (category ? `&category=${category}` : '');
-    res = http.get(`${BASE_URL}/facilities/nearby?${query}`, { tags: { name: 'nearby' } });
+    res = http.get(`${BASE_URL}/facilities/nearby?${query}`, { headers: GZIP, tags: { name: 'nearby' } });
   } else if (roll < 90) {
     res = http.get(`${BASE_URL}/config`, { tags: { name: 'config' } });
   } else {
