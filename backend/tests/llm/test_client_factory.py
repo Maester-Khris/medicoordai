@@ -86,3 +86,24 @@ def test_groq_and_anthropic_clients_take_the_timeout_from_the_environment(monkey
     AnthropicClient(max_retries=0)
     assert _env["groq"].call_args.kwargs == {"api_key": "g", "timeout": 9}
     assert _env["anthropic"].call_args.kwargs == {"api_key": "a", "timeout": 9, "max_retries": 0}
+
+
+def test_anthropic_defaults_to_the_current_haiku_and_never_sends_temperature(monkeypatch: pytest.MonkeyPatch, _env) -> None:
+    from unittest.mock import MagicMock
+
+    from llm.base import LLMMessage
+
+    monkeypatch.delenv("ANTHROPIC_MODEL", raising=False)
+    client = AnthropicClient()
+    assert client.model_name == "claude-haiku-5-5"
+
+    create = _env["anthropic"].return_value.messages.create
+    create.return_value = MagicMock(
+        content=[MagicMock(type="thinking"), MagicMock(type="text", text="ok")],
+        usage=MagicMock(input_tokens=3, output_tokens=2),
+    )
+    response = client.chat(messages=[LLMMessage(role="user", content="hi")], temperature=0.2)
+
+    sent = create.call_args.kwargs
+    assert "temperature" not in sent and sent["max_tokens"] == 4096 and sent["model"] == "claude-haiku-5-5"
+    assert response.content == "ok"  # a leading thinking block is skipped, not read as the answer
