@@ -98,7 +98,8 @@ async def create_new_session(
     user_id = str(current_user.id)  # type: ignore[attr-defined]
     title = generate_session_title(body.first_message)
 
-    session = create_session(user_id=user_id, title=title)
+    # Blocking database call: keep it off the event loop (see send_message).
+    session = await run_in_threadpool(create_session, user_id=user_id, title=title)
     append_session_to_cache(user_id, session)
     await _record_guest_event(current_user, "session_started", str(session["id"]))
 
@@ -139,8 +140,12 @@ async def send_message(
     if cache_entry:
         history = cache_entry.get("messages", {}).get(session_id, [])
 
+    # The store calls and the agent are blocking (database, two LLM round trips). They run in the
+    # thread pool: on the event loop one chat turn would stall every other request of this worker.
     try:
-        user_msg = add_message(session_id=session_id, user_id=user_id, role="user", content=body.content)
+        user_msg = await run_in_threadpool(
+            add_message, session_id=session_id, user_id=user_id, role="user", content=body.content
+        )
     except guest_store.SessionNotFound:
         raise HTTPException(404, "Session not found") from None
 
@@ -163,7 +168,8 @@ async def send_message(
             except Exception as exc:
                 logger.warning("profile_fetch_failed", extra={"request_id": request_id, "error": str(exc)})
 
-        result = agent.respond(
+        result = await run_in_threadpool(
+            agent.respond,
             user_message=body.content,
             history=history,
             lat=body.lat,
@@ -189,8 +195,8 @@ async def send_message(
             "turn_type": "followup",
         }
 
-    assistant_msg = add_message(
-        session_id=session_id, user_id=user_id, role="assistant", content=result["response"]
+    assistant_msg = await run_in_threadpool(
+        add_message, session_id=session_id, user_id=user_id, role="assistant", content=result["response"]
     )
     append_message_to_cache(user_id, session_id, assistant_msg)
 

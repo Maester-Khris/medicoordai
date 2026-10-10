@@ -564,3 +564,68 @@ class TestGuestChat:
                 "/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
         assert resp.status_code == 200
         limit.assert_not_called()
+
+
+# ── Blocking work stays off the event loop ────────────────────────────────────
+
+def _on_event_loop() -> bool:
+    """True when called on the thread that runs the event loop (a worker thread has none)."""
+    import asyncio
+
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return False
+    return True
+
+
+class TestChatDoesNotBlockTheEventLoop:
+    """The agent makes two LLM round trips and the store calls hit the database. Run on the event
+    loop they stall every other request of the single worker; they must run in the thread pool."""
+
+    def test_agent_and_message_writes_run_in_the_thread_pool(self):
+        seen: dict[str, bool] = {}
+
+        def respond(**_: object) -> dict:
+            seen["respond"] = _on_event_loop()
+            return _TRIAGE_RESULT
+
+        def add_message(**kwargs: object) -> dict:
+            seen[f"add_{kwargs['role']}"] = _on_event_loop()
+            return _msg(str(kwargs["role"]))
+
+        agent = MagicMock()
+        agent.respond.side_effect = respond
+        with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.add_message", side_effect=add_message), \
+             patch("services.llm_agent.LLMAgent", return_value=agent), \
+             patch("routers.chat.guest_store.record_event"), \
+             patch("routers.chat.should_sample", return_value=False):
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+
+        assert resp.status_code == 200
+        assert seen == {"add_user": False, "respond": False, "add_assistant": False}
+
+    def test_session_creation_runs_in_the_thread_pool(self):
+        seen: dict[str, bool] = {}
+        session = {"id": FAKE_SESSION_ID, "user_id": FAKE_USER_ID_STR, "title": "hi",
+                   "created_at": "2026-10-07T00:00:00Z", "updated_at": "2026-10-07T00:00:00Z"}
+
+        def create_session(**_: object) -> dict:
+            seen["create_session"] = _on_event_loop()
+            return session
+
+        with patch("routers.chat.create_session", side_effect=create_session), \
+             patch("routers.chat.guest_store.record_event"):
+            resp = _guest_client().post("/chat/sessions", json={"first_message": "hi"})
+
+        assert resp.status_code == 200
+        assert seen == {"create_session": False}
+
+    def test_a_foreign_session_is_still_404_through_the_thread_pool(self):
+        from services.guest_store import SessionNotFound
+
+        with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.add_message", side_effect=SessionNotFound("s")):
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+        assert resp.status_code == 404
