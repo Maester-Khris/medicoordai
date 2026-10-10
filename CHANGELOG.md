@@ -845,19 +845,23 @@ branch is deployed. Spec and plan: `docs/superpowers/specs/2026-10-08-guest-demo
 - [ ] Demo pool size from an environment variable (hardcoded to 5 today), default set from the load test
 - [ ] Rate-limit values from environment variables, defaults unchanged, raised on staging only
 - [ ] `pg_stat_statements` enabled on the demo database (admin step, needs a restart)
-- [ ] Grafana Cloud access re-established, or `/metrics` read directly during tests
+- [ ] `/metrics` read directly during tests (Grafana Cloud holds no data yet, see the last item) during tests
 - [ ] Test A, non-LLM: smoke, average load, breakpoint, one-hour soak
 - [ ] Test B, chat: concurrent turns ramped to the breakpoint
 - [ ] Profiling protocol (py-spy, or the Sentry profiler if attaching is blocked)
 - [ ] Web Vitals at the 75th percentile compared with the published "good" thresholds
 - [ ] Report: environment, mix, one row per load step, breakpoint and first bottleneck
 - [ ] Latency fix, only if the report or the journey timings show one dominant cost
+- [ ] Fix the metrics push to Grafana Cloud. Found 2026-10-10: the Prometheus store there has never received an API metric (only Grafana's own three alert series in 90 days; "Service down" is firing, the two others are in no-data). The push thread in `backend/observability.py` fails every 30 seconds with `'Response' object is not callable`, and it uses the Pushgateway method against a remote-write URL, which are different protocols. Until it is fixed, `/metrics` read directly (it resets on every deploy) is the only source
 
 **Exit:** deployed to `preview`, smoke test passing.
 
 ### Pending at deploy
 
-- [ ] **Migration 0005 on `medicoord-db-demo` — not applied.** It was applied on 2026-10-09 and rolled back the same day (remote is at `0004`). It is not additive: the narrowed unique index on `events` no longer matches the `on conflict` clause of the previous backend, which then cannot write any event row (chat keeps working, events are lost). Apply it in the same window as the backend deploy: `./backend/script.demo.local.sh migrate upgrade head`, then `verify`, then deploy the backend, then the web app, then the smoke suite. Rehearsed locally in both directions; the remote upgrade and downgrade both ran cleanly.
+- [x] **Migration 0005 on `medicoord-db-demo` — applied 2026-10-09, with the deploy.** A first attempt the same day was rolled back: the migration is not additive (the narrowed unique index on `events` no longer matches the `on conflict` clause of the previous backend, which then cannot write any event row; chat keeps working, events are lost), so it has to go in the same window as the backend deploy.
+- [x] **Phase 1 deployed to `preview` (PR #54, merged 2026-10-10 04:03 UTC).** The four smoke scenarios pass against the preview deployment. Events are recorded with their mode, and `mode_changed` rows carry a duration.
+- [x] **Before and after snapshots** (`backend/scripts/perf_baseline/run_baseline.py`, reports in the git-ignored `artifacts/perf/`). Small samples from repeated smoke runs, same prompt and location, so indicative only. Recommendation shown to route drawn: median 1.69 s before (n=6, two Geoapify calls from the browser), 1.18 s after (n=10, one `POST /routes`). `POST /routes` mean 651 ms over 15 calls. Mode change to redraw (bike): median 0.76 s (n=5). User message to assistant reply: median about 1.5 s in both, but three of ten replies after the deploy took about 10 s, which is the LLM provider and not routing.
+- [ ] Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel (owner).
 
 ### Side-tracks (do not block the scope)
 
