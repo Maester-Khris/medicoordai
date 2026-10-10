@@ -809,13 +809,31 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 ### Scope
 
 - [ ] Async chat path: the providers' own async clients instead of the thread pool.
-- [ ] Facility list serialised once per request instead of twice.
+- [ ] Facility list encoded once per data version and served as bytes (see Decisions).
+- [ ] Facility recommendation and route drawing: cell index, load-aware choice, one route up front, Geoapify budget protection (see Decisions).
 - [ ] Conversation history and the facility cache out of process memory (Redis in front of Postgres); metrics that work across replicas. Horizontal scaling proved with a local Docker Compose test.
 - [ ] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
 - [ ] Database pool size chosen from measurement (5 today).
-- [ ] Wait-time in-memory cache: decision still open, read path unchanged until decided.
+- [ ] Wait-time read path: in-memory copy on the API plus browser caching (decided 2026-10-10, see Decisions).
 - [ ] One-hour soak and the chat breakpoint, on the final code.
 - [ ] Final tasks: a new `METRICS_BEARER_TOKEN` generated locally, set on `python-api` and staging, registered in Grafana Cloud with its scrape job.
+
+### Decisions (2026-10-10)
+
+- **Wait-time read path: both layers.** The API keeps the wait-time data in memory and reloads it on a short TTL with jitter, so replicas do not all hit Redis at the same moment. The worker writes a "last successful run" key on every run. Each API instance derives the ETag from that key and sets `max-age` to the time left until that run plus 15 minutes, so an instance started at any moment gives the same answer as the others. The browser caches on those headers.
+- **Facility list: encode once per data version, serve bytes.** (1) The version is the facility snapshot plus the worker's last-run key. (2) The response bytes and the ETag are built once per version and kept in memory, in a small bounded cache keyed by the filter combination. (3) Per request: look up the version, compare `If-None-Match`, return 304 or the stored bytes, with no encoding and no hashing. Replaces "serialise once per request"; JSONL, a faster JSON library and protobuf were considered and set aside, since each still encodes per request.
+
+**Facility recommendation and route drawing** (research: `artifacts/research/2026-10-10-nearest-facility-lookup-and-request-batching.md`):
+
+- **No request batching window.** Considered: hold guests for 5 s and resolve them together, as ride-hailing does. Rejected: those platforms batch because a driver is exclusive, which a facility is not; Geoapify's matrix call costs as many credits or more and returns no road shape; and 5 s is added to a step that takes 1 s.
+- **Candidate lookup through an in-memory cell index** (`cell → facility ids`, built once per facility snapshot). Why: the scan grows with the number of facilities, the index with the number nearby, so the design holds at 100k facilities.
+- **One route up front, the others on demand.** Only the chosen facility is routed; another candidate is routed when the guest selects it, and a mode change is one call. Why: 3 Geoapify calls per guest become about 1, and the vendor's rate limit is the real ceiling. Accepted cost: no road-time comparison across the three on a cold cache. May be revisited. Any calls that remain per guest still run in parallel.
+- **Load-aware choice.** Score = estimated travel time + posted wait + a penalty for guests recently sent to that facility, with a random pick among close scores. Why: sending everyone to the shortest posted wait, on data refreshed every 15 minutes, herds them to one place. Applies to routine and moderate only; urgent and emergent always get the fastest appropriate facility. The penalty per guest starts as a configured value per facility type, since there is no real capacity data.
+- **Load counters in Redis, without locks.** One counter per facility per minute with an expiry, incremented atomically, one field per server; the load is the sum of the last few minutes. Each server reads a local copy refreshed every few seconds with jitter. Why: shared across replicas with no request waiting on another, and the per-server fields show every replica contributing in the horizontal test. The same counts, by cell, severity and facility type, are kept for a later city-spread view.
+- **Travel-time cache in process**, bounded, with a time limit on entries, keyed by origin cell, facility and mode. Why: it only improves the ranking (the drawn route always starts at the guest's real position), so a Redis round trip per recommendation is not worth it.
+- **Geoapify budget protection.** A limiter at the plan's rate with emergent requests first; when the budget is spent the guest gets the recommendation with an estimated time and no drawn route. A paid plan is needed for 5,000 guests.
+- **Designed, not built:** at 1M daily users, a self-hosted routing engine with matrix calls for ranking and a precomputed cell-to-facility time table.
+- **To check as we go:** whether Geoapify's terms allow storing Routing results.
 
 ### Also open
 
