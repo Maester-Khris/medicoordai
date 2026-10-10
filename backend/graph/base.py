@@ -4,8 +4,11 @@ deferred v2 (Neo4j) implementation satisfy. Mirrors BaseLLMClient
 (backend/llm/base.py). See design §3.
 """
 import logging
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+
+from metrics import GRAPH_LOOKUP_DURATION, timed
 
 logger = logging.getLogger(__name__)
 
@@ -38,14 +41,19 @@ class GraphContextProvider(ABC):
         dependency (unlike BaseLLMClient or find_nearest_facilities, which can
         surface a 503). Any failure in a subclass's _lookup() degrades to an
         empty GraphContext, logged but never propagated."""
-        try:
-            return self._lookup(user_message, recent_messages)
-        except Exception:
-            logger.exception(
-                "graph_context_lookup_failed",
-                extra={"provider": type(self).__name__},
-            )
-            return GraphContext(matched=False)
+        # Labelled with the configured provider name (off, static, neo4j), not the class name, so
+        # the series stays the same when an implementation is renamed.
+        provider = os.environ.get("GRAPH_RAG_PROVIDER", "off").lower()
+        with timed(GRAPH_LOOKUP_DURATION, provider=provider) as timing:
+            try:
+                return self._lookup(user_message, recent_messages)
+            except Exception:
+                timing.outcome = "error"
+                logger.exception(
+                    "graph_context_lookup_failed",
+                    extra={"provider": type(self).__name__},
+                )
+                return GraphContext(matched=False)
 
     @abstractmethod
     def _lookup(self, user_message: str, recent_messages: list[str]) -> GraphContext:

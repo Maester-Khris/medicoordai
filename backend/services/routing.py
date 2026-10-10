@@ -13,6 +13,8 @@ import os
 
 import httpx
 
+from metrics import ROUTING_CALL_DURATION, timed
+
 logger = logging.getLogger(__name__)
 # httpx logs every request URL at INFO, and the Geoapify key is in the query string.
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -63,22 +65,27 @@ async def _fetch_route(
         "mode": GEOAPIFY_MODES[mode],
         "apiKey": key,
     }
-    try:
-        response = await client.get(GEOAPIFY_ROUTING_URL, params=params)
-        response.raise_for_status()
-        parsed = parse_route(response.json())
-    except (httpx.HTTPError, ValueError, TypeError, KeyError, IndexError) as exc:
-        _log_failure(mode, facility, type(exc).__name__)
-        return None
-    if parsed is None:
-        _log_failure(mode, facility, "NoRoute")
-    return parsed
+    with timed(ROUTING_CALL_DURATION, mode=mode) as timing:
+        try:
+            response = await client.get(GEOAPIFY_ROUTING_URL, params=params)
+            response.raise_for_status()
+            parsed = parse_route(response.json())
+        except (httpx.HTTPError, ValueError, TypeError, KeyError, IndexError) as exc:
+            timing.outcome = "timeout" if isinstance(exc, httpx.TimeoutException) else "error"
+            status = exc.response.status_code if isinstance(exc, httpx.HTTPStatusError) else None
+            _log_failure(mode, facility, type(exc).__name__, status)
+            return None
+        if parsed is None:
+            timing.outcome = "no_route"
+            _log_failure(mode, facility, "NoRoute")
+        return parsed
 
 
-def _log_failure(mode: str, facility: dict, error_type: str) -> None:
+def _log_failure(mode: str, facility: dict, error_type: str, status: int | None = None) -> None:
+    # The provider's status code is safe to log; its message and URL are not (the key is in the URL).
     logger.warning(
         "routing_candidate_failed",
-        extra={"mode": mode, "facility_id": str(facility["id"]), "error_type": error_type},
+        extra={"mode": mode, "facility_id": str(facility["id"]), "error_type": error_type, "status": status},
     )
 
 
