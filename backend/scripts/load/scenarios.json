@@ -1,0 +1,62 @@
+[
+  {
+    "message": "I have crushing chest pain radiating to my left arm and I can't catch my breath.",
+    "lat": 43.6426,
+    "lng": -79.3871
+  },
+  {
+    "message": "My face is drooping on one side and I can't lift my right arm, this started 10 minutes ago.",
+    "lat": 43.6511,
+    "lng": -79.347
+  },
+  {
+    "message": "I'm having a severe allergic reaction, my throat is closing up and my face is swelling.",
+    "lat": 43.6629,
+    "lng": -79.3957
+  },
+  {
+    "message": "I was in a car accident and there's heavy bleeding from a deep cut on my leg that won't stop.",
+    "lat": 43.6205,
+    "lng": -79.5132
+  },
+  {
+    "message": "My child is unconscious and not responding after falling down the stairs.",
+    "lat": 43.7,
+    "lng": -79.4163
+  },
+  {
+    "message": "I suddenly can't see out of one eye and have the worst headache of my life.",
+    "lat": 43.689,
+    "lng": -79.4507
+  },
+  {
+    "message": "I'm having a seizure right now, this is the third one in an hour.",
+    "lat": 43.7615,
+    "lng": -79.4111
+  },
+  {
+    "message": "I'm coughing up blood and have severe difficulty breathing that's getting worse.",
+    "lat": 43.6435,
+    "lng": -79.5656
+  },
+  {
+    "message": "My baby has a fever of 40C and is limp and won't wake up.",
+    "lat": 43.7532,
+    "lng": -79.3832
+  },
+  {
+    "message": "I took too much of my medication by accident and I'm feeling dizzy and confused.",
+    "lat": 43.6677,
+    "lng": -79.42
+  },
+  {
+    "message": "I have sudden severe abdominal pain and I've been vomiting blood.",
+    "lat": 43.7042,
+    "lng": -79.355
+  },
+  {
+    "message": "I burned myself badly with boiling water and the skin is blistering over a large area.",
+    "lat": 43.6108,
+    "lng": -79.4849
+  }
+]

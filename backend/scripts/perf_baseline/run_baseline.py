@@ -31,12 +31,12 @@ TURN_SQL = """
         from messages window w as (partition by session_id order by created_at)
     )
     select extract(epoch from created_at - prev_at)::float as seconds
-    from m where role = 'assistant' and prev_role = 'user'
+    from m where role = 'assistant' and prev_role = 'user' and created_at >= %(since)s
 """
 ROUTE_GAP_SQL = """
     select extract(epoch from d.created_at - r.created_at)::float as seconds
     from events r join events d on d.session_id = r.session_id and d.type = 'route_drawn'
-    where r.type = 'recommendation_shown' and d.created_at >= r.created_at
+    where r.type = 'recommendation_shown' and d.created_at >= r.created_at and r.created_at >= %(since)s
 """
 FUNNEL_SQL = """
     select (select count(*) from guests)                                   as guests,
@@ -47,7 +47,10 @@ FUNNEL_SQL = """
            (select count(*) from feedback where thumb = 'up')              as thumbs_up,
            (select count(*) from feedback where thumb = 'down')            as thumbs_down
 """
-MODE_SQL = "select mode, duration_ms::float / 1000 as seconds from events where type = 'mode_changed'"
+MODE_SQL = (
+    "select mode, duration_ms::float / 1000 as seconds from events "
+    "where type = 'mode_changed' and created_at >= %(since)s"
+)
 
 
 def quantile(values: list[float], q: float) -> float | None:
@@ -129,30 +132,33 @@ def _round(value: float | None) -> float | None:
     return None if value is None else round(value, 2)
 
 
-def journey(dsn: str) -> dict:
+def journey(dsn: str, since: str) -> dict:
     import psycopg
     from psycopg.rows import dict_row
 
     with psycopg.connect(dsn.replace("+psycopg", "", 1), connect_timeout=8, row_factory=dict_row) as conn:
         conn.read_only = True
+        window = {"since": since}
         out: dict = {
-            "funnel": conn.execute(FUNNEL_SQL).fetchone(),
-            "turn_latency": summarize([r["seconds"] for r in conn.execute(TURN_SQL)]),
-            "recommendation_to_route_drawn": summarize([r["seconds"] for r in conn.execute(ROUTE_GAP_SQL)]),
+            "funnel": conn.execute(FUNNEL_SQL).fetchone(),  # whole table, not windowed
+            "turn_latency": summarize([r["seconds"] for r in conn.execute(TURN_SQL, window)]),
+            "recommendation_to_route_drawn": summarize([r["seconds"] for r in conn.execute(ROUTE_GAP_SQL, window)]),
         }
         has_mode = conn.execute(
             "select 1 from information_schema.columns where table_name = 'events' and column_name = 'duration_ms'"
         ).fetchone()
         if has_mode:  # revision 0005 and later
             by_mode: dict[str, list[float]] = {}
-            for row in conn.execute(MODE_SQL):
+            for row in conn.execute(MODE_SQL, window):
                 if row["seconds"] is not None:
                     by_mode.setdefault(row["mode"], []).append(row["seconds"])
             out["mode_change"] = {mode: summarize(values) for mode, values in sorted(by_mode.items())}
     return out
 
 
-def render(label: str, base_url: str, health: dict, config: dict, rows: list[dict], overall: dict, db: dict | None) -> str:
+def render(
+    label: str, base_url: str, since: str, health: dict, config: dict, rows: list[dict], overall: dict, db: dict | None
+) -> str:
     lines = [
         f"# Performance snapshot: {label}",
         "",
@@ -175,8 +181,8 @@ def render(label: str, base_url: str, health: dict, config: dict, rows: list[dic
     if db is None:
         lines += ["", "## Guest journey", "", "Not read: DATABASE_URL was not set."]
     else:
-        lines += ["", "## Guest journey, from the demo database (all rows, internal guests included)", "",
-                  f"Funnel: `{json.dumps(db['funnel'])}`", "",
+        lines += ["", f"## Guest journey, from the demo database (timings since {since}, internal guests included)", "",
+                  f"Funnel, whole table: `{json.dumps(db['funnel'])}`", "",
                   "| Measure | n | p50 (s) | p95 (s) | max (s) |", "|---|---|---|---|---|"]
         named = {"User message to assistant reply": db["turn_latency"],
                  "Recommendation shown to route drawn": db["recommendation_to_route_drawn"]}
@@ -192,6 +198,8 @@ def main() -> None:
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--label", required=True, help="short name used in the report title and file name")
     parser.add_argument("--out-dir", default=str(REPO / "artifacts" / "perf"))
+    parser.add_argument("--since", default="1970-01-01T00:00:00+00:00",
+                        help="only time journeys that started at or after this ISO timestamp (default: all rows)")
     args = parser.parse_args()
 
     base_url = args.base_url.rstrip("/")
@@ -200,12 +208,12 @@ def main() -> None:
     config = json.loads(get(f"{base_url}/config"))
     rows, overall = route_stats(get(f"{base_url}/metrics", token))
     dsn = os.environ.get("DATABASE_URL")
-    db = journey(dsn) if dsn else None
+    db = journey(dsn, args.since) if dsn else None
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{datetime.now(timezone.utc).strftime('%Y-%m-%d-%H%M')}-{args.label}.md"
-    path.write_text(render(args.label, base_url, health, config, rows, overall, db))
+    path.write_text(render(args.label, base_url, args.since, health, config, rows, overall, db))
     print(f"wrote {path}")
 
 

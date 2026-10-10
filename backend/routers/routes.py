@@ -8,13 +8,7 @@ from cache import get_cached_facilities
 from middleware.auth import get_actor
 from models import RoutesRequest, RoutesResponse
 from services import routing
-from services.rate_limit import (
-    ROUTES_GUEST_LIMIT,
-    ROUTES_IP_LIMIT,
-    busy_response,
-    check_rate_limit,
-    client_ip,
-)
+from services.rate_limit import busy_response, check_rate_limit, client_ip
 
 router = APIRouter(tags=["routes"])
 
@@ -32,8 +26,6 @@ async def post_routes(
             str(actor.id),  # type: ignore[attr-defined]
             client_ip(request),
             bucket="routes",
-            guest_limit=ROUTES_GUEST_LIMIT,
-            ip_limit=ROUTES_IP_LIMIT,
         )
         if retry_after is not None:
             return busy_response(retry_after)

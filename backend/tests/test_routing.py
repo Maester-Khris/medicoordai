@@ -146,3 +146,52 @@ def test_fastest_ignores_candidates_without_a_route_and_can_be_none() -> None:
     assert routing.fastest_facility_id([_route("a", None), _route("b", 30)]) == "b"
     assert routing.fastest_facility_id([_route("a", None)]) is None
     assert routing.fastest_facility_id([]) is None
+
+
+from observability import _registry
+
+
+def _routing_count(mode: str, outcome: str) -> float:
+    return _registry.get_sample_value("routing_call_duration_seconds_count", {"mode": mode, "outcome": outcome}) or 0.0
+
+
+@pytest.mark.asyncio
+async def test_each_candidate_call_is_timed_with_its_outcome() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        waypoints = request.url.params["waypoints"]
+        if "43.7224" in waypoints:
+            return httpx.Response(500, json={"error": "boom"})
+        if "43.7557" in waypoints:
+            return httpx.Response(200, json={"features": []})
+        return httpx.Response(200, json=_feature(600, 5000, LINE))
+
+    before = {o: _routing_count("bike", o) for o in ("ok", "error", "no_route", "timeout")}
+    await routing.routes_for(ORIGIN, [A, B, C], "bike", transport=_transport(handler))
+
+    assert _routing_count("bike", "ok") == before["ok"] + 1
+    assert _routing_count("bike", "error") == before["error"] + 1
+    assert _routing_count("bike", "no_route") == before["no_route"] + 1
+    assert _routing_count("bike", "timeout") == before["timeout"]
+
+
+@pytest.mark.asyncio
+async def test_a_timeout_is_recorded_as_a_timeout() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("slow", request=request)
+
+    before = _routing_count("walk", "timeout")
+    await routing.routes_for(ORIGIN, [A], "walk", transport=_transport(handler))
+    assert _routing_count("walk", "timeout") == before + 1
+
+
+@pytest.mark.asyncio
+async def test_a_provider_status_code_is_logged_without_the_key(caplog: pytest.LogCaptureFixture) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(400, json={"message": f"no route, key {KEY}"})
+
+    with caplog.at_level(logging.WARNING):
+        await routing.routes_for(ORIGIN, [A], "car", transport=_transport(handler))
+
+    failed = [rec for rec in caplog.records if rec.getMessage() == "routing_candidate_failed"]
+    assert [(rec.error_type, rec.status) for rec in failed] == [("HTTPStatusError", 400)]
+    assert KEY not in str(failed[0].__dict__)

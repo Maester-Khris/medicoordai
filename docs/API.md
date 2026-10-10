@@ -166,6 +166,56 @@ Query: `lat`, `lng`, `radius_m` (default 5000, capped at 50000), optional `categ
 on the in-memory facility list with a straight-line distance; the three `eta_*_min` fields are
 fixed-speed estimates kept for the response shape and are not travel times from a routing engine.
 
+## Operations: metrics and settings
+
+### GET `/metrics`
+
+Prometheus text format. **Auth:** `Authorization: Bearer <METRICS_BEARER_TOKEN>`. Answers 503
+when the token is not configured and 403 on a wrong one. Grafana Cloud scrapes this endpoint
+(Metrics Endpoint integration); the API pushes nothing.
+
+Counters and histograms live in the process and restart with it. The API runs as one worker;
+with several workers each would report its own numbers.
+
+| Metric | Type | Labels |
+|---|---|---|
+| `http_requests_total`, `http_request_duration_seconds` | per route | `handler`, `method`, `status` |
+| `llm_call_duration_seconds` | histogram | `provider`, `outcome` |
+| `llm_calls_total` | counter | `provider`, `outcome` (`ok`, `rate_limited`, `timeout`, `error`) |
+| `llm_tokens_total` | counter | `provider`, `kind` (`prompt`, `completion`) |
+| `routing_call_duration_seconds` | histogram | `mode`, `outcome` (`ok`, `no_route`, `timeout`, `error`) |
+| `graph_lookup_duration_seconds` | histogram | `provider` (value of `GRAPH_RAG_PROVIDER`), `outcome` |
+| `demo_db_pool_size`, `demo_db_pool_in_use`, `demo_db_pool_waiting` | gauge | none |
+
+### Settings
+
+Read at call time. A missing, malformed or out-of-range number falls back to the default with
+one `env_setting_invalid` warning.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DEMO_DB_POOL_MAX` | 5 (1 to 50) | Largest number of demo database connections |
+| `DEMO_DB_POOL_TIMEOUT_SECONDS` | 5 (1 to 60) | How long a request waits for a free connection |
+| `RATE_LIMIT_CHAT_GUEST`, `RATE_LIMIT_CHAT_IP` | 10, 30 | Chat messages per guest and per IP per 10 minutes |
+| `RATE_LIMIT_ROUTES_GUEST`, `RATE_LIMIT_ROUTES_IP` | 60, 180 | Route requests per guest and per IP per 10 minutes |
+| `LLM_TIMEOUT_SECONDS` | 30 (1 to 300) | Timeout of one provider call |
+| `LLM_PROVIDER` | `groq` | Single provider: `groq`, `openai` or `anthropic` |
+| `LLM_PROVIDER_CHAIN` | unset | Ordered fallback, for example `groq,openai,anthropic`. Wins over `LLM_PROVIDER` |
+| `OPENAI_API_KEY`, `OPENAI_MODEL` | none | Required for the `openai` provider. The model has no default |
+
+The rate-limit variables exist for load tests on staging; the public demo keeps the defaults.
+
+### LLM provider fallback
+
+With `LLM_PROVIDER_CHAIN` set, a chat call goes to the first provider and moves to the next one
+when the failure belongs to that provider: rate limit (429), timeout, server error (5xx),
+connection failure, or rejected credentials (401, 403). Any other error is raised at once. Each
+provider is tried once per call, with its SDK retries off. A switch logs `llm_fallback` with
+`from_provider`, `to_provider` and `outcome`, and both attempts appear in `llm_calls_total`.
+
+Do not enable a chain for guests before the triage vignette check has run on every model in it:
+a different model can classify severity differently.
+
 ## Shared Types Reference
 
 Canonical definitions live in `shared/types.ts`. Replicated here for documentation.

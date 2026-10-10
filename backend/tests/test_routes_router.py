@@ -132,11 +132,7 @@ def test_guests_are_counted_in_the_routes_bucket(_defaults) -> None:
     with patch.object(routes.routing, "routes_for", AsyncMock(return_value=[_found("a", 5), _found("b", 6)])):
         _client().post("/routes", json=BODY)
     assert _defaults.call_args.args[0] == GUEST
-    assert _defaults.call_args.kwargs == {
-        "bucket": "routes",
-        "guest_limit": routes.ROUTES_GUEST_LIMIT,
-        "ip_limit": routes.ROUTES_IP_LIMIT,
-    }
+    assert _defaults.call_args.kwargs == {"bucket": "routes"}
 
 
 def test_signed_in_users_are_not_rate_limited(_defaults, monkeypatch: pytest.MonkeyPatch) -> None:

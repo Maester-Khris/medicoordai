@@ -1,15 +1,21 @@
 import os
 from groq import BadRequestError, Groq
+from config import llm_timeout_seconds
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
 
 
 class GroqClient(BaseLLMClient):
 
-    def __init__(self) -> None:
+    def __init__(self, max_retries: int | None = None) -> None:
         api_key = os.environ.get("GROQ_API_KEY")
         if not api_key:
             raise RuntimeError("GROQ_API_KEY is not set")
-        self._client = Groq(api_key=api_key)
+        # max_retries=None keeps the SDK's own retries (single-provider mode). A fallback chain
+        # passes 0: there the next provider is the retry.
+        options: dict = {"api_key": api_key, "timeout": llm_timeout_seconds()}
+        if max_retries is not None:
+            options["max_retries"] = max_retries
+        self._client = Groq(**options)
         # llama-3.3-70b-versatile was shut down by Groq 2026-08-16; openai/gpt-oss-120b
         # is Groq's official migration target and supports tool calling.
         self._model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")

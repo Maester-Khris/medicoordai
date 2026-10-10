@@ -1,6 +1,7 @@
 import json
 import os
 import logging
+from config import llm_provider_chain
 from graph.base import GraphContextProvider
 from graph.factory import get_graph_provider
 from llm.base import BaseLLMClient, LLMMessage
@@ -12,17 +13,54 @@ from services.triage_eval import check_emergency_mismatch, check_facility_ground
 logger = logging.getLogger(__name__)
 
 
-def get_llm_client() -> BaseLLMClient:
-    """
-    Factory. Reads LLM_PROVIDER env var.
-    Import is deferred so unused provider packages don't cause ImportError.
-    """
-    provider = os.environ.get("LLM_PROVIDER", "groq").lower()
+KNOWN_PROVIDERS = ("groq", "openai", "anthropic")
+
+
+def _build_provider_client(provider: str, max_retries: int | None) -> BaseLLMClient:
+    """One provider client. Imports are deferred so unused provider packages don't cause ImportError."""
     if provider == "anthropic":
         from llm.anthropic_client import AnthropicClient
-        return AnthropicClient()
+        return AnthropicClient(max_retries=max_retries)
+    if provider == "openai":
+        from llm.openai_client import OpenAIClient
+        return OpenAIClient(max_retries=max_retries)
     from llm.groq_client import GroqClient
-    return GroqClient()
+    return GroqClient(max_retries=max_retries)
+
+
+def get_llm_client() -> BaseLLMClient:
+    """
+    Factory. Every provider client comes back wrapped in InstrumentedLLMClient.
+
+    LLM_PROVIDER_CHAIN unset: one client chosen by LLM_PROVIDER (groq by default), with the SDK's
+    own retries, exactly as before.
+    LLM_PROVIDER_CHAIN="groq,openai,anthropic": those providers in that order behind
+    FallbackLLMClient, each with SDK retries off (the next provider is the retry). A name that is
+    unknown, or whose key is missing, is skipped with a warning.
+    """
+    from llm.instrumented import InstrumentedLLMClient
+
+    chain = llm_provider_chain()
+    if not chain:
+        provider = os.environ.get("LLM_PROVIDER", "groq").lower()
+        if provider not in KNOWN_PROVIDERS:
+            provider = "groq"
+        return InstrumentedLLMClient(_build_provider_client(provider, None), provider)
+
+    from llm.fallback import FallbackLLMClient
+
+    clients: list[BaseLLMClient] = []
+    for provider in chain:
+        if provider not in KNOWN_PROVIDERS:
+            logger.warning("llm_provider_skipped", extra={"provider": provider, "reason": "unknown provider"})
+            continue
+        try:
+            clients.append(InstrumentedLLMClient(_build_provider_client(provider, 0), provider))
+        except RuntimeError as exc:  # a missing key or model
+            logger.warning("llm_provider_skipped", extra={"provider": provider, "reason": str(exc)})
+    if not clients:
+        raise RuntimeError("LLM_PROVIDER_CHAIN names no usable provider")
+    return FallbackLLMClient(clients)
 
 
 class LLMAgent:

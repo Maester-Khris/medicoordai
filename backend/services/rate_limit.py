@@ -12,6 +12,7 @@ import sentry_sdk
 from fastapi.responses import JSONResponse
 from starlette.requests import Request
 
+from config import env_int
 from services.wait_times import redis_client
 
 logger = logging.getLogger(__name__)
@@ -35,16 +36,36 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+# bucket -> (guest setting, guest default, IP setting, IP default)
+_BUCKET_SETTINGS: dict[str, tuple[str, int, str, int]] = {
+    "chat": ("RATE_LIMIT_CHAT_GUEST", GUEST_LIMIT, "RATE_LIMIT_CHAT_IP", IP_LIMIT),
+    "routes": ("RATE_LIMIT_ROUTES_GUEST", ROUTES_GUEST_LIMIT, "RATE_LIMIT_ROUTES_IP", ROUTES_IP_LIMIT),
+}
+
+
+def limits_for(bucket: str) -> tuple[int, int]:
+    """(guest limit, IP limit) for a bucket: the constants above unless the environment overrides
+    them. The overrides exist for load tests on staging; guests keep the defaults."""
+    guest_setting, guest_default, ip_setting, ip_default = _BUCKET_SETTINGS.get(bucket, _BUCKET_SETTINGS["chat"])
+    return env_int(guest_setting, guest_default), env_int(ip_setting, ip_default)
+
+
 def check_rate_limit(
     guest_id: str,
     ip: str,
     now: float | None = None,
     *,
     bucket: str = "chat",
-    guest_limit: int = GUEST_LIMIT,
-    ip_limit: int = IP_LIMIT,
+    guest_limit: int | None = None,
+    ip_limit: int | None = None,
 ) -> int | None:
-    """Counts this request in `bucket`. Returns seconds until the window ends when over a limit, else None."""
+    """Counts this request in `bucket`. Returns seconds until the window ends when over a limit, else None.
+
+    Limits come from `limits_for(bucket)` unless passed explicitly.
+    """
+    default_guest_limit, default_ip_limit = limits_for(bucket)
+    guest_limit = default_guest_limit if guest_limit is None else guest_limit
+    ip_limit = default_ip_limit if ip_limit is None else ip_limit
     now = time.time() if now is None else now
     window = int(now // WINDOW_SECONDS)
     ip_hash = hashlib.sha256(ip.encode()).hexdigest()[:32]
