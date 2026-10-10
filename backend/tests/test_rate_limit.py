@@ -128,3 +128,35 @@ def test_keys_are_namespaced_by_bucket(fake_redis) -> None:
     rate_limit.check_rate_limit("g1", "3.3.3.3", now=0.0, bucket="routes")
     assert any(key.startswith("rl:chat:guest:g1:") for key in fake_redis.counts)
     assert any(key.startswith("rl:routes:guest:g1:") for key in fake_redis.counts)
+
+
+def test_limits_default_to_the_constants(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in ("RATE_LIMIT_CHAT_GUEST", "RATE_LIMIT_CHAT_IP", "RATE_LIMIT_ROUTES_GUEST", "RATE_LIMIT_ROUTES_IP"):
+        monkeypatch.delenv(name, raising=False)
+    assert rate_limit.limits_for("chat") == (10, 30)
+    assert rate_limit.limits_for("routes") == (60, 180)
+
+
+def test_limits_can_be_raised_from_the_environment(fake_redis, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RATE_LIMIT_CHAT_GUEST", "3")
+    monkeypatch.setenv("RATE_LIMIT_CHAT_IP", "1000")
+    assert rate_limit.limits_for("chat") == (3, 1000)
+    for _ in range(3):
+        assert rate_limit.check_rate_limit("g1", "4.4.4.4", now=0.0) is None
+    assert rate_limit.check_rate_limit("g1", "4.4.4.4", now=0.0) == 600
+
+
+def test_an_invalid_limit_keeps_the_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RATE_LIMIT_ROUTES_GUEST", "lots")
+    monkeypatch.setenv("RATE_LIMIT_ROUTES_IP", "0")
+    assert rate_limit.limits_for("routes") == (60, 180)
+
+
+def test_explicit_limits_win_over_the_environment(fake_redis, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("RATE_LIMIT_CHAT_GUEST", "1000")
+    assert rate_limit.check_rate_limit("g1", "5.5.5.5", now=0.0, guest_limit=1, ip_limit=50) is None
+    assert rate_limit.check_rate_limit("g1", "5.5.5.5", now=0.0, guest_limit=1, ip_limit=50) == 600
+
+
+def test_an_unknown_bucket_uses_the_chat_limits() -> None:
+    assert rate_limit.limits_for("something-else") == rate_limit.limits_for("chat")
