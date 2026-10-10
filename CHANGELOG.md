@@ -841,9 +841,9 @@ branch is deployed. Spec and plan: `docs/superpowers/specs/2026-10-08-guest-demo
 
 **Phase 2 — performance tracking and measurement**
 
-- [ ] Latency histograms with one shape for the LLM call, routing and the graph call (the last records nothing until the instance is back); LLM outcome counter (errors, 429s); pool stats exported
-- [ ] Demo pool size from an environment variable (hardcoded to 5 today), default set from the load test
-- [ ] Rate-limit values from environment variables, defaults unchanged, raised on staging only
+- [x] Latency histograms with one shape for the LLM call, routing and the graph call (the last records nothing until the instance is back); LLM outcome counter (errors, 429s); pool stats exported
+- [x] Demo pool size from an environment variable (hardcoded to 5 today), default set from the load test
+- [x] Rate-limit values from environment variables, defaults unchanged, raised on staging only
 - [ ] `pg_stat_statements` enabled on the demo database (admin step, needs a restart)
 - [ ] `/metrics` read directly during tests (Grafana Cloud holds no data yet, see the last item) during tests
 - [ ] Test A, non-LLM: smoke, average load, breakpoint, one-hour soak
@@ -852,7 +852,17 @@ branch is deployed. Spec and plan: `docs/superpowers/specs/2026-10-08-guest-demo
 - [ ] Web Vitals at the 75th percentile compared with the published "good" thresholds
 - [ ] Report: environment, mix, one row per load step, breakpoint and first bottleneck
 - [ ] Latency fix, only if the report or the journey timings show one dominant cost
-- [ ] Fix the metrics push to Grafana Cloud. Found 2026-10-10: the Prometheus store there has never received an API metric (only Grafana's own three alert series in 90 days; "Service down" is firing, the two others are in no-data). The push thread in `backend/observability.py` fails every 30 seconds with `'Response' object is not callable`, and it uses the Pushgateway method against a remote-write URL, which are different protocols. Until it is fixed, `/metrics` read directly (it resets on every deploy) is the only source
+- [ ] Fix the metrics push to Grafana Cloud (code done: the push thread is removed and `/metrics` is closed without a token; the Grafana Cloud scrape job is still to create). Found 2026-10-10: the Prometheus store there has never received an API metric (only Grafana's own three alert series in 90 days; "Service down" is firing, the two others are in no-data). The push thread in `backend/observability.py` fails every 30 seconds with `'Response' object is not callable`, and it uses the Pushgateway method against a remote-write URL, which are different protocols. Until it is fixed, `/metrics` read directly (it resets on every deploy) is the only source
+
+Phase 2 code as built (2026-10-10): application metrics on `/metrics` (LLM, routing and graph
+timings, LLM outcomes and tokens, database pool gauges); pool size, pool wait, rate limits and the
+LLM timeout from environment variables; an OpenAI provider and an ordered provider fallback behind
+`LLM_PROVIDER_CHAIN`, off by default and not to be enabled for guests before the triage vignette
+check; k6 scripts for the non-LLM mix and the chat path under `backend/scripts/load/`; chat turns
+moved off the event loop (one turn used to stall every other request of the single worker). The
+measurement runbook (load tests, profiling, report, Grafana scrape job) is still to run. Spec and
+plan: `docs/superpowers/specs/2026-10-10-guest-demo-sprint2-phase2-design.md`,
+`docs/superpowers/plans/2026-10-10-guest-demo-sprint2-phase2.md`.
 
 **Exit:** deployed to `preview`, smoke test passing.
 
