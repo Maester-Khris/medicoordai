@@ -1,16 +1,22 @@
 import json
 import os
 import anthropic
+from config import llm_timeout_seconds
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
 
 
 class AnthropicClient(BaseLLMClient):
 
-    def __init__(self) -> None:
+    def __init__(self, max_retries: int | None = None) -> None:
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY is not set")
-        self._client = anthropic.Anthropic(api_key=api_key)
+        # max_retries=None keeps the SDK's own retries (single-provider mode). A fallback chain
+        # passes 0: there the next provider is the retry.
+        options: dict = {"api_key": api_key, "timeout": llm_timeout_seconds()}
+        if max_retries is not None:
+            options["max_retries"] = max_retries
+        self._client = anthropic.Anthropic(**options)
         self._model = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5")
 
     @property
