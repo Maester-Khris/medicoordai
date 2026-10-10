@@ -844,13 +844,13 @@ branch is deployed. Spec and plan: `docs/superpowers/specs/2026-10-08-guest-demo
 - [x] Latency histograms with one shape for the LLM call, routing and the graph call (the last records nothing until the instance is back); LLM outcome counter (errors, 429s); pool stats exported
 - [x] Demo pool size from an environment variable (hardcoded to 5 today), default set from the load test
 - [x] Rate-limit values from environment variables, defaults unchanged, raised on staging only
-- [ ] `pg_stat_statements` enabled on the demo database (admin step, needs a restart)
-- [ ] `/metrics` read directly during tests (Grafana Cloud holds no data yet, see the last item) during tests
-- [ ] Test A, non-LLM: smoke, average load, breakpoint, one-hour soak
-- [ ] Test B, chat: concurrent turns ramped to the breakpoint
-- [ ] Profiling protocol (py-spy, or the Sentry profiler if attaching is blocked)
-- [ ] Web Vitals at the 75th percentile compared with the published "good" thresholds
-- [ ] Report: environment, mix, one row per load step, breakpoint and first bottleneck
+- [x] `pg_stat_statements` enabled on the demo database (admin step, needs a restart)
+- [x] `/metrics` read directly during tests (Grafana Cloud holds no data yet, see the last item) during tests
+- [ ] Test A, non-LLM: smoke, average load and breakpoint done; the one-hour soak is not run (moved to the next sprint, on the final code)
+- [x] Test B, chat: concurrent turns ramped to the breakpoint
+- [x] Profiling protocol (py-spy, or the Sentry profiler if attaching is blocked)
+- [x] Web Vitals at the 75th percentile compared with the published "good" thresholds
+- [x] Report: environment, mix, one row per load step, breakpoint and first bottleneck
 - [ ] Latency fix, only if the report or the journey timings show one dominant cost
 - [ ] Fix the metrics push to Grafana Cloud (code done: the push thread is removed and `/metrics` is closed without a token; the Grafana Cloud scrape job is still to create). Found 2026-10-10: the Prometheus store there has never received an API metric (only Grafana's own three alert series in 90 days; "Service down" is firing, the two others are in no-data). The push thread in `backend/observability.py` fails every 30 seconds with `'Response' object is not callable`, and it uses the Pushgateway method against a remote-write URL, which are different protocols. Until it is fixed, `/metrics` read directly (it resets on every deploy) is the only source
 
@@ -863,6 +863,17 @@ moved off the event loop (one turn used to stall every other request of the sing
 measurement runbook (load tests, profiling, report, Grafana scrape job) is still to run. Spec and
 plan: `docs/superpowers/specs/2026-10-10-guest-demo-sprint2-phase2-design.md`,
 `docs/superpowers/plans/2026-10-10-guest-demo-sprint2-phase2.md`.
+
+Phase 2 measurements (2026-10-10, staging: 1 worker, 1 vCPU, 1 GB, US West; report in the
+git-ignored `artifacts/perf/2026-10-10-phase2-report.md`):
+
+- **Map and routing endpoints:** 0 errors up to 200 requests per second (p50 168 ms, p95 251 ms, CPU 67%). Breakpoint between 200 and 250: at 250 the p95 reaches 790 ms with CPU at 88%, still without errors. Past the limit there is no admission control and latency collapses into an unbounded queue.
+- **Profile:** 74.5% of working thread time is one Redis read per map request for wait-time data that changes every 15 minutes (API in US West, Redis in US East). CPU goes mostly to JSON encoding of the 127 KB facility list, serialised twice per request. Neither is changed in this sprint.
+- **Chat turns, before the fix:** one turn at a time. About 15 turns per minute whatever the concurrency, turn p50 31 s at 10 concurrent, `/health` timing out, CPU at 1%.
+- **Chat turns, after the fix:** turn p50 flat at about 4.2 s from 1 to 40 concurrent, 431 turns per minute at 40, `/health` at 0.21 s, CPU 17%, no busy answer and no failure. No breakpoint reached; the thread pool of 40 is the expected next limit.
+- **Open finding:** memory rose from 106 MB to 397 MB during the 13-minute chat run and did not level off. The in-process conversation cache, which never evicts, is the first suspect.
+- **Provider fallback** verified with real calls: an invalid Groq key falls through to `claude-haiku-5-5`, visible in the log and in `llm_calls_total`.
+- 40 threads and a database pool of 5 are implementation limits, not capacity numbers. Next sprint: async chat path, conversation and facility state out of process memory, admission control with a waiting state in the UI, the wait-time cache, and the soak on the final code.
 
 **Exit:** deployed to `preview`, smoke test passing.
 
