@@ -802,7 +802,7 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 ---
 
-## [Sprint 21 — In Progress] · Guest Demo Launch — Sprint 2: demo user experience
+## [Sprint 21 — Closed] · Guest Demo Launch — Sprint 2: demo user experience
 
 **Started — 2026-10-08 · branch: `feat/demo-user-experience`.** Second sprint of the guest demo launch, building on
 Sprint 20 (guest sessions, demo database, feedback, deployed smoke test). Two phases: the guest-facing experience,
