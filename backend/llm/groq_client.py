@@ -1,7 +1,8 @@
 import os
-from groq import BadRequestError, Groq
+from groq import AsyncGroq, BadRequestError, DefaultAsyncHttpxClient
 from config import llm_timeout_seconds
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
+from .limits import connection_limits
 
 
 class GroqClient(BaseLLMClient):
@@ -12,10 +13,14 @@ class GroqClient(BaseLLMClient):
             raise RuntimeError("GROQ_API_KEY is not set")
         # max_retries=None keeps the SDK's own retries (single-provider mode). A fallback chain
         # passes 0: there the next provider is the retry.
-        options: dict = {"api_key": api_key, "timeout": llm_timeout_seconds()}
+        options: dict = {
+            "api_key": api_key,
+            "timeout": llm_timeout_seconds(),
+            "http_client": DefaultAsyncHttpxClient(limits=connection_limits()),
+        }
         if max_retries is not None:
             options["max_retries"] = max_retries
-        self._client = Groq(**options)
+        self._client = AsyncGroq(**options)
         # llama-3.3-70b-versatile was shut down by Groq 2026-08-16; openai/gpt-oss-120b
         # is Groq's official migration target and supports tool calling.
         self._model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
@@ -24,7 +29,7 @@ class GroqClient(BaseLLMClient):
     def model_name(self) -> str:
         return self._model
 
-    def chat(
+    async def chat(
         self,
         messages: list[LLMMessage],
         tools: list[ToolDefinition] | None = None,
@@ -53,14 +58,14 @@ class GroqClient(BaseLLMClient):
             kwargs["tool_choice"] = tool_choice
 
         try:
-            resp = self._client.chat.completions.create(**kwargs)
+            resp = await self._client.chat.completions.create(**kwargs)
         except BadRequestError as e:
             # ponytail: llama occasionally emits a tool-call arg as the wrong
             # JSON type (e.g. "true" instead of true) — a transient sampling
             # glitch, not a systematic prompt/schema problem. One retry, no
             # backoff; if it fails twice, let it raise.
             if groq_tools and "tool_use_failed" in str(e):
-                resp = self._client.chat.completions.create(**kwargs)
+                resp = await self._client.chat.completions.create(**kwargs)
             else:
                 raise
         choice = resp.choices[0]

@@ -34,7 +34,7 @@ class FallbackLLMClient(BaseLLMClient):
     def model_name(self) -> str:
         return self._answered_by.model_name
 
-    def chat(
+    async def chat(
         self,
         messages: list[LLMMessage],
         tools: list[ToolDefinition] | None = None,
@@ -45,7 +45,7 @@ class FallbackLLMClient(BaseLLMClient):
         last = len(self._clients) - 1
         for position, client in enumerate(self._clients):
             try:
-                response = client.chat(
+                response = await client.chat(
                     messages=messages, tools=tools, temperature=temperature, stop=stop, force_tool=force_tool,
                 )
             except Exception as exc:
