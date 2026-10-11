@@ -38,6 +38,8 @@ class SystemUnderTestPort(ABC):
 class LiveLLMAgentAdapter(SystemUnderTestPort):
     def __init__(self, graph_rag_provider: str = "off"):
         os.environ["GRAPH_RAG_PROVIDER"] = graph_rag_provider
+        # Evaluation runs must not depend on a random pick or write counters to the shared Redis.
+        os.environ["LOAD_AWARE_ROUTING"] = "off"
         self._capturing_provider = CapturingGraphProvider(get_graph_provider())
         self._agent = LLMAgent(client=GroqClient(), graph_provider=self._capturing_provider)
 

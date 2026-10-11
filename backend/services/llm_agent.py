@@ -7,7 +7,9 @@ from graph.factory import get_graph_provider
 from llm.base import BaseLLMClient, LLMMessage
 from llm.tools import ALL_TOOLS, TRIAGE_RESPONSE
 from llm.prompts import build_system_prompt, build_medical_context_block, build_graph_context_block
+from services import facility_load
 from services.proximity import find_nearest_facilities
+from services.recommendation import rank_facilities
 from services.triage_eval import check_emergency_mismatch, check_facility_groundedness
 from starlette.concurrency import run_in_threadpool
 
@@ -269,8 +271,10 @@ class LLMAgent:
         if needs_location:
             facilities = find_nearest_facilities(lat=lat, lng=lng, severity=severity)
             if facilities:
-                recommended_facility = facilities[0]
-                nearby_facilities = facilities[1:]
+                ranked = rank_facilities(facilities, severity, lat, lng)
+                recommended_facility = ranked[0]
+                nearby_facilities = ranked[1:]
+                facility_load.record(recommended_facility, severity, lat, lng)
 
         response_text = await self._generate_grounded_response(
             messages=messages,
