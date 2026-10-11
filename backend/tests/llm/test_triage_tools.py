@@ -4,6 +4,7 @@ No real LLM calls — all LLM interactions are mocked.
 No environment variables or network access required.
 """
 import json
+import asyncio
 import os
 import sys
 
@@ -11,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 MOCK_FACILITIES = [
     {
@@ -194,7 +195,7 @@ class TestFollowupCeiling:
         from llm.tools import TRIAGE_RESPONSE
 
         mock_client = MagicMock()
-        mock_client.chat.return_value = MagicMock(
+        mock_client.chat = AsyncMock(return_value=MagicMock(
             finish_reason="tool_calls",
             content=None,
             tool_calls=[{
@@ -205,7 +206,7 @@ class TestFollowupCeiling:
                     "reasoning": "Persistent symptoms",
                 }),
             }],
-        )
+        ))
         os.environ["TRIAGE_MAX_FOLLOWUPS"] = "2"
         agent = LLMAgent(client=mock_client)
 
@@ -215,7 +216,7 @@ class TestFollowupCeiling:
             {"role": "user", "content": "Since yesterday"},
             {"role": "assistant", "content": "Any other symptoms?"},
         ]
-        result = agent.respond("Just tired", history)
+        result = asyncio.run(agent.respond("Just tired", history))
 
         call_kwargs = mock_client.chat.call_args_list[0].kwargs
         assert call_kwargs.get("force_tool") == TRIAGE_RESPONSE.name
@@ -226,15 +227,15 @@ class TestFollowupCeiling:
         from services.llm_agent import LLMAgent
 
         mock_client = MagicMock()
-        mock_client.chat.return_value = MagicMock(
+        mock_client.chat = AsyncMock(return_value=MagicMock(
             finish_reason="stop",
             content="How long have you had these symptoms?",
             tool_calls=None,
-        )
+        ))
         os.environ["TRIAGE_MAX_FOLLOWUPS"] = "4"
         agent = LLMAgent(client=mock_client)
 
-        result = agent.respond("I have a headache", [])
+        result = asyncio.run(agent.respond("I have a headache", []))
 
         call_kwargs = mock_client.chat.call_args_list[0].kwargs
         assert call_kwargs.get("force_tool") is None
@@ -252,7 +253,7 @@ class TestTriageResultShape:
         from llm.tools import TRIAGE_RESPONSE
 
         mock_client = MagicMock()
-        mock_client.chat.side_effect = [
+        mock_client.chat = AsyncMock(side_effect=[
             MagicMock(
                 finish_reason="tool_calls",
                 content=None,
@@ -270,7 +271,7 @@ class TestTriageResultShape:
                 content="Please go to Bay Centre Walk-In.",
                 tool_calls=None,
             ),
-        ]
+        ])
 
         # Three prior user turns so user_turns >= TRIAGE_MIN_TURNS (default 3)
         history = [
@@ -282,7 +283,7 @@ class TestTriageResultShape:
             {"role": "assistant", "content": "Any chills or nausea alongside the fever?"},
         ]
         agent = LLMAgent(client=mock_client)
-        result = agent.respond("I have a high fever", history, lat=43.660, lng=-79.385)
+        result = asyncio.run(agent.respond("I have a high fever", history, lat=43.660, lng=-79.385))
 
         assert result["turn_type"] == "triage"
         assert result["severity"] == "urgent"
@@ -297,7 +298,7 @@ class TestTriageResultShape:
         from llm.tools import TRIAGE_RESPONSE
 
         mock_client = MagicMock()
-        mock_client.chat.side_effect = [
+        mock_client.chat = AsyncMock(side_effect=[
             MagicMock(
                 finish_reason="tool_calls",
                 content=None,
@@ -315,10 +316,10 @@ class TestTriageResultShape:
                 content="See a walk-in when convenient.",
                 tool_calls=None,
             ),
-        ]
+        ])
 
         agent = LLMAgent(client=mock_client)
-        result = agent.respond("I have a cold", [], lat=None, lng=None)
+        result = asyncio.run(agent.respond("I have a cold", [], lat=None, lng=None))
 
         assert result["recommended_facility"] is None
         assert result["nearby_facilities"] == []
@@ -334,7 +335,7 @@ class TestTriageGroundingLogged:
         from llm.tools import TRIAGE_RESPONSE
 
         mock_client = MagicMock()
-        mock_client.chat.side_effect = [
+        mock_client.chat = AsyncMock(side_effect=[
             MagicMock(
                 finish_reason="tool_calls",
                 content=None,
@@ -352,7 +353,7 @@ class TestTriageGroundingLogged:
                 content="Please go to Bay Centre Walk-In Clinic.",
                 tool_calls=None,
             ),
-        ]
+        ])
 
         history = [
             {"role": "user",      "content": "I feel unwell"},
@@ -365,7 +366,7 @@ class TestTriageGroundingLogged:
         agent = LLMAgent(client=mock_client)
 
         with caplog.at_level("INFO"):
-            result = agent.respond("I have a high fever", history, lat=43.660, lng=-79.385)
+            result = asyncio.run(agent.respond("I have a high fever", history, lat=43.660, lng=-79.385))
 
         assert result["turn_type"] == "triage"
         grounding_records = [r for r in caplog.records if r.msg == "triage_grounding_checked"]
@@ -379,7 +380,7 @@ class TestTriageGroundingLogged:
         from llm.tools import TRIAGE_RESPONSE
 
         mock_client = MagicMock()
-        mock_client.chat.side_effect = [
+        mock_client.chat = AsyncMock(side_effect=[
             MagicMock(
                 finish_reason="tool_calls",
                 content=None,
@@ -397,14 +398,14 @@ class TestTriageGroundingLogged:
                 content="See a walk-in when convenient.",
                 tool_calls=None,
             ),
-        ]
+        ])
 
         # Empty history → 0 user turns; set TRIAGE_MIN_TURNS=0 so triage fires
         # without the minimum-turn gate suppressing it.
         with patch.dict(os.environ, {"TRIAGE_MIN_TURNS": "0"}):
             agent = LLMAgent(client=mock_client)
             with caplog.at_level("INFO"):
-                agent.respond("I have a cold", [], lat=None, lng=None)
+                asyncio.run(agent.respond("I have a cold", [], lat=None, lng=None))
 
         grounding_records = [r for r in caplog.records if r.msg == "triage_grounding_checked"]
         assert len(grounding_records) == 1
