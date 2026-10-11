@@ -87,14 +87,14 @@ export function useConversations(): UseConversationsResult {
         const body = await res.json().catch(() => null) as BusyResponse | null
         const retryAfter = body?.retry_after ?? 60
         const step = nextBusyStep(retryAfter, attempt)
+        // A timer left by an earlier busy answer must not clear the new wait early.
+        if (busyTimerRef.current) clearTimeout(busyTimerRef.current)
+        setBusyUntil(Date.now() + step.waitMs)
         if (step.kind === "retry") {
-          setBusyUntil(Date.now() + step.waitMs)
           await new Promise((resolve) => setTimeout(resolve, step.waitMs))
           setBusyUntil(null)
           continue
         }
-        setBusyUntil(Date.now() + step.waitMs)
-        if (busyTimerRef.current) clearTimeout(busyTimerRef.current)
         busyTimerRef.current = setTimeout(() => setBusyUntil(null), step.waitMs)
         return null
       }

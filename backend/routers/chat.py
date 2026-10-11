@@ -228,7 +228,11 @@ async def send_message(
     background_tasks: BackgroundTasks,
     current_user: object = Depends(get_actor),
 ) -> Response | dict:
-    """The check comes before the rate limit and before any write, so a refused turn stores nothing and does not use the guest's allowance."""
+    """
+    Admits the turn, or answers "busy" at once when this process is at its limit. The check
+    comes before the rate limit and before any write: a refused turn stores nothing and does
+    not use the guest's allowance, so the client can simply send it again.
+    """
     try:
         with admission.admit():
             return await _run_turn(body, request, background_tasks, current_user)

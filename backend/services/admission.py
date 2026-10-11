@@ -1,9 +1,11 @@
-"""Admission control for chat turns.
+"""Admission control for chat turns: a limit on turns in flight in this process.
 
-Past a limit on chat turns in flight in this process, a new turn is refused at
-once with a busy answer instead of being queued. The limit is per process, a
-refused turn is answered at once instead of queued, and everything here runs on
-the event loop thread between awaits, so it needs no lock.
+Past the limit a turn is refused at once instead of queued: an overloaded process answers
+"busy" quickly rather than answering everyone slowly. The count lives in the process, so each
+replica protects itself and capacity adds up when replicas are added. MAX_TURNS_IN_FLIGHT is 0
+(no limit) until it is set from a measured breakpoint.
+
+All of this runs on the event loop thread, between awaits, so the counter needs no lock.
 """
 from collections.abc import Callable, Iterator
 import contextlib
