@@ -121,6 +121,26 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
           onModeChange={onModeChange}
         />
 
+        {recommendedRoute?.estimated && (
+          <div
+            role="status"
+            data-testid="route-estimated"
+            style={{
+              marginTop: 10,
+              padding: "8px 10px",
+              borderRadius: 6,
+              background: "rgba(245, 158, 11, 0.1)",
+              border: "1px solid rgba(245, 158, 11, 0.3)",
+              color: "#F59E0B",
+              fontSize: 11,
+              lineHeight: 1.4,
+              fontFamily: "var(--font-mono)",
+            }}
+          >
+            Route unavailable right now. The time shown is an estimate. If this is an emergency, call 911.
+          </div>
+        )}
+
         {/* CTA button */}
         <button
           onClick={() => onGetDirections(facility.name, facility.lat, facility.lng)}
