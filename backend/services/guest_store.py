@@ -122,6 +122,7 @@ def get_older_messages(guest_id: str, session_id: str, before_id: str, limit: in
 
 
 def recent_messages(guest_id: str, session_id: str, limit: int = 20) -> list[dict]:
+    """The last `limit` messages of a session, oldest first."""
     if not (_is_uuid(guest_id) and _is_uuid(session_id)):
         return []
     rows = demo_db.fetch_all(

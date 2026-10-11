@@ -134,7 +134,8 @@ async def send_message(
         )
         raise HTTPException(503, "Conversation unavailable") from exc
 
-    # The store calls hit the database and run in the thread pool.
+    # The store calls hit the database and run in the thread pool. The agent awaits the
+    # LLM on the event loop, so no thread is held for the seconds an LLM call takes.
     try:
         user_msg = await run_in_threadpool(
             add_message, session_id=session_id, user_id=user_id, role="user", content=body.content
@@ -251,14 +252,8 @@ async def load_older_messages(
 
 @router.post("/sessions/invalidate")
 async def invalidate_cache(
-    request: Request,
     current_user: object = Depends(get_actor),
 ) -> dict:
     """No-op endpoint kept for backward compatibility with web app logout; does nothing."""
-    user_id = str(current_user.id)  # type: ignore[attr-defined]
-    logger.info(
-        "chat cache invalidated",
-        extra={"request_id": getattr(request.state, "request_id", None), "user_id": _trunc_uid(user_id)},
-    )
     return {"status": "cache cleared"}
 
