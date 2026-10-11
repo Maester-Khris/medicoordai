@@ -502,6 +502,37 @@ class TestGuestChat:
         assert resp.status_code == 200
         limit.assert_not_called()
 
+    def test_a_refused_turn_stores_nothing_and_does_not_count_against_the_rate_limit(self, monkeypatch, _turn_defaults):
+        from services import admission
+
+        monkeypatch.setenv("MAX_TURNS_IN_FLIGHT", "1")
+        monkeypatch.setattr(admission, "_in_flight", 1)
+        monkeypatch.setattr(admission, "retry_after_seconds", lambda: 4)
+        with patch("routers.chat.check_rate_limit") as limit, \
+             patch("routers.chat.add_message") as add:
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+
+        assert resp.status_code == 429 and resp.json() == {"code": "busy", "retry_after": 4}
+        assert resp.headers["retry-after"] == "4"
+        limit.assert_not_called()
+        add.assert_not_called()
+        _turn_defaults.assert_not_called()
+
+    def test_an_admitted_turn_frees_its_slot_when_it_ends(self, monkeypatch):
+        from services import admission
+
+        monkeypatch.setenv("MAX_TURNS_IN_FLIGHT", "1")
+        monkeypatch.setattr(admission, "_in_flight", 0)
+        with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.add_message",
+                   side_effect=[_msg("user"), _msg("assistant"), _msg("user"), _msg("assistant")]):
+            client = _guest_client()
+            first = client.post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+            second = client.post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "again"})
+
+        assert first.status_code == 200 and second.status_code == 200
+        assert admission.in_flight() == 0
+
 
 # ── Blocking work stays off the event loop ────────────────────────────────────
 
