@@ -68,3 +68,15 @@ def llm_provider_chain() -> list[str]:
     """Ordered provider names from LLM_PROVIDER_CHAIN ("groq,openai,anthropic"); empty when unset."""
     raw = os.environ.get("LLM_PROVIDER_CHAIN", "")
     return [name.strip().lower() for name in raw.split(",") if name.strip()]
+
+
+def load_aware_routing() -> bool:
+    """
+    Whether facility load counters influence candidate scoring and routing.
+    Enabled by default so recommendation pressure balances across facilities,
+    unless explicitly disabled by setting LOAD_AWARE_ROUTING to 0, off, false, or no.
+    """
+    raw = os.environ.get("LOAD_AWARE_ROUTING")
+    if raw is None:
+        return True
+    return raw.strip().lower() not in ("0", "off", "false", "no")

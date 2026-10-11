@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from starlette.concurrency import run_in_threadpool
-from services import facility_bytes, wait_cache
+from services import facility_bytes, facility_load, wait_cache
 from services.facilities import get_all_facilities, apply_wait_filter, annotate_wait_details
 from services.wait_cache import current_wait, max_age_seconds
 from services.proximity import find_facilities_within
@@ -44,7 +44,10 @@ async def lifespan(_app: FastAPI):
         await run_in_threadpool(wait_cache.refresh_once)
     except Exception as exc:
         logger.warning("wait_cache_warm_failed", extra={"error_type": type(exc).__name__})
-    background_tasks = [asyncio.create_task(wait_cache.run_forever())]
+    background_tasks = [
+        asyncio.create_task(wait_cache.run_forever()),
+        asyncio.create_task(facility_load.run_forever()),
+    ]
     yield
     for task in background_tasks:
         task.cancel()
