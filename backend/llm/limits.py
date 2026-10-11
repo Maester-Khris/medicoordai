@@ -1,4 +1,8 @@
-"""HTTP connection limits for LLM provider clients."""
+"""HTTP connection limits for LLM provider clients.
+
+Set explicitly because the SDK defaults are a hidden cap on LLM calls in flight: 100 for Groq,
+1,000 for OpenAI and Anthropic.
+"""
 import httpx
 
 import config

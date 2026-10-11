@@ -1,4 +1,9 @@
-"""Synchronous runner for coroutines in scripts, reusing a single process event loop."""
+"""Synchronous runner for coroutines. For scripts and the evaluation harness, never the API.
+
+One event loop is kept for the life of the process: the providers' async HTTP clients are bound
+to the loop they first ran on, so a new loop per call (asyncio.run) would break their
+connections on the second call.
+"""
 import asyncio
 from collections.abc import Coroutine
 from typing import Any, TypeVar
