@@ -43,6 +43,8 @@ GRAPH_LOOKUP_DURATION = Histogram(
 POOL_SIZE = Gauge("demo_db_pool_size", "Connections open in the demo database pool", registry=_registry)
 POOL_IN_USE = Gauge("demo_db_pool_in_use", "Connections currently checked out", registry=_registry)
 POOL_WAITING = Gauge("demo_db_pool_waiting", "Callers waiting for a free connection", registry=_registry)
+TURNS_IN_FLIGHT = Gauge("chat_turns_in_flight", "Chat turns currently in flight in this process", registry=_registry)
+TURNS_REJECTED = Counter("chat_turns_rejected_total", "Chat turns rejected by admission control", registry=_registry)
 
 
 class Timing:
@@ -76,3 +78,9 @@ def bind_pool_stats(read_stats: Callable[[], dict[str, int]]) -> None:
     POOL_SIZE.set_function(lambda: read_stats()["size"])
     POOL_IN_USE.set_function(lambda: read_stats()["in_use"])
     POOL_WAITING.set_function(lambda: read_stats()["waiting"])
+
+
+def bind_turns_in_flight(read_count: Callable[[], int]) -> None:
+    """Makes the gauge read `read_count()` at scrape time."""
+    TURNS_IN_FLIGHT.set_function(read_count)
+

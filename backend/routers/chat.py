@@ -9,7 +9,7 @@ from starlette.concurrency import run_in_threadpool
 
 import config
 from middleware.auth import get_actor
-from services import guest_store
+from services import admission, guest_store
 from services.rate_limit import LLM_BUSY_RETRY_SECONDS, busy_response, check_rate_limit, client_ip
 from models import CreateSessionRequest, SendMessageRequest
 from services.chat import (
@@ -103,12 +103,11 @@ async def create_new_session(
     return _ser(session)
 
 
-@router.post("/message", response_model=None)
-async def send_message(
+async def _run_turn(
     body: SendMessageRequest,
     request: Request,
     background_tasks: BackgroundTasks,
-    current_user: object = Depends(get_actor),
+    current_user: object,
 ) -> Response | dict:
     """
     Saves a user message, runs the LLM triage agent, saves the assistant response.
@@ -220,6 +219,21 @@ async def send_message(
         )
 
     return _ser({"user_message": user_msg, "assistant_message": assistant_msg, "triage": triage})
+
+
+@router.post("/message", response_model=None)
+async def send_message(
+    body: SendMessageRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    current_user: object = Depends(get_actor),
+) -> Response | dict:
+    """The check comes before the rate limit and before any write, so a refused turn stores nothing and does not use the guest's allowance."""
+    try:
+        with admission.admit():
+            return await _run_turn(body, request, background_tasks, current_user)
+    except admission.Busy:
+        return busy_response(admission.retry_after_seconds())
 
 
 @router.get("/sessions/{session_id}/messages")
