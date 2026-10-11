@@ -51,6 +51,13 @@ def test_config_with_flag_off_enables_every_mode(monkeypatch: pytest.MonkeyPatch
     assert body["demo_mode"] is False and body["modes_enabled"] == ["car", "bike", "bus", "walk"]
 
 
+def test_config_says_how_many_routes_to_request_up_front(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ROUTES_UP_FRONT", raising=False)
+    assert _client().get("/config").json()["routes_up_front"] == 1
+    monkeypatch.setenv("ROUTES_UP_FRONT", "3")
+    assert _client().get("/config").json()["routes_up_front"] == 3
+
+
 def test_config_needs_no_identity(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DEMO_MODE", "true")
     app = FastAPI()

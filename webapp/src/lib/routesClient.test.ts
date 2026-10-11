@@ -22,6 +22,22 @@ describe("fetchRoutes", () => {
     expect(JSON.parse(String(options.body))).toEqual({ origin: ORIGIN, facility_ids: ["a", "b"], mode: "bus" })
   })
 
+  it("sends the severity when it is given", async () => {
+    apiFetch.mockResolvedValue({ ok: true, json: async () => RESPONSE })
+    await fetchRoutes(ORIGIN, ["a"], "car", "emergent")
+    const [, options] = apiFetch.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(String(options.body))).toEqual({
+      origin: ORIGIN, facility_ids: ["a"], mode: "car", severity: "emergent",
+    })
+  })
+
+  it("leaves the severity out when there is none", async () => {
+    apiFetch.mockResolvedValue({ ok: true, json: async () => RESPONSE })
+    await fetchRoutes(ORIGIN, ["a"], "car", null)
+    const [, options] = apiFetch.mock.calls[0] as [string, RequestInit]
+    expect(JSON.parse(String(options.body))).toEqual({ origin: ORIGIN, facility_ids: ["a"], mode: "car" })
+  })
+
   it("returns null on an http error", async () => {
     apiFetch.mockResolvedValue({ ok: false, status: 502, json: async () => ({}) })
     expect(await fetchRoutes(ORIGIN, ["a"], "car")).toBeNull()

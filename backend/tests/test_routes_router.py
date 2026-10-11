@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 
 from middleware.auth import get_actor
 from routers import routes
-from services import routing
+from services import geoapify_limiter, routing, travel_time
 
 GUEST = "3f2b1c9e-8a47-4d1e-9c55-0a1b2c3d4e5f"
 FACILITIES = [
@@ -53,9 +53,14 @@ def _missing(fid: str) -> dict:
 @pytest.fixture(autouse=True)
 def _defaults(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("DEMO_MODE", "true")
+    monkeypatch.delenv("GEOAPIFY_RATE_PER_SECOND", raising=False)
+    geoapify_limiter.reset_for_tests()
+    travel_time.clear()
     with patch.object(routes, "get_cached_facilities", return_value=(FACILITIES, '"etag"')), \
          patch.object(routes, "check_rate_limit", return_value=None) as limiter:
         yield limiter
+    geoapify_limiter.reset_for_tests()
+    travel_time.clear()
 
 
 def test_routes_are_returned_with_the_fastest_candidate() -> None:
@@ -140,3 +145,57 @@ def test_signed_in_users_are_not_rate_limited(_defaults, monkeypatch: pytest.Mon
     with patch.object(routes.routing, "routes_for", AsyncMock(return_value=[_found("a", 5), _found("b", 6)])):
         assert _client(_User).post("/routes", json=BODY).status_code == 200
     _defaults.assert_not_called()
+
+
+def _spend_the_budget() -> None:
+    while geoapify_limiter.take(1, priority=False):
+        pass
+
+
+def test_a_routine_request_gets_an_estimate_when_the_budget_is_spent() -> None:
+    _spend_the_budget()
+    fake = AsyncMock()
+    with patch.object(routes.routing, "routes_for", fake):
+        resp = _client().post("/routes", json={**BODY, "severity": "routine"})
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert [r["estimated"] for r in body["routes"]] == [True, True]
+    assert all(r["geometry"] is None and r["eta_minutes"] >= 1 for r in body["routes"])
+    assert body["fastest_facility_id"] == "a"  # the nearer of the two
+    fake.assert_not_called()
+
+
+def test_a_request_without_a_severity_is_not_a_priority() -> None:
+    _spend_the_budget()
+    fake = AsyncMock()
+    with patch.object(routes.routing, "routes_for", fake):
+        resp = _client().post("/routes", json=BODY)
+    assert resp.json()["routes"][0]["estimated"] is True
+    fake.assert_not_called()
+
+
+@pytest.mark.parametrize("severity", ["urgent", "emergent"])
+def test_urgent_and_emergent_are_routed_even_when_the_budget_is_spent(severity: str) -> None:
+    _spend_the_budget()
+    fake = AsyncMock(return_value=[_found("a", 20), _found("b", 9)])
+    with patch.object(routes.routing, "routes_for", fake):
+        resp = _client().post("/routes", json={**BODY, "severity": severity})
+
+    assert resp.status_code == 200
+    assert [r["estimated"] for r in resp.json()["routes"]] == [False, False]
+    fake.assert_awaited_once()
+
+
+def test_a_drawn_route_is_not_marked_estimated_and_its_time_is_remembered() -> None:
+    with patch.object(routes.routing, "routes_for", AsyncMock(return_value=[_found("a", 20), _missing("b")])):
+        body = _client().post("/routes", json=BODY).json()
+
+    assert body["routes"][0]["estimated"] is False
+    origin = BODY["origin"]
+    assert travel_time.recall(origin["lat"], origin["lng"], "a", "bike") == 20
+    assert travel_time.recall(origin["lat"], origin["lng"], "b", "bike") is None
+
+
+def test_an_unknown_severity_is_422() -> None:
+    assert _client().post("/routes", json={**BODY, "severity": "critical"}).status_code == 422

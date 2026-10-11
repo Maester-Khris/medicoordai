@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { FacilityCandidate, RoutesResponse, TriageUIState } from "@shared/types"
-import { applyRoutes, candidateIds, promoteFacility, toRouteResults } from "./triageRoutes"
+import { applyRoutes, candidateIds, mergeRoutes, promoteFacility, toRouteResults } from "./triageRoutes"
 
 const facility = (id: string): FacilityCandidate => ({
   id, name: `Facility ${id}`, category: "hospital", address: "1 Main St", lat: 43.6, lng: -79.4, distanceKm: 1,
@@ -41,6 +41,12 @@ describe("candidateIds", () => {
     expect(candidateIds(BASE)).toEqual(["a", "b", "c"])
   })
 
+  it("keeps only the first ones when a number up front is given", () => {
+    expect(candidateIds(BASE, 1)).toEqual(["a"])
+    expect(candidateIds(BASE, 2)).toEqual(["a", "b"])
+    expect(candidateIds(BASE, 3)).toEqual(["a", "b", "c"])
+  })
+
   it("is empty without a recommendation", () => {
     expect(candidateIds({ ...BASE, recommendedFacility: null, nearbyFacilities: [] })).toEqual([])
   })
@@ -51,6 +57,17 @@ describe("toRouteResults", () => {
     expect(toRouteResults(RESPONSE)).toEqual([
       { facilityId: "a", etaMinutes: 20, distanceKm: 5.1, geometry: LINE_A },
       { facilityId: "b", etaMinutes: 9, distanceKm: 2.4, geometry: LINE_B },
+    ])
+  })
+
+  it("carries the estimated flag of a route that was not drawn", () => {
+    const estimated: RoutesResponse = {
+      mode: "car",
+      routes: [{ facility_id: "a", eta_minutes: 7, distance_km: 2.1, geometry: null, estimated: true }],
+      fastest_facility_id: "a",
+    }
+    expect(toRouteResults(estimated)).toEqual([
+      { facilityId: "a", etaMinutes: 7, distanceKm: 2.1, geometry: null, estimated: true },
     ])
   })
 })
@@ -99,5 +116,47 @@ describe("promoteFacility", () => {
 
   it("promotes a candidate that has no route with a null geometry", () => {
     expect(promoteFacility(routed, "c").roadGeometry).toBeNull()
+  })
+})
+
+describe("mergeRoutes", () => {
+  const onlyA: RoutesResponse = {
+    mode: "bike",
+    routes: [{ facility_id: "a", eta_minutes: 20, distance_km: 5.1, geometry: LINE_A }],
+    fastest_facility_id: "a",
+  }
+  const onlyB: RoutesResponse = {
+    mode: "bike",
+    routes: [{ facility_id: "b", eta_minutes: 9, distance_km: 2.4, geometry: LINE_B }],
+    fastest_facility_id: "b",
+  }
+  const shown = applyRoutes(BASE, "bike", onlyA)
+
+  it("adds the new route and keeps the ones already there", () => {
+    const next = mergeRoutes({ ...shown, routeLoading: true }, onlyB)
+    expect(next.routes.map(r => r.facilityId)).toEqual(["a", "b"])
+    expect(next.routeLoading).toBe(false)
+  })
+
+  it("does not move the recommendation", () => {
+    const next = mergeRoutes(shown, onlyB)
+    expect(next.recommendedFacilityId).toBe("a")
+    expect(next.roadGeometry).toEqual(LINE_A)
+  })
+
+  it("replaces a route for the same facility", () => {
+    const faster: RoutesResponse = {
+      ...onlyA, routes: [{ facility_id: "a", eta_minutes: 12, distance_km: 5.1, geometry: LINE_A }],
+    }
+    expect(mergeRoutes(shown, faster).routes).toEqual([
+      { facilityId: "a", etaMinutes: 12, distanceKm: 5.1, geometry: LINE_A },
+    ])
+  })
+
+  it("lets the merged route be promoted", () => {
+    const next = promoteFacility(mergeRoutes(shown, onlyB), "b")
+    expect(next.recommendedFacilityId).toBe("b")
+    expect(next.roadGeometry).toEqual(LINE_B)
+    expect(next.nearbyFacilities).toEqual([A, C])
   })
 })

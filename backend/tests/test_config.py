@@ -63,3 +63,42 @@ def test_provider_chain_is_empty_when_unset_and_ordered_when_set(monkeypatch: py
     assert config.llm_provider_chain() == []
     monkeypatch.setenv("LLM_PROVIDER_CHAIN", " Groq, openai ,,anthropic ")
     assert config.llm_provider_chain() == ["groq", "openai", "anthropic"]
+
+
+@pytest.mark.parametrize("raw, expected", [
+    (None, True), ("on", True), ("true", True), ("1", True), ("anything", True),
+    ("off", False), ("OFF", False), ("0", False), ("false", False), ("no", False), (" off ", False),
+])
+def test_load_aware_routing_is_on_unless_switched_off(monkeypatch: pytest.MonkeyPatch, raw, expected) -> None:
+    import config
+
+    if raw is None:
+        monkeypatch.delenv("LOAD_AWARE_ROUTING", raising=False)
+    else:
+        monkeypatch.setenv("LOAD_AWARE_ROUTING", raw)
+    assert config.load_aware_routing() is expected
+
+
+def test_one_route_is_requested_up_front_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    import config
+
+    monkeypatch.delenv("ROUTES_UP_FRONT", raising=False)
+    assert config.routes_up_front() == 1
+    monkeypatch.setenv("ROUTES_UP_FRONT", "3")
+    assert config.routes_up_front() == 3
+    monkeypatch.setenv("ROUTES_UP_FRONT", "9")
+    assert config.routes_up_front() == 1
+
+
+def test_stubbed_providers_lists_the_overrides_that_are_set(monkeypatch: pytest.MonkeyPatch) -> None:
+    import config
+
+    monkeypatch.delenv("GROQ_BASE_URL", raising=False)
+    monkeypatch.delenv("GEOAPIFY_BASE_URL", raising=False)
+    assert config.stubbed_providers() == []
+    monkeypatch.setenv("GEOAPIFY_BASE_URL", "http://mock:9000")
+    assert config.stubbed_providers() == ["geoapify"]
+    monkeypatch.setenv("GROQ_BASE_URL", "http://mock:9000")
+    assert config.stubbed_providers() == ["groq", "geoapify"]
+    monkeypatch.setenv("GROQ_BASE_URL", "   ")
+    assert config.stubbed_providers() == ["geoapify"]
