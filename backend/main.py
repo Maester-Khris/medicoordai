@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 import demo_db
-from config import demo_mode
+from config import demo_mode, stubbed_providers
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +29,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    stubbed = stubbed_providers()
+    if stubbed:
+        logger.warning("providers_stubbed", extra={"providers": stubbed})
     if demo_mode():
         try:
             demo_db.open_pool()
@@ -120,6 +123,8 @@ def health() -> dict:
         except Exception as exc:
             result["neo4j"] = "unreachable"
             logger.warning("neo4j_health_ping_failed", extra={"error_type": type(exc).__name__})
+    if stubbed_providers():
+        result["stubbed"] = True
     return result
 
 

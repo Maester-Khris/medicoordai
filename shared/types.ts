@@ -178,6 +178,7 @@ export interface AppConfig {
   starter_prompts:   string[]
   downtown_fallback: { lat: number; lng: number }
   modes_enabled:     TravelModeKey[]
+  routes_up_front?:  number
 }
 
 export type Thumb = "up" | "down"

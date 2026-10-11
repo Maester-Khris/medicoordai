@@ -133,6 +133,7 @@ class AppConfig(BaseModel):
     starter_prompts:   list[str]
     downtown_fallback: LatLng
     modes_enabled:     list[Literal["car", "bike", "bus", "walk"]]
+    routes_up_front:   int = 1
 
 
 class FeedbackRequest(BaseModel):

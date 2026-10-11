@@ -80,3 +80,20 @@ def load_aware_routing() -> bool:
     if raw is None:
         return True
     return raw.strip().lower() not in ("0", "off", "false", "no")
+
+
+def routes_up_front() -> int:
+    """
+    How many candidate facilities the web app requests routes for up front before the guest asks.
+    Defaults to 1 and is clamped between 1 and 3 to bound initial routing latency and provider rate limits.
+    """
+    return env_int("ROUTES_UP_FRONT", 1, minimum=1, maximum=3)
+
+
+def stubbed_providers() -> list[str]:
+    """
+    Names of external providers overridden with mock base URLs, in the order groq, geoapify.
+    Set on the staging service only, for load tests against a mock so tests don't consume quotas or hit external APIs.
+    """
+    return [name for name in ("groq", "geoapify") if os.environ.get(f"{name.upper()}_BASE_URL", "").strip()]
+
