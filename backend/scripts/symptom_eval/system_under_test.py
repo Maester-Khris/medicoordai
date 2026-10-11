@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 
 from graph.factory import get_graph_provider
 from llm.groq_client import GroqClient
+from llm.sync import run_sync
 from services.llm_agent import LLMAgent
 from scripts.symptom_eval.graph_capture import CapturingGraphProvider
 
@@ -41,7 +42,7 @@ class LiveLLMAgentAdapter(SystemUnderTestPort):
         self._agent = LLMAgent(client=GroqClient(), graph_provider=self._capturing_provider)
 
     def respond(self, patient_message: str, history: list[dict]) -> SystemTurnResult:
-        result = self._agent.respond(patient_message, history)
+        result = run_sync(self._agent.respond(patient_message, history))
         context = self._capturing_provider.last_context
 
         return SystemTurnResult(
