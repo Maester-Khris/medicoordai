@@ -14,12 +14,23 @@ import os
 import httpx
 
 from metrics import ROUTING_CALL_DURATION, timed
+from services import travel_time
+from services.proximity import haversine_km
 
 logger = logging.getLogger(__name__)
 # httpx logs every request URL at INFO, and the Geoapify key is in the query string.
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-GEOAPIFY_ROUTING_URL = "https://api.geoapify.com/v1/routing"
+
+def routing_url() -> str:
+    """
+    Returns the Geoapify routing endpoint URL.
+    Exists so a load test can point at a mock and is never set for guests.
+    """
+    base = os.environ.get("GEOAPIFY_BASE_URL", "https://api.geoapify.com").strip().rstrip("/")
+    return f"{base}/v1/routing"
+
+
 GEOAPIFY_MODES: dict[str, str] = {"car": "drive", "bike": "bicycle", "walk": "walk", "bus": "transit"}
 ROUTE_TIMEOUT = httpx.Timeout(8.0, connect=3.0)  # slowest observed call (transit) was 2.9 s
 
@@ -67,7 +78,7 @@ async def _fetch_route(
     }
     with timed(ROUTING_CALL_DURATION, mode=mode) as timing:
         try:
-            response = await client.get(GEOAPIFY_ROUTING_URL, params=params)
+            response = await client.get(routing_url(), params=params)
             response.raise_for_status()
             parsed = parse_route(response.json())
         except (httpx.HTTPError, ValueError, TypeError, KeyError, IndexError) as exc:
@@ -121,3 +132,20 @@ def fastest_facility_id(routes: list[dict]) -> str | None:
     if not routed:
         return None
     return min(routed, key=lambda route: route["eta_minutes"])["facility_id"]  # min keeps the first on a tie
+
+
+def estimated_route(origin: dict[str, float], facility: dict, mode: str) -> dict:
+    """
+    Computes a degraded straight-line route estimate when the Geoapify request budget is spent,
+    providing non-zero ETA and distance so callers can still rank and display options.
+    """
+    dist_km = haversine_km(origin["lat"], origin["lng"], facility["lat"], facility["lng"])
+    eta_min = max(1, round(travel_time.estimate_minutes(dist_km, mode)))
+    return {
+        "facility_id": str(facility["id"]),
+        "eta_minutes": eta_min,
+        "distance_km": round(dist_km, 1),
+        "geometry": None,
+        "estimated": True,
+    }
+

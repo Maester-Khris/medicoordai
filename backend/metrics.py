@@ -45,6 +45,7 @@ POOL_IN_USE = Gauge("demo_db_pool_in_use", "Connections currently checked out", 
 POOL_WAITING = Gauge("demo_db_pool_waiting", "Callers waiting for a free connection", registry=_registry)
 TURNS_IN_FLIGHT = Gauge("chat_turns_in_flight", "Chat turns currently in flight in this process", registry=_registry)
 TURNS_REJECTED = Counter("chat_turns_rejected_total", "Chat turns rejected by admission control", registry=_registry)
+ROUTES_DEGRADED = Counter("routes_degraded_total", "Routes answered with estimates when Geoapify rate limit is exhausted", registry=_registry)
 
 
 class Timing:

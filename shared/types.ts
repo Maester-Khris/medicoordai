@@ -152,6 +152,7 @@ export interface RouteResult {
   etaMinutes:  number
   distanceKm:  number
   geometry:    [number, number][] | null
+  estimated?:  boolean
 }
 
 export interface TriageUIState {
@@ -199,6 +200,7 @@ export interface RoutesRequest {
   origin:       { lat: number; lng: number }
   facility_ids: string[]        // 1 to 3, unique
   mode:         TravelModeKey
+  severity?:    Severity
 }
 
 export interface CandidateRoute {
@@ -206,6 +208,7 @@ export interface CandidateRoute {
   eta_minutes: number | null             // null when this candidate has no route
   distance_km: number | null
   geometry:    [number, number][] | null // [lat, lng] pairs
+  estimated?:  boolean
 }
 
 export interface RoutesResponse {

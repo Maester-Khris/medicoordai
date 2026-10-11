@@ -161,6 +161,7 @@ class RoutesRequest(BaseModel):
     origin:       LatLng
     facility_ids: list[str] = Field(..., min_length=1, max_length=3)
     mode:         TravelMode
+    severity:     Severity | None = None
 
     @field_validator("origin")
     @classmethod
@@ -182,6 +183,7 @@ class CandidateRoute(BaseModel):
     eta_minutes: int | None = None
     distance_km: float | None = None
     geometry:    list[tuple[float, float]] | None = None
+    estimated:   bool = False
 
 
 class RoutesResponse(BaseModel):
