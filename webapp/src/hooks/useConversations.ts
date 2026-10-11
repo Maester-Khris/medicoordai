@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useAuth } from "../auth/useAuth"
 import { apiFetch } from "../lib/apiClient"
+import { nextBusyStep } from "../lib/busy"
 import type { Message, Session, ConversationsCache, ChatMessageResponse, BusyResponse } from "@shared/types"
 
 export type { Message, Session, ConversationsCache, ChatMessageResponse }
@@ -72,33 +73,43 @@ export function useConversations(): UseConversationsResult {
     content: string,
     coords?: { lat: number; lng: number } | null,
   ): Promise<ChatMessageResponse | null> => {
-    const res = await apiFetch("/chat/message", {
-      method: "POST",
-      body: JSON.stringify({
-        session_id: sessionId,
-        content,
-        ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
-      }),
-    })
-    if (res.status === 429) {
-      const body = await res.json().catch(() => null) as BusyResponse | null
-      const waitMs = Math.max(1, body?.retry_after ?? 60) * 1000
-      setBusyUntil(Date.now() + waitMs)
-      if (busyTimerRef.current) clearTimeout(busyTimerRef.current)
-      busyTimerRef.current = setTimeout(() => setBusyUntil(null), waitMs)
-      return null
-    }
-    if (!res.ok) return null
-    const data: ChatMessageResponse = await res.json()
-    setCache((prev: ConversationsCache | null) => {
-      if (!prev) return prev
-      const existing = prev.messages[sessionId] ?? []
-      return {
-        ...prev,
-        messages: { ...prev.messages, [sessionId]: [...existing, data.user_message, data.assistant_message] },
+    // Resending is safe: a refused turn stored nothing on the server.
+    for (let attempt = 0; ; attempt++) {
+      const res = await apiFetch("/chat/message", {
+        method: "POST",
+        body: JSON.stringify({
+          session_id: sessionId,
+          content,
+          ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+        }),
+      })
+      if (res.status === 429) {
+        const body = await res.json().catch(() => null) as BusyResponse | null
+        const retryAfter = body?.retry_after ?? 60
+        const step = nextBusyStep(retryAfter, attempt)
+        if (step.kind === "retry") {
+          setBusyUntil(Date.now() + step.waitMs)
+          await new Promise((resolve) => setTimeout(resolve, step.waitMs))
+          setBusyUntil(null)
+          continue
+        }
+        setBusyUntil(Date.now() + step.waitMs)
+        if (busyTimerRef.current) clearTimeout(busyTimerRef.current)
+        busyTimerRef.current = setTimeout(() => setBusyUntil(null), step.waitMs)
+        return null
       }
-    })
-    return data
+      if (!res.ok) return null
+      const data: ChatMessageResponse = await res.json()
+      setCache((prev: ConversationsCache | null) => {
+        if (!prev) return prev
+        const existing = prev.messages[sessionId] ?? []
+        return {
+          ...prev,
+          messages: { ...prev.messages, [sessionId]: [...existing, data.user_message, data.assistant_message] },
+        }
+      })
+      return data
+    }
   }
 
   const loadOlderMessages = async (sessionId: string, beforeId: string): Promise<Message[]> => {
