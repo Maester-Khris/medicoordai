@@ -1,10 +1,11 @@
+import asyncio
 import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 import logging
-from unittest.mock import patch
+from unittest.mock import ANY, AsyncMock, patch
 
 import pytest
 
@@ -22,8 +23,8 @@ def _env(monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setenv(name, value)
     for name in ("LLM_PROVIDER", "LLM_PROVIDER_CHAIN", "LLM_TIMEOUT_SECONDS"):
         monkeypatch.delenv(name, raising=False)
-    with patch("llm.groq_client.Groq") as groq, patch("llm.openai_client.OpenAI") as openai, \
-         patch("llm.anthropic_client.anthropic.Anthropic") as anthropic:
+    with patch("llm.groq_client.AsyncGroq") as groq, patch("llm.openai_client.AsyncOpenAI") as openai, \
+         patch("llm.anthropic_client.anthropic.AsyncAnthropic") as anthropic:
         yield {"groq": groq, "openai": openai, "anthropic": anthropic}
 
 
@@ -35,7 +36,7 @@ def test_without_a_chain_the_default_is_one_instrumented_groq_client_with_sdk_re
     client = get_llm_client()
     assert isinstance(client, InstrumentedLLMClient) and client.provider == "groq"
     assert isinstance(client._inner, GroqClient)
-    assert _env["groq"].call_args.kwargs == {"api_key": "g", "timeout": 30}
+    assert _env["groq"].call_args.kwargs == {"api_key": "g", "timeout": 30, "http_client": ANY}
 
 
 @pytest.mark.parametrize("name,expected", [("anthropic", AnthropicClient), ("openai", OpenAIClient),
@@ -84,8 +85,8 @@ def test_groq_and_anthropic_clients_take_the_timeout_from_the_environment(monkey
     monkeypatch.setenv("LLM_TIMEOUT_SECONDS", "9")
     GroqClient()
     AnthropicClient(max_retries=0)
-    assert _env["groq"].call_args.kwargs == {"api_key": "g", "timeout": 9}
-    assert _env["anthropic"].call_args.kwargs == {"api_key": "a", "timeout": 9, "max_retries": 0}
+    assert _env["groq"].call_args.kwargs == {"api_key": "g", "timeout": 9, "http_client": ANY}
+    assert _env["anthropic"].call_args.kwargs == {"api_key": "a", "timeout": 9, "max_retries": 0, "http_client": ANY}
 
 
 def test_anthropic_defaults_to_the_current_haiku_and_never_sends_temperature(monkeypatch: pytest.MonkeyPatch, _env) -> None:
@@ -97,12 +98,12 @@ def test_anthropic_defaults_to_the_current_haiku_and_never_sends_temperature(mon
     client = AnthropicClient()
     assert client.model_name == "claude-haiku-5-5"
 
-    create = _env["anthropic"].return_value.messages.create
-    create.return_value = MagicMock(
+    create = AsyncMock(return_value=MagicMock(
         content=[MagicMock(type="thinking"), MagicMock(type="text", text="ok")],
         usage=MagicMock(input_tokens=3, output_tokens=2),
-    )
-    response = client.chat(messages=[LLMMessage(role="user", content="hi")], temperature=0.2)
+    ))
+    _env["anthropic"].return_value.messages.create = create
+    response = asyncio.run(client.chat(messages=[LLMMessage(role="user", content="hi")], temperature=0.2))
 
     sent = create.call_args.kwargs
     assert "temperature" not in sent and sent["max_tokens"] == 4096 and sent["model"] == "claude-haiku-5-5"
