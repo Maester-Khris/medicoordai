@@ -117,6 +117,20 @@ def test_older_messages_bad_uuid_is_empty(guest) -> None:
     assert guest_store.get_older_messages(guest(), "nope", "nope") == []
 
 
+def test_recent_messages_are_the_newest_in_order_and_owned(guest) -> None:
+    owner, intruder = guest(), guest()
+    session = guest_store.create_session(owner, "pytest-recent")
+    for i in range(5):
+        guest_store.add_message(session["id"], owner, "user", f"m{i}")
+    recent = guest_store.recent_messages(owner, session["id"], limit=3)
+    assert [m["content"] for m in recent] == ["m2", "m3", "m4"]
+    assert guest_store.recent_messages(intruder, session["id"]) == []
+
+
+def test_recent_messages_bad_uuid_is_empty(guest) -> None:
+    assert guest_store.recent_messages(guest(), "nope") == []
+
+
 def test_feedback_upserts_one_row_per_message(guest) -> None:
     gid = guest()
     session = guest_store.create_session(gid, "pytest-feedback")
