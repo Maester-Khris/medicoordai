@@ -27,7 +27,8 @@ def routing_url() -> str:
     Returns the Geoapify routing endpoint URL.
     Exists so a load test can point at a mock and is never set for guests.
     """
-    base = os.environ.get("GEOAPIFY_BASE_URL", "https://api.geoapify.com").strip().rstrip("/")
+    # A blank value means "not set": it must not turn the address into a bare path.
+    base = (os.environ.get("GEOAPIFY_BASE_URL", "").strip() or "https://api.geoapify.com").rstrip("/")
     return f"{base}/v1/routing"
 
 

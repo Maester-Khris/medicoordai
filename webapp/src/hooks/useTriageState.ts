@@ -151,6 +151,7 @@ export function useTriageState() {
 
   const selectFacility = useCallback(async (facilityId: string) => {
     const current = stateRef.current
+    if (!current.active || current.routeLoading) return
     const route = current.routes.find(r => r.facilityId === facilityId)
     // If route already in state (even with null geometry), promote immediately without network call.
     if (route) {

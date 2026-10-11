@@ -63,7 +63,7 @@ def record(facility: dict, severity: str, lat: float, lng: float) -> None:
         except Exception as exc:
             logger.warning(
                 "facility_load_write_failed",
-                extra={"error_type": type(exc).__name__, "error": str(exc)},
+                extra={"error_type": type(exc).__name__},
             )
 
     try:
@@ -137,7 +137,7 @@ async def run_forever() -> None:
         except Exception as exc:
             logger.warning(
                 "facility_load_refresh_failed",
-                extra={"error_type": type(exc).__name__, "error": str(exc)},
+                extra={"error_type": type(exc).__name__},
             )
 
 

@@ -55,9 +55,10 @@ def _get_index(facilities: list[dict]) -> dict[str, list[tuple[int, dict]]]:
 
 def rings_covering(distance_km: float) -> int:
     """
-    two cells g rings apart have centres at least 1.5*edge*g apart and a point is
-    at most one edge from its cell centre, so this many rings are sure to contain
-    everything within the distance;
+    Rings around a point's cell that are sure to contain everything within `distance_km`.
+    Two cells g rings apart have centres at least 1.5 * edge * g apart, and a point is at most
+    one edge from its cell centre; with the smallest and largest edge that gives
+    distance >= 1.5 * EDGE_KM_MIN * g - 2 * EDGE_KM_MAX, solved here for g.
     """
     return math.floor((distance_km + 2 * EDGE_KM_MAX) / (1.5 * EDGE_KM_MIN)) + 1
 

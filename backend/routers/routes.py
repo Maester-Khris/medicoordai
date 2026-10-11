@@ -41,6 +41,8 @@ async def post_routes(
         raise HTTPException(404, "Unknown facility")
     candidates = [by_id[facility_id] for facility_id in body.facility_ids]
 
+    # One Geoapify call per candidate. An urgent or emergent case always gets its calls; the
+    # others get an estimate, with no road shape, once the plan's rate is used up.
     priority = body.severity in (Severity.urgent, Severity.emergent) if body.severity else False
 
     if geoapify_limiter.take(len(candidates), priority):
