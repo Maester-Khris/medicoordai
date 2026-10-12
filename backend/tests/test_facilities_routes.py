@@ -111,6 +111,23 @@ class TestFacilitiesCaching:
         assert second.headers["ETag"] == first.headers["ETag"]
         encode.assert_not_called()
 
+    @pytest.mark.parametrize("wrap", ['W/{etag}', '"other", {etag}', 'W/"other", W/{etag}'])
+    def test_a_weak_or_listed_tag_matches_because_a_proxy_that_compresses_makes_ours_weak(self, wrap):
+        with patch("main.get_cached_facilities", return_value=(TWO_HOSPITALS, '"f1"')), \
+             patch("main.current_wait", return_value=_snap(_info(a=10))):
+            first = asyncio.run(main.facilities(_request()))
+            header = wrap.format(etag=first.headers["ETag"])
+            second = asyncio.run(main.facilities(_request(**{"If-None-Match": header})))
+
+        assert second.status_code == 304
+
+    def test_a_different_tag_is_not_a_match(self):
+        with patch("main.get_cached_facilities", return_value=(TWO_HOSPITALS, '"f1"')), \
+             patch("main.current_wait", return_value=_snap(_info(a=10))):
+            second = asyncio.run(main.facilities(_request(**{"If-None-Match": 'W/"stale"'})))
+
+        assert second.status_code == 200
+
     def test_new_wait_data_gives_a_new_etag_and_a_new_body(self):
         with patch("main.get_cached_facilities", return_value=(TWO_HOSPITALS, '"f1"')):
             with patch("main.current_wait", return_value=_snap(_info(a=10), version="w1")):

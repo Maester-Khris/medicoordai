@@ -183,7 +183,9 @@ Response headers:
 | `Cache-Control: max-age=N` | N seconds until the wait-time worker's next run, at least `MAP_MIN_MAX_AGE_SECONDS` |
 | `X-Wait-As-Of` | Time of the worker's last successful run (ISO 8601). Absent when unknown |
 
-A request with a matching `If-None-Match` gets `304` with the same headers and no body.
+A request with a matching `If-None-Match` gets `304` with the same headers and no body. The match is
+weak (RFC 9110): `W/"…"` matches `"…"`, and a comma-separated list matches if any tag does, because
+the hosting proxy compresses the body and then sends our tag back to the browser as `W/"…"`.
 
 ### POST `/chat/message` when the server is busy
 

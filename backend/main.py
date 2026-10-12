@@ -171,7 +171,7 @@ async def facilities(
     if wait.last_run is not None:
         headers["X-Wait-As-Of"] = wait.last_run.isoformat()
 
-    if request.headers.get("If-None-Match", "") == etag:
+    if facility_bytes.etag_matches(request.headers.get("If-None-Match", ""), etag):
         return Response(status_code=304, headers=headers)
 
     body = facility_bytes.get(key)

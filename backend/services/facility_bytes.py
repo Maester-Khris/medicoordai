@@ -20,6 +20,13 @@ def etag_for(key: Key) -> str:
     return '"' + hashlib.sha256(repr(key).encode()).hexdigest()[:32] + '"'
 
 
+def etag_matches(if_none_match: str, etag: str) -> bool:
+    """If-None-Match compares weakly (RFC 9110): a proxy that gzips the body turns our strong tag
+    into W/"..." and the browser sends that back, so the prefix must not decide the match."""
+    opaque = etag.removeprefix("W/")
+    return any(tag.strip().removeprefix("W/") == opaque for tag in if_none_match.split(","))
+
+
 def encode(data: list[dict]) -> bytes:
     return json.dumps(data, ensure_ascii=False, separators=(",", ":"), default=str).encode("utf-8")
 
