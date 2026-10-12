@@ -11,9 +11,11 @@
 //           key, so it is capped at 2 per second in every scenario and never ramps.
 import http from 'k6/http';
 import { check } from 'k6';
+import { Counter } from 'k6/metrics';
 import { BASE_URL, guestHeaders, pick, randomTorontoPoint, uuid4 } from './lib.js';
 
 const SCENARIO = __ENV.SCENARIO || 'smoke';
+const notModified = new Counter('not_modified_304');
 const AVG_RATE = Number(__ENV.AVG_RATE || 10);
 const RATES = (__ENV.RATES || '10,25,50,100,150,200').split(',').map((r) => Number(r.trim()));
 const STEP_SECONDS = 135;
@@ -93,11 +95,24 @@ export function setup() {
   return { hospitalIds };
 }
 
+// A browser that has the facility list asks again with If-None-Match. Each virtual user keeps the
+// ETag it was last given and sends it on half of its list requests, so 304 is part of the mix.
+let facilitiesEtag = null;
+
 export function mix() {
   const roll = Math.random() * 100;
   let res;
   if (roll < 42) {
-    res = http.get(`${BASE_URL}/facilities`, { headers: GZIP, tags: { name: 'facilities' } });
+    const headers = { ...GZIP };
+    if (facilitiesEtag && Math.random() < 0.5) {
+      headers['If-None-Match'] = facilitiesEtag;
+    }
+    res = http.get(`${BASE_URL}/facilities`, { headers, tags: { name: 'facilities' } });
+    if (res.status === 200) {
+      facilitiesEtag = res.headers['Etag'] || res.headers['ETag'] || null;
+    } else if (res.status === 304) {
+      notModified.add(1);
+    }
   } else if (roll < 74) {
     const point = randomTorontoPoint();
     const category = pick(CATEGORIES);
@@ -108,7 +123,7 @@ export function mix() {
   } else {
     res = http.get(`${BASE_URL}/health`, { tags: { name: 'health' } });
   }
-  check(res, { 'status is 200': (r) => r.status === 200 });
+  check(res, { 'status is 200 or 304': (r) => r.status === 200 || r.status === 304 });
 }
 
 export function routes(data) {
