@@ -225,6 +225,17 @@ with several workers each would report its own numbers.
 | `chat_turns_rejected_total` | counter | none |
 | `routes_degraded_total` | counter | none |
 
+### GET `/internal/memory-profile`
+
+Staging only, for load tests. Answers 404 unless `MEMORY_PROFILE` is set (`1`, `on`, `true` or
+`yes`) and 403 without the `X-Internal` token. With the switch on, the process starts `tracemalloc`
+after its warm-up and keeps a baseline snapshot; this route compares the live heap to it.
+
+Response: `traced_bytes`, `rss_bytes` and `top`, the 20 allocation sites that grew most
+(`site` as `path:line`, `size_diff_bytes`, `count_diff`). Compare `rss_bytes` with
+`traced_bytes`: growth outside the Python heap shows up in the first and not the second. Tracing
+slows the process, so numbers taken with it on are for diagnosis, not for capacity.
+
 ### Settings
 
 Read at call time. A missing, malformed or out-of-range number falls back to the default with
@@ -251,6 +262,7 @@ one `env_setting_invalid` warning.
 | `LOAD_WINDOW_MINUTES` | 15 (1 to 120) | How far back recent recommendations count as load |
 | `ROUTES_UP_FRONT` | 1 (1 to 3) | Candidates the web app routes before the guest asks |
 | `GEOAPIFY_RATE_PER_SECOND` | 5 (1 to 1000) | Geoapify calls per second per process; the plan's rate divided by the number of processes |
+| `MEMORY_PROFILE` | off | Turns on `tracemalloc` and `/internal/memory-profile`. Staging service only |
 | `GROQ_BASE_URL`, `GEOAPIFY_BASE_URL` | unset | Point the API at a mock. Staging service only, never in Doppler `stg` |
 
 The rate-limit variables exist for load tests on staging; the public demo keeps the defaults.

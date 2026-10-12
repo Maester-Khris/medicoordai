@@ -191,3 +191,15 @@ class RoutesResponse(BaseModel):
     mode:                TravelMode
     routes:              list[CandidateRoute]
     fastest_facility_id: str | None = None
+
+
+class MemoryProfileSite(BaseModel):
+    site:            str
+    size_diff_bytes: int
+    count_diff:      int
+
+
+class MemoryProfileResponse(BaseModel):
+    traced_bytes: int
+    rss_bytes:    int
+    top:          list[MemoryProfileSite]

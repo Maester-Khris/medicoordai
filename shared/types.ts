@@ -222,3 +222,16 @@ export interface BusyResponse {
   code:        "busy"
   retry_after: number
 }
+
+// GET /internal/memory-profile — staging only (MEMORY_PROFILE), X-Internal token required
+export interface MemoryProfileSite {
+  site:            string   // "path/file.py:line"
+  size_diff_bytes: number   // growth since the baseline taken at startup
+  count_diff:      number
+}
+
+export interface MemoryProfileResponse {
+  traced_bytes: number      // live tracemalloc total
+  rss_bytes:    number      // resident set size of the process
+  top:          MemoryProfileSite[]  // largest growth first, at most 20
+}

@@ -9,13 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from starlette.concurrency import run_in_threadpool
-from services import facility_bytes, facility_load, wait_cache
+from services import facility_bytes, facility_load, memory_profile, wait_cache
 from services.facilities import get_all_facilities, apply_wait_filter, annotate_wait_details
 from services.wait_cache import current_wait, max_age_seconds
 from services.proximity import find_facilities_within
 from db import supabase_rpc
-from models import NearbyFacilityResult
-from middleware.auth import AuthMiddleware, get_current_user
+from models import MemoryProfileResponse, NearbyFacilityResult
+from middleware.auth import AuthMiddleware, get_current_user, require_internal
 from cache import get_cached_facilities, set_cached_facilities
 from graph.factory import close_graph_provider, get_graph_provider
 from observability import init_observability, verify_metrics_token, RequestIDMiddleware, _registry
@@ -47,6 +47,7 @@ async def lifespan(_app: FastAPI):
         await run_in_threadpool(wait_cache.refresh_once)
     except Exception as exc:
         logger.warning("wait_cache_warm_failed", extra={"error_type": type(exc).__name__})
+    memory_profile.start()  # after the warm-up, so the baseline already holds the caches
     background_tasks = [
         asyncio.create_task(wait_cache.run_forever()),
         asyncio.create_task(facility_load.run_forever()),
@@ -88,6 +89,15 @@ async def metrics(_: None = Depends(verify_metrics_token)) -> Response:
         content=generate_latest(_registry),
         media_type=CONTENT_TYPE_LATEST,
     )
+
+
+@app.get("/internal/memory-profile", response_model=MemoryProfileResponse)
+def memory_profile_report(request: Request) -> dict:
+    """Staging only: 404 unless MEMORY_PROFILE is set, 403 without the internal token."""
+    if not memory_profile.enabled():
+        raise HTTPException(404, "Not found")
+    require_internal(request)
+    return memory_profile.growth()
 
 
 @app.get("/")
