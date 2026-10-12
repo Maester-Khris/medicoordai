@@ -36,6 +36,7 @@ const FOLLOW_UPS = [
 const turnDuration = new Trend('chat_turn_duration', true);
 const turnBusy = new Rate('chat_turn_busy');           // 429: admission limit, our limiter, or the provider's quota
 const turnFailed = new Rate('chat_turn_failed');       // anything else that is not a 200
+const turnsOk = new Counter('chat_turns_ok');           // 200s: throughput is this over the run time
 const turnsWithRecommendation = new Counter('chat_turns_with_recommendation');
 const conversations = new Counter('chat_conversations');
 
@@ -72,6 +73,7 @@ function sendTurn(headers, sessionId, content, origin) {
   turnFailed.add(turn.status !== 200 && !busy);
   if (turn.status === 200) {
     turnDuration.add(turn.timings.duration);
+    turnsOk.add(1);
     const triage = turn.json('triage');
     if (triage && triage.recommended_facility) {
       turnsWithRecommendation.add(1);

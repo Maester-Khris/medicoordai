@@ -113,3 +113,10 @@ def test_route_delays_follow_the_configured_percentiles(monkeypatch: pytest.Monk
     samples = sorted(mock_provider.route_delay_seconds() for _ in range(4000))
     assert samples[len(samples) // 2] == pytest.approx(1.0, rel=0.1)
     assert samples[int(len(samples) * 0.95)] == pytest.approx(1.9, rel=0.15)
+
+
+def test_the_emergent_share_is_a_setting(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("MOCK_EMERGENT_SHARE", "1")
+    assert {mock_provider.pick_severity() for _ in range(50)} == {"emergent"}
+    monkeypatch.setenv("MOCK_EMERGENT_SHARE", "0")
+    assert "emergent" not in {mock_provider.pick_severity() for _ in range(200)}

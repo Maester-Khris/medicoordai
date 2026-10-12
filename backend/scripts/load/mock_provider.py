@@ -13,6 +13,7 @@ Settings (all optional; defaults reproduce Sprint 21):
     MOCK_ROUTE_P95_S      95th percentile routing call time (1.9)
     MOCK_ROUTE_POINTS     points in a route's geometry (200)
     MOCK_DELAY_SCALE      multiplies every delay; 0 answers at once (1)
+    MOCK_EMERGENT_SHARE   share of triage calls classified emergent (0.85)
 
 GET /stats counts what the API sent, POST /stats/reset zeroes it.
 """
@@ -30,9 +31,9 @@ from fastapi.responses import JSONResponse
 
 app = FastAPI(title="MediCoord provider mock")
 
-# ponytail: fixed mix and token counts. Sprint 21 measured about 1,820 prompt and 690 completion
-# tokens over two calls per turn; make these settings if a run needs another shape.
-SEVERITY_WEIGHTS = {"routine": 25, "moderate": 40, "urgent": 25, "emergent": 10}
+# ponytail: fixed token counts. Sprint 21 measured about 1,820 prompt and 690 completion tokens
+# over two calls per turn; make these settings if a run needs another shape.
+OTHER_SEVERITIES = ("routine", "moderate", "urgent")
 PROMPT_TOKENS = 910
 COMPLETION_TOKENS = 345
 SPEED_KMH = {"drive": 40.0, "bicycle": 15.0, "walk": 5.0, "transit": 25.0}
@@ -63,6 +64,15 @@ def _float(name: str, default: float) -> float:
 
 def _scale() -> float:
     return _float("MOCK_DELAY_SCALE", 1.0)
+
+
+def pick_severity() -> str:
+    """The agent holds back a triage in the first turns unless it is emergent, so this share
+    decides how many turns end in a recommendation and a second call. Sprint 21's scenarios are
+    emergencies and 87% of its turns got one; the default reproduces that."""
+    if random.random() < _float("MOCK_EMERGENT_SHARE", 0.85):
+        return "emergent"
+    return random.choice(OTHER_SEVERITIES)
 
 
 def llm_delay_seconds() -> float:
@@ -122,8 +132,7 @@ async def chat_completions(request: Request) -> JSONResponse:
         # The agent suppresses a triage that comes too early, so always offering one keeps the
         # real turn-count rules in play.
         _stats["llm_tool_calls"] += 1
-        severity = random.choices(list(SEVERITY_WEIGHTS), weights=list(SEVERITY_WEIGHTS.values()))[0]
-        arguments = {"severity": severity, "reasoning": "Mock classification.", "information_sufficient": True}
+        arguments = {"severity": pick_severity(), "reasoning": "Mock classification.", "information_sufficient": True}
         message = {
             "role": "assistant",
             "content": None,
