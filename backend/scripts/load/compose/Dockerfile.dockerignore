@@ -1,0 +1,3 @@
+# The build needs requirements.txt only. Nothing else in backend/ is sent to the builder.
+*
+!requirements.txt

@@ -1,0 +1,68 @@
+# Local proof that the API scales by adding replicas. Everything here runs on this machine and
+# nothing reaches Railway, the real providers or Doppler. Started by run_horizontal.py; see
+# ../README.md. The demo Postgres is the existing local container (medicoord-demo-pg), which
+# the script attaches to this network.
+name: medicoord-load
+
+x-app: &app
+  build:
+    context: ../../..
+    dockerfile: scripts/load/compose/Dockerfile
+  image: medicoord-load-app
+  working_dir: /app
+  volumes:
+    - ../../..:/app:ro
+
+services:
+  api:
+    <<: *app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --log-level warning
+    cpus: ${API_CPUS:-1}
+    mem_limit: ${API_MEMORY:-768m}
+    depends_on: [redis, mock]
+    environment:
+      ENVIRONMENT: loadtest
+      DEMO_MODE: "true"
+      LLM_PROVIDER: groq
+      GRAPH_RAG_PROVIDER: "off"
+      # Local throwaway credentials (migrations/postgres/README.md), reachable on this network only.
+      POSTGRES_DB_URL_APP: postgresql://postgres:postgres@medicoord-demo-pg:5432/medicoord_demo
+      UPSTASH_REDIS_URL: redis://redis:6379/0
+      # Both providers are the mock. The keys only have to be non-empty.
+      GROQ_API_KEY: mock
+      GROQ_BASE_URL: http://mock:8080
+      GEOAPIFY_API_KEY: mock
+      GEOAPIFY_BASE_URL: http://mock:8080
+      # Read at import and unused in DEMO_MODE.
+      SUPABASE_URL: http://unused.invalid
+      SUPABASE_SERVICE_ROLE_KEY: unused
+      # Not secrets: this stack is local. They mark test guests and open /metrics.
+      DEMO_INTERNAL_TOKEN: compose-internal-token
+      METRICS_BEARER_TOKEN: compose-metrics-token
+      # Every request comes from one address.
+      RATE_LIMIT_CHAT_GUEST: "100000"
+      RATE_LIMIT_CHAT_IP: "100000000"
+      RATE_LIMIT_ROUTES_GUEST: "100000"
+      RATE_LIMIT_ROUTES_IP: "100000000"
+      ROUTING_SHADOW_SAMPLE_RATE: "0"
+      MAX_TURNS_IN_FLIGHT: ${MAX_TURNS_IN_FLIGHT:-0}
+      DEMO_DB_POOL_MAX: ${DEMO_DB_POOL_MAX:-5}
+
+  mock:
+    <<: *app
+    command: uvicorn scripts.load.mock_provider:app --host 0.0.0.0 --port 8080 --log-level warning
+    ports: ["127.0.0.1:8089:8080"]
+    environment:
+      # Shorter than the real 2.2 s so the bend is reached with fewer virtual users than this
+      # machine can generate. The result is a ratio between replica counts, not a capacity.
+      MOCK_LLM_MEAN_S: ${MOCK_LLM_MEAN_S:-0.5}
+
+  redis:
+    image: redis:7-alpine
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on: [api]
+    ports: ["127.0.0.1:8088:80"]
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
