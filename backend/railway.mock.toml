@@ -1,0 +1,12 @@
+# Config for the load-test provider mock only (backend/scripts/load/mock_provider.py).
+# python-api and medicoordai-staging build from this same directory and must not read it: only
+# the mock service points "Config file path" here (/backend/railway.mock.toml). A file named
+# railway.toml would be picked up by every service rooted in backend/.
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "uvicorn scripts.load.mock_provider:app --host 0.0.0.0 --port $PORT"
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"
