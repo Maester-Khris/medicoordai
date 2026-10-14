@@ -71,6 +71,11 @@ function sendTurn(headers, sessionId, content, origin) {
   const busy = turn.status === 429;
   turnBusy.add(busy);
   turnFailed.add(turn.status !== 200 && !busy);
+  if (busy) {
+    // Wait as the web client does before it sends again; without it a refused guest would
+    // start a new conversation at once, which no browser does.
+    sleep(Number(turn.headers['Retry-After']) || 3);
+  }
   if (turn.status === 200) {
     turnDuration.add(turn.timings.duration);
     turnsOk.add(1);
