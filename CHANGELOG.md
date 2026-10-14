@@ -802,7 +802,9 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 ---
 
-## [Sprint 22 — Started] · Guest Demo Launch — Sprint 3: demo scaling
+## [Sprint 22 — Closed] · Guest Demo Launch — Sprint 3: demo scaling
+
+**Closed — 2026-10-14.** PR #56 merged into `preview` (`fa4aabb`) after CI went green (the OpenAI SDK pinned below 3); PR #57, emergent routing to ERs only, merged before it (`c58f3c2`). `python-api` and the wait-time worker deployed from `preview`; the four-scenario smoke suite passed on the preview deployment. The load-test mock and staging are stopped, not deleted.
 
 **Started — 2026-10-10 · branch: `feat/demo-scaling`.** Third sprint of the guest demo launch. Goal: 1,000 to 2,000 concurrent chat turns, with numbers that hold up under review. Baseline and profile: Sprint 21 phase 2 (below).
 
@@ -866,7 +868,9 @@ Provider mock calibrated against OpenAI `gpt-4o-mini` (1,935 real turns): mean 1
 - [ ] ~~Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel.~~ Deferred (read-only key, negligible).
 - [ ] ~~Decide: API and Redis in the same region; box size.~~ Deferred with the US East move and run 8.
 - [x] Load-test guest rows deleted from the demo database before the runs, and the 68,276 internal guests of these runs after them; the four non-internal guests, `8fe1df4f` included, are kept.
-- [x] Emergent cases go only to facilities with an emergency department (branch `fix/emergent-er-only`; demo database fixed and `python-api` restarted 2026-10-14). Before: 16% of a Toronto grid sent an emergent case to a rehabilitation, hospice, psychiatric or surgical site.
+- [x] Emergent cases go only to facilities with an emergency department (PR #57; demo database fixed and `python-api` restarted 2026-10-14). Before: 16% of a Toronto grid sent an emergent case to a rehabilitation, hospice, psychiatric or surgical site.
+- [x] `python-api` settings from the measurements: `DEMO_DB_POOL_MAX=5`, `MAX_TURNS_IN_FLIGHT=50`, `GEOAPIFY_RATE_PER_SECOND=5` (1 vCPU / 1 GB, one worker).
+- [x] Provider fallback on for the public demo: `LLM_PROVIDER_CHAIN=groq,anthropic` (Doppler `stg`), so a Groq refusal is answered by Anthropic instead of the busy answer. The proactive token budget per provider is planned: `docs/superpowers/plans/2026-10-14-llm-provider-budget.md`.
 
 ---
 
