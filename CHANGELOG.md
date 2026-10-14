@@ -808,15 +808,39 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 ### Scope
 
-- [ ] Async chat path: the providers' own async clients instead of the thread pool.
-- [ ] Facility list encoded once per data version and served as bytes (see Decisions).
-- [ ] Facility recommendation and route drawing: cell index, load-aware choice, one route up front, Geoapify budget protection (see Decisions).
-- [ ] Conversation history and the facility cache out of process memory (Redis in front of Postgres); metrics that work across replicas. Horizontal scaling proved with a local Docker Compose test.
-- [ ] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
-- [ ] Database pool size chosen from measurement (5 today).
-- [ ] Wait-time read path: in-memory copy on the API plus browser caching (decided 2026-10-10, see Decisions).
-- [ ] One-hour soak and the chat breakpoint, on the final code.
-- [ ] Final tasks: a new `METRICS_BEARER_TOKEN` generated locally, set on `python-api` and staging, registered in Grafana Cloud with its scrape job.
+- [x] Async chat path: the providers' own async clients instead of the thread pool.
+- [x] Facility list encoded once per data version and served as bytes (see Decisions). Includes a fix: `If-None-Match` is matched weakly, so a 304 is returned behind Railway's compressing proxy (0 of 134 conditional requests answered 304 before, 21 of 135 after).
+- [x] Facility recommendation and route drawing: cell index, load-aware choice, one route up front, Geoapify budget protection (see Decisions).
+- [x] Conversation history and the facility cache out of process memory (history read from the store on every turn); metrics that work across replicas. Horizontal scaling proved with a local Docker Compose test: history kept across replicas, load counters exact, one replica stopped mid-run lost 0.4% of turns. The throughput ratio (1 : 1.52 : 2.16 at 1, 2, 4 replicas) was measured on a laptop, which is the suspected limit; not re-measured on larger hardware.
+- [x] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
+- [x] Database pool size chosen from measurement: 5 on a 1 vCPU process. Pools of 10 and 20 lowered throughput (CPU per turn roughly doubled); a control run at 5 reproduced the first result.
+- [x] Wait-time read path: in-memory copy on the API plus browser caching (decided 2026-10-10, see Decisions).
+- [x] One-hour soak and the chat breakpoint, on the final code (results below).
+- [ ] ~~Final tasks: a new `METRICS_BEARER_TOKEN` generated locally, set on `python-api` and staging, registered in Grafana Cloud with its scrape job.~~ Deferred (see below).
+
+### Results (staging, 1 vCPU / 1 GB, one worker, 2026-10-14)
+
+Provider mock calibrated against OpenAI `gpt-4o-mini` (1,935 real turns): mean 1.69 s both, p95 2.54 s real and 2.60 s mock, 51% and 50% of turns ending in a recommendation. Report: `artifacts/perf/2026-10-13-phase5-report.md`.
+
+- **Capacity of one box:** about 35 chat turns a second (2,100 a minute), flat up to about 60 turns in flight, about 16 ms of API CPU per turn. Past that it queues (p95 10.3 s at 250 conversations, 19.6 s at 500) and nothing fails.
+- **Admission at 50 turns in flight:** the limit holds; accepted turns stay near the unloaded time up to 2.5 times capacity (p95 3.3 s) and slow to p95 7.1 s at 5 times, where the pool of 5 is the limit (session creation is not behind admission).
+- **Soak, one hour at 75 conversations:** 93,322 turns, 0 failed, 1.75% busy answers, p95 2.60 to 2.66 s in every 10-minute window, resident memory 155 MB to 155 MB over the last 30 minutes.
+- **The 1,000 to 2,000 target is not met on this box:** it bends near 60 turns in flight. Reaching it needs more processes (several uvicorn workers on a larger box; the Hobby plan allows one replica per service) and the async database pool.
+
+### Spec amendments
+
+- Success criterion 7 (the 27-vignette triage check): dropped from this sprint, a triage evaluation rather than a load test.
+- The horizontal scaling ratio was measured locally only (see Scope).
+- Railway's Hobby plan allows one replica per service: production scales by box size and uvicorn workers, not replicas.
+- Phase 5 was reduced (2026-10-13) to calibration, breakpoint, admission, pool size and soak.
+
+### Deferred
+
+- Phase 5 runs 6 (map path breakpoint), 7 (Geoapify calls per 1,000 guests) and 8 (2 vCPU with 2 workers).
+- `python-api` and the demo Postgres to US East.
+- A new `METRICS_BEARER_TOKEN` and the Grafana Cloud scrape job.
+- After the run: why a larger pool costs CPU (profile first), `AsyncConnectionPool` for the demo database, session creation behind admission, pool 10 against 20 in one session, Upstash plan limits under load, the mock's `/stats` read in the load scripts.
+- `VITE_GEOAPIFY_API_KEY` in Doppler and Vercel: kept for now (read-only, negligible).
 
 ### Decisions (2026-10-10)
 
@@ -837,11 +861,12 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 ### Also open
 
-- [ ] Real-call test of the OpenAI client with gpt-4o-mini (only run against a fake SDK so far).
-- [ ] Doppler `stg` `ANTHROPIC_MODEL=claude-haiku-4-5` against the code default `claude-haiku-5-5`.
-- [ ] Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel (owner, sprint end).
-- [ ] Decide: API and Redis in the same region; box size (2 vCPU / 2 GB discussed).
-- [ ] Before the first load test: delete the load-test guest rows from the demo database; one non-internal guest row (`8fe1df4f`) is unexplained and is not to be deleted without asking.
+- [x] Real-call test of the OpenAI client with gpt-4o-mini: 1,935 real turns in the calibration run, none failed.
+- [x] `ANTHROPIC_MODEL`: `claude-haiku-4-5` and `claude-haiku-5-5` both passed a plain and a forced-tool call (2026-10-14); `claude-haiku-4-5` stays pinned by env var on Doppler `stg`, `python-api` and staging.
+- [ ] ~~Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel.~~ Deferred (read-only key, negligible).
+- [ ] ~~Decide: API and Redis in the same region; box size.~~ Deferred with the US East move and run 8.
+- [x] Load-test guest rows deleted from the demo database before the runs, and the 68,276 internal guests of these runs after them; the four non-internal guests, `8fe1df4f` included, are kept.
+- [x] Emergent cases go only to facilities with an emergency department (branch `fix/emergent-er-only`; demo database fixed and `python-api` restarted 2026-10-14). Before: 16% of a Toronto grid sent an emergent case to a rehabilitation, hospice, psychiatric or surgical site.
 
 ---
 
