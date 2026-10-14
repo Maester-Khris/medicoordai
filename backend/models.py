@@ -133,6 +133,7 @@ class AppConfig(BaseModel):
     starter_prompts:   list[str]
     downtown_fallback: LatLng
     modes_enabled:     list[Literal["car", "bike", "bus", "walk"]]
+    routes_up_front:   int = 1
 
 
 class FeedbackRequest(BaseModel):
@@ -161,6 +162,7 @@ class RoutesRequest(BaseModel):
     origin:       LatLng
     facility_ids: list[str] = Field(..., min_length=1, max_length=3)
     mode:         TravelMode
+    severity:     Severity | None = None
 
     @field_validator("origin")
     @classmethod
@@ -182,9 +184,22 @@ class CandidateRoute(BaseModel):
     eta_minutes: int | None = None
     distance_km: float | None = None
     geometry:    list[tuple[float, float]] | None = None
+    estimated:   bool = False
 
 
 class RoutesResponse(BaseModel):
     mode:                TravelMode
     routes:              list[CandidateRoute]
     fastest_facility_id: str | None = None
+
+
+class MemoryProfileSite(BaseModel):
+    site:            str
+    size_diff_bytes: int
+    count_diff:      int
+
+
+class MemoryProfileResponse(BaseModel):
+    traced_bytes: int
+    rss_bytes:    int
+    top:          list[MemoryProfileSite]

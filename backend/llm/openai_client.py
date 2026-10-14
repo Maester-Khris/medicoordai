@@ -1,10 +1,11 @@
 import os
 
-from openai import OpenAI
+from openai import AsyncOpenAI, DefaultAsyncHttpxClient
 
 from config import llm_timeout_seconds
 
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
+from .limits import connection_limits
 
 
 class OpenAIClient(BaseLLMClient):
@@ -19,17 +20,21 @@ class OpenAIClient(BaseLLMClient):
         model = os.environ.get("OPENAI_MODEL", "").strip()
         if not model:
             raise RuntimeError("OPENAI_MODEL is not set")
-        options: dict = {"api_key": api_key, "timeout": llm_timeout_seconds()}
+        options: dict = {
+            "api_key": api_key,
+            "timeout": llm_timeout_seconds(),
+            "http_client": DefaultAsyncHttpxClient(limits=connection_limits()),
+        }
         if max_retries is not None:
             options["max_retries"] = max_retries
-        self._client = OpenAI(**options)
+        self._client = AsyncOpenAI(**options)
         self._model = model
 
     @property
     def model_name(self) -> str:
         return self._model
 
-    def chat(
+    async def chat(
         self,
         messages: list[LLMMessage],
         tools: list[ToolDefinition] | None = None,
@@ -50,7 +55,7 @@ class OpenAIClient(BaseLLMClient):
                 {"type": "function", "function": {"name": force_tool}} if force_tool else "auto"
             )
 
-        resp = self._client.chat.completions.create(**kwargs)
+        resp = await self._client.chat.completions.create(**kwargs)
         choice = resp.choices[0]
 
         # Read the tool calls themselves, not finish_reason: with a forced tool choice OpenAI

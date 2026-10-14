@@ -48,6 +48,7 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 REDIS_HASH_KEY = "wait_times:current"
+LAST_RUN_KEY = "wait:last_run"  # read by the API to version and age the wait-time data
 ALIASES_PATH = Path(__file__).with_name("hospital_aliases.json")
 MIN_JACCARD = 0.6          # share of distinctive words two names must have in common
 MIN_MARGIN = 0.2           # best candidate must beat the runner-up by this much
@@ -302,6 +303,7 @@ def write_redis(client: redis.Redis, records: list[dict]) -> int:
             "wait_minutes": r["wait_minutes"], "predicted": r["predicted"], "raw_wait": r["raw_wait"],
             "source": r["source"], "updated_at": r["scraped_at"],
         }))
+    pipe.set(LAST_RUN_KEY, datetime.now(timezone.utc).isoformat())
     pipe.execute()
     return len(records)
 

@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from datetime import datetime, date
-from unittest.mock import patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID
 
 import pytest
@@ -20,14 +20,6 @@ from fastapi.testclient import TestClient
 from services.chat import generate_session_title
 from routers.chat import _ser, router as chat_router
 from middleware.auth import get_current_user, get_actor
-import cache_chat
-from cache_chat import (
-    set_user_cache,
-    get_user_cache,
-    append_message_to_cache,
-    append_session_to_cache,
-    invalidate_user_cache,
-)
 
 # ── Shared test fixtures ──────────────────────────────────────────────────────
 
@@ -51,11 +43,17 @@ def _make_test_app(authenticated: bool = True) -> FastAPI:
 
 
 @pytest.fixture(autouse=True)
-def _clear_cache():
-    """Reset module-level chat cache before and after every test."""
-    cache_chat._chat_cache.clear()
-    yield
-    cache_chat._chat_cache.clear()
+def _turn_defaults():
+    """Every test gets an empty history and an agent that asks a follow-up question.
+    A test overrides either with its own patch; the history mock is what the fixture yields."""
+    agent = MagicMock()
+    agent.respond = AsyncMock(return_value={
+        "response": "Can you tell me more?", "severity": None, "reasoning": None,
+        "recommended_facility": None, "nearby_facilities": [], "turn_type": "followup",
+    })
+    with patch("routers.chat.get_recent_messages", return_value=[]) as history, \
+         patch("routers.chat.get_agent", return_value=agent):
+        yield history
 
 
 # ── 1. generate_session_title ─────────────────────────────────────────────────
@@ -107,59 +105,6 @@ class TestSer:
     def test_date_object_also_converted(self):
         d = date(2024, 1, 15)
         assert _ser({"day": d}) == {"day": "2024-01-15"}
-
-
-# ── 3. cache_chat ─────────────────────────────────────────────────────────────
-
-class TestCacheChat:
-    def test_set_user_cache_returns_quoted_etag(self):
-        etag = set_user_cache("u1", [], {})
-        assert etag.startswith('"') and etag.endswith('"')
-
-    def test_set_user_cache_same_data_same_etag(self):
-        assert set_user_cache("u1", [], {}) == set_user_cache("u1", [], {})
-
-    def test_set_user_cache_different_data_different_etag(self):
-        etag1 = set_user_cache("u1", [], {})
-        etag2 = set_user_cache("u1", [{"id": "s1"}], {})
-        assert etag1 != etag2
-
-    def test_get_user_cache_empty_returns_none_none(self):
-        data, etag = get_user_cache("nobody")
-        assert data is None and etag is None
-
-    def test_get_user_cache_after_set_returns_stored_data(self):
-        sessions = [{"id": "s1", "title": "t"}]
-        messages = {"s1": []}
-        set_user_cache("u1", sessions, messages)
-        data, etag = get_user_cache("u1")
-        assert data["sessions"] == sessions
-        assert etag is not None
-
-    def test_append_message_appended_and_etag_changes(self):
-        set_user_cache("u1", [], {"s1": []})
-        _, etag_before = get_user_cache("u1")
-        msg = {"id": "m1", "role": "user", "content": "hi"}
-        append_message_to_cache("u1", "s1", msg)
-        data, etag_after = get_user_cache("u1")
-        assert data["messages"]["s1"] == [msg]
-        assert etag_before != etag_after
-
-    def test_append_message_noop_when_user_not_in_cache(self):
-        append_message_to_cache("ghost", "s1", {"id": "m1"})  # must not raise
-        assert get_user_cache("ghost") == (None, None)
-
-    def test_invalidate_removes_entry(self):
-        set_user_cache("u1", [], {})
-        invalidate_user_cache("u1")
-        assert get_user_cache("u1") == (None, None)
-
-    def test_append_session_prepended_and_message_list_created(self):
-        set_user_cache("u1", [{"id": "old"}], {"old": []})
-        append_session_to_cache("u1", {"id": "new", "title": "new"})
-        data, _ = get_user_cache("u1")
-        assert data["sessions"][0]["id"] == "new"
-        assert data["messages"]["new"] == []
 
 
 # ── 4. GET /chat/sessions ─────────────────────────────────────────────────────
@@ -275,16 +220,16 @@ class TestSendMessage:
         assistant_msg = self._fake_msg("assistant", "Can you tell me more?")
 
         with patch("routers.chat.add_message", side_effect=[user_msg, assistant_msg]), \
-             patch("services.llm_agent.LLMAgent") as MockAgent:
+             patch("routers.chat.get_agent") as MockAgent:
             mock_instance = MagicMock()
-            mock_instance.respond.return_value = {
+            mock_instance.respond = AsyncMock(return_value={
                 "response": "Can you tell me more?",
                 "severity": None,
                 "reasoning": None,
                 "recommended_facility": None,
                 "nearby_facilities": [],
                 "turn_type": "followup",
-            }
+            })
             MockAgent.return_value = mock_instance
             resp = self._post(client, "I have a headache")
 
@@ -307,16 +252,16 @@ class TestSendMessage:
         }
 
         with patch("routers.chat.add_message", side_effect=[user_msg, assistant_msg]), \
-             patch("services.llm_agent.LLMAgent") as MockAgent:
+             patch("routers.chat.get_agent") as MockAgent:
             mock_instance = MagicMock()
-            mock_instance.respond.return_value = {
+            mock_instance.respond = AsyncMock(return_value={
                 "response": "Go to Toronto General immediately.",
                 "severity": "emergent",
                 "reasoning": "Chest pain may indicate cardiac event.",
                 "recommended_facility": fake_facility,
                 "nearby_facilities": [],
                 "turn_type": "triage",
-            }
+            })
             MockAgent.return_value = mock_instance
             resp = self._post(client, "chest pain")
 
@@ -336,8 +281,8 @@ class TestSendMessage:
             "If this is an emergency, please call 911.")
 
         with patch("routers.chat.add_message", side_effect=[user_msg, fallback_msg]), \
-             patch("services.llm_agent.LLMAgent") as MockAgent:
-            MockAgent.return_value.respond.side_effect = Exception("LLM unavailable")
+             patch("routers.chat.get_agent") as MockAgent:
+            MockAgent.return_value.respond = AsyncMock(side_effect=Exception("LLM unavailable"))
             resp = self._post(client, "I feel sick")
 
         assert resp.status_code == 200
@@ -353,14 +298,6 @@ class TestSendMessage:
         body = resp.json()
         assert "user_message" in body
         assert "assistant_message" in body
-
-    def test_cache_append_called_twice(self, client):
-        user_msg = self._fake_msg("user", "hi")
-        assistant_msg = self._fake_msg("assistant", "hi")
-        with patch("routers.chat.add_message", side_effect=[user_msg, assistant_msg]), \
-             patch("routers.chat.append_message_to_cache") as mock_append:
-            self._post(client, "hi")
-        assert mock_append.call_count == 2
 
 
 class TestSendMessageRoutingShadowDispatch:
@@ -388,18 +325,18 @@ class TestSendMessageRoutingShadowDispatch:
         }
 
         with patch("routers.chat.add_message", side_effect=[user_msg, assistant_msg]), \
-             patch("services.llm_agent.LLMAgent") as MockAgent, \
+             patch("routers.chat.get_agent") as MockAgent, \
              patch("routers.chat.should_sample", return_value=True), \
              patch("routers.chat.log_routing_comparison") as mock_log:
             mock_instance = MagicMock()
-            mock_instance.respond.return_value = {
+            mock_instance.respond = AsyncMock(return_value={
                 "response": "Go to Toronto General immediately.",
                 "severity": "emergent",
                 "reasoning": "Chest pain may indicate cardiac event.",
                 "recommended_facility": fake_facility,
                 "nearby_facilities": [],
                 "turn_type": "triage",
-            }
+            })
             MockAgent.return_value = mock_instance
             resp = client.post(
                 "/chat/message",
@@ -419,18 +356,18 @@ class TestSendMessageRoutingShadowDispatch:
         }
 
         with patch("routers.chat.add_message", side_effect=[user_msg, assistant_msg]), \
-             patch("services.llm_agent.LLMAgent") as MockAgent, \
+             patch("routers.chat.get_agent") as MockAgent, \
              patch("routers.chat.should_sample", return_value=False), \
              patch("routers.chat.log_routing_comparison") as mock_log:
             mock_instance = MagicMock()
-            mock_instance.respond.return_value = {
+            mock_instance.respond = AsyncMock(return_value={
                 "response": "Go to Toronto General immediately.",
                 "severity": "emergent",
                 "reasoning": "Chest pain may indicate cardiac event.",
                 "recommended_facility": fake_facility,
                 "nearby_facilities": [],
                 "turn_type": "triage",
-            }
+            })
             MockAgent.return_value = mock_instance
             resp = client.post(
                 "/chat/message",
@@ -445,18 +382,18 @@ class TestSendMessageRoutingShadowDispatch:
         assistant_msg = self._fake_msg("assistant", "Can you tell me more?")
 
         with patch("routers.chat.add_message", side_effect=[user_msg, assistant_msg]), \
-             patch("services.llm_agent.LLMAgent") as MockAgent, \
+             patch("routers.chat.get_agent") as MockAgent, \
              patch("routers.chat.should_sample", return_value=True), \
              patch("routers.chat.log_routing_comparison") as mock_log:
             mock_instance = MagicMock()
-            mock_instance.respond.return_value = {
+            mock_instance.respond = AsyncMock(return_value={
                 "response": "Can you tell me more?",
                 "severity": None,
                 "reasoning": None,
                 "recommended_facility": None,
                 "nearby_facilities": [],
                 "turn_type": "followup",
-            }
+            })
             MockAgent.return_value = mock_instance
             resp = client.post(
                 "/chat/message",
@@ -508,19 +445,19 @@ class TestGuestChat:
             status_code = 429
 
         agent = MagicMock()
-        agent.respond.side_effect = Quota("rate limit")
+        agent.respond = AsyncMock(side_effect=Quota("rate limit"))
         with patch("routers.chat.check_rate_limit", return_value=None), \
              patch("routers.chat.add_message", return_value=_msg("user")), \
-             patch("services.llm_agent.LLMAgent", return_value=agent):
+             patch("routers.chat.get_agent", return_value=agent):
             resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
         assert resp.status_code == 429 and resp.json() == {"code": "busy", "retry_after": 60}
 
     def test_guest_skips_profile_lookup_and_records_recommendation(self):
         agent = MagicMock()
-        agent.respond.return_value = _TRIAGE_RESULT
+        agent.respond = AsyncMock(return_value=_TRIAGE_RESULT)
         with patch("routers.chat.check_rate_limit", return_value=None), \
              patch("routers.chat.add_message", side_effect=[_msg("user"), _msg("assistant")]), \
-             patch("services.llm_agent.LLMAgent", return_value=agent), \
+             patch("routers.chat.get_agent", return_value=agent), \
              patch("db.supabase_select") as profile_lookup, \
              patch("routers.chat.guest_store.record_event") as record, \
              patch("routers.chat.should_sample", return_value=False):
@@ -555,15 +492,46 @@ class TestGuestChat:
 
     def test_signed_in_user_is_not_rate_limited(self):
         agent = MagicMock()
-        agent.respond.return_value = {**_TRIAGE_RESULT, "turn_type": "followup", "recommended_facility": None}
+        agent.respond = AsyncMock(return_value={**_TRIAGE_RESULT, "turn_type": "followup", "recommended_facility": None})
         with patch("routers.chat.check_rate_limit") as limit, \
              patch("routers.chat.add_message", side_effect=[_msg("user"), _msg("assistant")]), \
-             patch("services.llm_agent.LLMAgent", return_value=agent), \
+             patch("routers.chat.get_agent", return_value=agent), \
              patch("db.supabase_select", return_value=None):
             resp = TestClient(_make_test_app()).post(
                 "/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
         assert resp.status_code == 200
         limit.assert_not_called()
+
+    def test_a_refused_turn_stores_nothing_and_does_not_count_against_the_rate_limit(self, monkeypatch, _turn_defaults):
+        from services import admission
+
+        monkeypatch.setenv("MAX_TURNS_IN_FLIGHT", "1")
+        monkeypatch.setattr(admission, "_in_flight", 1)
+        monkeypatch.setattr(admission, "retry_after_seconds", lambda: 4)
+        with patch("routers.chat.check_rate_limit") as limit, \
+             patch("routers.chat.add_message") as add:
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+
+        assert resp.status_code == 429 and resp.json() == {"code": "busy", "retry_after": 4}
+        assert resp.headers["retry-after"] == "4"
+        limit.assert_not_called()
+        add.assert_not_called()
+        _turn_defaults.assert_not_called()
+
+    def test_an_admitted_turn_frees_its_slot_when_it_ends(self, monkeypatch):
+        from services import admission
+
+        monkeypatch.setenv("MAX_TURNS_IN_FLIGHT", "1")
+        monkeypatch.setattr(admission, "_in_flight", 0)
+        with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.add_message",
+                   side_effect=[_msg("user"), _msg("assistant"), _msg("user"), _msg("assistant")]):
+            client = _guest_client()
+            first = client.post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+            second = client.post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "again"})
+
+        assert first.status_code == 200 and second.status_code == 200
+        assert admission.in_flight() == 0
 
 
 # ── Blocking work stays off the event loop ────────────────────────────────────
@@ -580,13 +548,13 @@ def _on_event_loop() -> bool:
 
 
 class TestChatDoesNotBlockTheEventLoop:
-    """The agent makes two LLM round trips and the store calls hit the database. Run on the event
-    loop they stall every other request of the single worker; they must run in the thread pool."""
+    """The agent awaits the LLM on the event loop, so no thread is held for an LLM call. The
+    store calls hit the database and still run in the thread pool."""
 
-    def test_agent_and_message_writes_run_in_the_thread_pool(self):
+    def test_the_agent_runs_on_the_event_loop_and_the_store_calls_in_the_thread_pool(self):
         seen: dict[str, bool] = {}
 
-        def respond(**_: object) -> dict:
+        async def respond(**_: object) -> dict:
             seen["respond"] = _on_event_loop()
             return _TRIAGE_RESULT
 
@@ -594,17 +562,22 @@ class TestChatDoesNotBlockTheEventLoop:
             seen[f"add_{kwargs['role']}"] = _on_event_loop()
             return _msg(str(kwargs["role"]))
 
+        def recent(*_: object) -> list[dict]:
+            seen["history"] = _on_event_loop()
+            return []
+
         agent = MagicMock()
-        agent.respond.side_effect = respond
+        agent.respond = respond
         with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.get_recent_messages", side_effect=recent), \
              patch("routers.chat.add_message", side_effect=add_message), \
-             patch("services.llm_agent.LLMAgent", return_value=agent), \
+             patch("routers.chat.get_agent", return_value=agent), \
              patch("routers.chat.guest_store.record_event"), \
              patch("routers.chat.should_sample", return_value=False):
             resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
 
         assert resp.status_code == 200
-        assert seen == {"add_user": False, "respond": False, "add_assistant": False}
+        assert seen == {"history": False, "add_user": False, "respond": True, "add_assistant": False}
 
     def test_session_creation_runs_in_the_thread_pool(self):
         seen: dict[str, bool] = {}
@@ -629,3 +602,43 @@ class TestChatDoesNotBlockTheEventLoop:
              patch("routers.chat.add_message", side_effect=SessionNotFound("s")):
             resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
         assert resp.status_code == 404
+
+
+# ── History comes from the store ──────────────────────────────────────────────
+
+class TestHistoryComesFromTheStore:
+    def test_history_comes_from_the_store_and_reaches_the_agent(self, _turn_defaults):
+        earlier = [{"role": "user", "content": "I have a fever"},
+                   {"role": "assistant", "content": "Since when?"}]
+        _turn_defaults.return_value = earlier
+        agent = MagicMock()
+        agent.respond = AsyncMock(return_value={**_TRIAGE_RESULT, "turn_type": "followup",
+                                                "recommended_facility": None})
+        with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.add_message", side_effect=[_msg("user"), _msg("assistant")]), \
+             patch("routers.chat.get_agent", return_value=agent):
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+
+        assert resp.status_code == 200
+        assert agent.respond.call_args.kwargs["history"] == earlier
+        assert _turn_defaults.call_args.args == (FAKE_SESSION_ID, FAKE_USER_ID_STR, 20)
+
+    def test_a_failed_history_read_is_503_and_nothing_reaches_the_llm(self, _turn_defaults):
+        _turn_defaults.side_effect = RuntimeError("database down")
+        agent = MagicMock()
+        agent.respond = AsyncMock()
+        with patch("routers.chat.check_rate_limit", return_value=None), \
+             patch("routers.chat.add_message") as add, \
+             patch("routers.chat.get_agent", return_value=agent):
+            resp = _guest_client().post("/chat/message", json={"session_id": FAKE_SESSION_ID, "content": "hi"})
+
+        assert resp.status_code == 503
+        add.assert_not_called()
+        agent.respond.assert_not_called()
+
+    def test_the_session_list_is_read_from_the_store_on_every_request(self):
+        with patch("routers.chat.get_past_conversations", return_value=([], {})) as read:
+            client = TestClient(_make_test_app())
+            assert client.get("/chat/sessions").status_code == 200
+            assert client.get("/chat/sessions").status_code == 200
+        assert read.call_count == 2

@@ -1,21 +1,21 @@
+import asyncio
 import logging
 import os
-import hashlib
-import json
 import demo_db
-from config import demo_mode
+from config import demo_mode, stubbed_providers
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, JSONResponse
+from fastapi.responses import Response
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from starlette.concurrency import run_in_threadpool
+from services import facility_bytes, facility_load, memory_profile, wait_cache
 from services.facilities import get_all_facilities, apply_wait_filter, annotate_wait_details
-from services.wait_times import get_wait_map, get_wait_minutes_map
+from services.wait_cache import current_wait, max_age_seconds
 from services.proximity import find_facilities_within
 from db import supabase_rpc
-from models import NearbyFacilityResult
-from middleware.auth import AuthMiddleware, get_current_user
+from models import MemoryProfileResponse, NearbyFacilityResult
+from middleware.auth import AuthMiddleware, get_current_user, require_internal
 from cache import get_cached_facilities, set_cached_facilities
 from graph.factory import close_graph_provider, get_graph_provider
 from observability import init_observability, verify_metrics_token, RequestIDMiddleware, _registry
@@ -29,6 +29,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    stubbed = stubbed_providers()
+    if stubbed:
+        logger.warning("providers_stubbed", extra={"providers": stubbed})
     if demo_mode():
         try:
             demo_db.open_pool()
@@ -40,7 +43,18 @@ async def lifespan(_app: FastAPI):
         logger.info("cache_warm", extra={"facility_count": len(data)})
     except Exception as exc:
         logger.warning("cache_warm_failed", extra={"error_type": type(exc).__name__})
+    try:
+        await run_in_threadpool(wait_cache.refresh_once)
+    except Exception as exc:
+        logger.warning("wait_cache_warm_failed", extra={"error_type": type(exc).__name__})
+    memory_profile.start()  # after the warm-up, so the baseline already holds the caches
+    background_tasks = [
+        asyncio.create_task(wait_cache.run_forever()),
+        asyncio.create_task(facility_load.run_forever()),
+    ]
     yield
+    for task in background_tasks:
+        task.cancel()
     close_graph_provider()
     demo_db.close_pool()
 
@@ -57,6 +71,7 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type", "Authorization", "X-Request-ID", "If-None-Match", "X-Guest-Id", "X-Internal"],
+    expose_headers=["ETag", "X-Wait-As-Of"],
 )
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RequestIDMiddleware)
@@ -74,6 +89,15 @@ async def metrics(_: None = Depends(verify_metrics_token)) -> Response:
         content=generate_latest(_registry),
         media_type=CONTENT_TYPE_LATEST,
     )
+
+
+@app.get("/internal/memory-profile", response_model=MemoryProfileResponse)
+def memory_profile_report(request: Request) -> dict:
+    """Staging only: 404 unless MEMORY_PROFILE is set, 403 without the internal token."""
+    if not memory_profile.enabled():
+        raise HTTPException(404, "Not found")
+    require_internal(request)
+    return memory_profile.growth()
 
 
 @app.get("/")
@@ -109,6 +133,8 @@ def health() -> dict:
         except Exception as exc:
             result["neo4j"] = "unreachable"
             logger.warning("neo4j_health_ping_failed", extra={"error_type": type(exc).__name__})
+    if stubbed_providers():
+        result["stubbed"] = True
     return result
 
 
@@ -124,38 +150,44 @@ async def facilities(
     severity: str | None = None,
     max_wait_minutes: int | None = None,
 ) -> Response:
-    cached_data, _ = get_cached_facilities()
+    cached_data, facilities_etag = get_cached_facilities()
 
     # `cache.py` has no TTL/invalidation. `cached_data is None` alone isn't enough:
-    # if the lifespan warm-up ran before Supabase had rows (or before they were
+    # if the lifespan warm-up ran before the database had rows (or before they were
     # marked is_operational), it caches `[]` — not None — and every request since
     # would serve that empty snapshot forever. Treat an empty cache as not-yet-warm
     # too, so it self-heals on the next request once real data exists.
     if not cached_data:
         raw = get_all_facilities(category=None, severity=None)
-        cached_etag = set_cached_facilities(raw)
+        facilities_etag = set_cached_facilities(raw)
         cached_data = raw
 
-    data: list[dict] = cached_data
-    if category:
-        data = [r for r in data if r["category"] == category]
-    if severity:
-        data = [r for r in data if severity in r.get("accepted_severity", [])]
+    wait = current_wait()
+    # Everything the body depends on. The ETag comes from this key, so a conditional request
+    # is answered without building, encoding or hashing the list.
+    key = (facilities_etag, wait.version, category, severity, max_wait_minutes)
+    etag = facility_bytes.etag_for(key)
+    headers = {"ETag": etag, "Cache-Control": f"max-age={max_age_seconds(wait)}"}
+    if wait.last_run is not None:
+        headers["X-Wait-As-Of"] = wait.last_run.isoformat()
 
-    wait_info = await run_in_threadpool(get_wait_map)
-    wait_minutes = {fid: info["wait_minutes"] for fid, info in wait_info.items()}
-    data = apply_wait_filter(data, "id", max_wait_minutes, wait_minutes)
-    data = annotate_wait_details(data, "id", wait_info)
+    if facility_bytes.etag_matches(request.headers.get("If-None-Match", ""), etag):
+        return Response(status_code=304, headers=headers)
 
-    filtered_etag = f'"{hashlib.sha256(json.dumps(data, sort_keys=True, default=str).encode()).hexdigest()[:32]}"'
+    body = facility_bytes.get(key)
+    if body is None:
+        data: list[dict] = cached_data
+        if category:
+            data = [r for r in data if r["category"] == category]
+        if severity:
+            data = [r for r in data if severity in r.get("accepted_severity", [])]
+        wait_minutes = {fid: info.get("wait_minutes") for fid, info in wait.wait_map.items()}
+        data = apply_wait_filter(data, "id", max_wait_minutes, wait_minutes)
+        data = annotate_wait_details(data, "id", wait.wait_map)
+        body = facility_bytes.encode(data)
+        facility_bytes.put(key, body)
 
-    if request.headers.get("If-None-Match", "") == filtered_etag:
-        return Response(status_code=304)
-
-    return JSONResponse(
-        content=data,
-        headers={"ETag": filtered_etag, "Cache-Control": "no-cache"},
-    )
+    return Response(content=body, media_type="application/json", headers=headers)
 
 
 @app.get("/facilities/nearby")
@@ -188,5 +220,5 @@ async def facilities_nearby(
         except Exception as exc:
             raise HTTPException(status_code=500, detail=f"proximity search failed: {exc}") from exc
 
-    wait_map = await run_in_threadpool(get_wait_minutes_map)
-    return apply_wait_filter(data, "facility_id", max_wait_minutes, wait_map)
+    wait_minutes = {fid: info.get("wait_minutes") for fid, info in current_wait().wait_map.items()}
+    return apply_wait_filter(data, "facility_id", max_wait_minutes, wait_minutes)

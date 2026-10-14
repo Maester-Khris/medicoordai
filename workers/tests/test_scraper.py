@@ -219,6 +219,20 @@ class TestSinks:
         payload = [__import__("json").loads(c.args[2]) for c in pipe.hset.call_args_list]
         assert payload[3] == {"wait_minutes": None, "predicted": True, "raw_wait": "45m–2h", "source": "erstat", "updated_at": T0}
 
+    def test_redis_also_stamps_the_last_successful_run(self):
+        client = MagicMock()
+        scraper.write_redis(client, RECORDS)
+        pipe = client.pipeline.return_value
+        key, stamp = pipe.set.call_args.args
+        assert key == "wait:last_run"
+        assert __import__("datetime").datetime.fromisoformat(stamp).tzinfo is not None
+        assert pipe.execute.call_count == 1
+
+    def test_redis_does_not_stamp_a_run_without_records(self):
+        client = MagicMock()
+        assert scraper.write_redis(client, []) == 0
+        client.pipeline.assert_not_called()
+
 
 # ── main ──────────────────────────────────────────────────────────────────────
 

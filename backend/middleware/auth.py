@@ -29,6 +29,12 @@ def _is_internal(header_value: str) -> bool:
     return bool(expected) and hmac.compare_digest(header_value.encode(), expected.encode())
 
 
+def require_internal(request: Request) -> None:
+    """403 unless the caller sent the internal token. Closed when no token is configured."""
+    if not _is_internal(request.headers.get("X-Internal", "")):
+        raise HTTPException(403, "Internal access only")
+
+
 async def get_actor(request: Request, authorization: str = Header(default="")) -> object:
     """Who is calling: a guest (DEMO_MODE) or a Supabase user. Exposes .id, .email, .is_guest."""
     if not demo_mode():

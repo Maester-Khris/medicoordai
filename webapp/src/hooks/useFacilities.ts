@@ -7,12 +7,15 @@ interface UseFacilitiesResult {
   facilities: Facility[]
   loading: boolean
   error: string | null
+  /** ISO time of the worker's last successful run, from the X-Wait-As-Of header. */
+  waitAsOf: string | null
 }
 
 export function useFacilities(): UseFacilitiesResult {
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState<string | null>(null)
+  const [waitAsOf, setWaitAsOf]     = useState<string | null>(null)
   const etagRef                     = useRef<string | null>(null)
 
   useEffect(() => {
@@ -42,6 +45,7 @@ export function useFacilities(): UseFacilitiesResult {
         const data: Facility[] = await res.json() as Facility[]
         if (!cancelled) {
           setFacilities(data)
+          setWaitAsOf(res.headers.get("X-Wait-As-Of"))
           setError(null)
         }
       } catch (err) {
@@ -57,5 +61,5 @@ export function useFacilities(): UseFacilitiesResult {
     return () => { cancelled = true }
   }, [])
 
-  return { facilities, loading, error }
+  return { facilities, loading, error, waitAsOf }
 }

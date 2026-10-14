@@ -97,8 +97,11 @@ Liveness check. Used by Railway to confirm the service is running.
 
 **Response `200`**
 ```json
-{ "status": "ok", "llmProvider": "groq" }
+{ "status": "ok", "llmProvider": "groq", "demoMode": true }
 ```
+
+`"stubbed": true` is added when `GROQ_BASE_URL` or `GEOAPIFY_BASE_URL` is set. That is only
+ever the case on the staging service during a load test.
 
 ---
 
@@ -118,7 +121,14 @@ Request:
 ```
 
 `facility_ids`: 1 to 3, unique, resolved against the server's facility list. `mode`: `car`,
-`bike`, `bus` or `walk` (Geoapify `drive`, `bicycle`, `transit`, `walk`).
+`bike`, `bus` or `walk` (Geoapify `drive`, `bicycle`, `transit`, `walk`). `severity` (optional):
+the triage severity. The web app sends the recommended facility only (`routes_up_front` in
+`/config`), and another candidate when the guest selects it.
+
+**Geoapify budget.** The server makes at most `GEOAPIFY_RATE_PER_SECOND` Geoapify calls per
+second per process. Past that, a request whose `severity` is `urgent` or `emergent` is still
+routed; any other request is answered with `"estimated": true` on each route: `eta_minutes` and
+`distance_km` come from the straight-line distance and `geometry` is null.
 
 Response 200:
 
@@ -126,8 +136,8 @@ Response 200:
 {
   "mode": "bike",
   "routes": [
-    { "facility_id": "<id>", "eta_minutes": 34, "distance_km": 9.8, "geometry": [[43.65, -79.38], [43.66, -79.39]] },
-    { "facility_id": "<id>", "eta_minutes": null, "distance_km": null, "geometry": null }
+    { "facility_id": "<id>", "eta_minutes": 34, "distance_km": 9.8, "geometry": [[43.65, -79.38], [43.66, -79.39]], "estimated": false },
+    { "facility_id": "<id>", "eta_minutes": null, "distance_km": null, "geometry": null, "estimated": false }
   ],
   "fastest_facility_id": "<id>"
 }
@@ -159,6 +169,33 @@ Guest-only measurement events. Body:
 Returns 204. `session_started` and `recommendation_shown` are written by the server and cannot be
 posted.
 
+### GET `/facilities`
+
+The facility list with current wait times. Optional query parameters: `category`, `severity`,
+`max_wait_minutes`.
+
+The body is encoded once per data version (facility list and wait-time data) and filter set.
+Response headers:
+
+| Header | Meaning |
+|---|---|
+| `ETag` | Changes when the facility list, the wait-time data or a filter changes |
+| `Cache-Control: max-age=N` | N seconds until the wait-time worker's next run, at least `MAP_MIN_MAX_AGE_SECONDS` |
+| `X-Wait-As-Of` | Time of the worker's last successful run (ISO 8601). Absent when unknown |
+
+A request with a matching `If-None-Match` gets `304` with the same headers and no body. The match is
+weak (RFC 9110): `W/"…"` matches `"…"`, and a comma-separated list matches if any tag does, because
+the hosting proxy compresses the body and then sends our tag back to the browser as `W/"…"`.
+
+### POST `/chat/message` when the server is busy
+
+Past `MAX_TURNS_IN_FLIGHT` turns in flight in a process, a turn is refused at once with
+`429 {"code": "busy", "retry_after": N}` (N is 3 to 5 seconds by default). Nothing is stored
+and the guest's rate-limit allowance is not used, so the client sends the same message again.
+A failed read of the conversation history answers `503`.
+
+---
+
 ### GET `/facilities/nearby`
 
 Query: `lat`, `lng`, `radius_m` (default 5000, capped at 50000), optional `category`, optional
@@ -186,6 +223,20 @@ with several workers each would report its own numbers.
 | `routing_call_duration_seconds` | histogram | `mode`, `outcome` (`ok`, `no_route`, `timeout`, `error`) |
 | `graph_lookup_duration_seconds` | histogram | `provider` (value of `GRAPH_RAG_PROVIDER`), `outcome` |
 | `demo_db_pool_size`, `demo_db_pool_in_use`, `demo_db_pool_waiting` | gauge | none |
+| `chat_turns_in_flight` | gauge | none |
+| `chat_turns_rejected_total` | counter | none |
+| `routes_degraded_total` | counter | none |
+
+### GET `/internal/memory-profile`
+
+Staging only, for load tests. Answers 404 unless `MEMORY_PROFILE` is set (`1`, `on`, `true` or
+`yes`) and 403 without the `X-Internal` token. With the switch on, the process starts `tracemalloc`
+after its warm-up and keeps a baseline snapshot; this route compares the live heap to it.
+
+Response: `traced_bytes`, `rss_bytes` and `top`, the 20 allocation sites that grew most
+(`site` as `path:line`, `size_diff_bytes`, `count_diff`). Compare `rss_bytes` with
+`traced_bytes`: growth outside the Python heap shows up in the first and not the second. Tracing
+slows the process, so numbers taken with it on are for diagnosis, not for capacity.
 
 ### Settings
 
@@ -202,6 +253,19 @@ one `env_setting_invalid` warning.
 | `LLM_PROVIDER` | `groq` | Single provider: `groq`, `openai` or `anthropic` |
 | `LLM_PROVIDER_CHAIN` | unset | Ordered fallback, for example `groq,openai,anthropic`. Wins over `LLM_PROVIDER` |
 | `OPENAI_API_KEY`, `OPENAI_MODEL` | none | Required for the `openai` provider. The model has no default |
+| `WAIT_CACHE_TTL_SECONDS` | 30 (1 to 900) | How often the API reloads wait-time data into memory (plus up to 20%) |
+| `MAP_MIN_MAX_AGE_SECONDS` | 30 (1 to 900) | Smallest `max-age` sent with `/facilities` |
+| `LLM_MAX_CONNECTIONS` | 2000 (1 to 20000) | Connections each provider client may hold; caps LLM calls in flight |
+| `CHAT_HISTORY_MESSAGES` | 20 (1 to 200) | Messages of a session read from the store for each turn |
+| `MAX_TURNS_IN_FLIGHT` | 0 (no limit) | Chat turns in flight per process before the busy answer |
+| `ADMISSION_RETRY_SECONDS` | 3 (1 to 60) | `retry_after` of that busy answer, plus 0 to 2 seconds |
+| `LOAD_AWARE_ROUTING` | on | `off` recommends the nearest facility for every severity |
+| `LOAD_SCORE_TIE_MINUTES` | 5 (0 to 120) | Candidates within this many minutes of the best score are a tie |
+| `LOAD_WINDOW_MINUTES` | 15 (1 to 120) | How far back recent recommendations count as load |
+| `ROUTES_UP_FRONT` | 1 (1 to 3) | Candidates the web app routes before the guest asks |
+| `GEOAPIFY_RATE_PER_SECOND` | 5 (1 to 1000) | Geoapify calls per second per process; the plan's rate divided by the number of processes |
+| `MEMORY_PROFILE` | off | Turns on `tracemalloc` and `/internal/memory-profile`. Staging service only |
+| `GROQ_BASE_URL`, `GEOAPIFY_BASE_URL` | unset | Point the API at a mock. Staging service only, never in Doppler `stg` |
 
 The rate-limit variables exist for load tests on staging; the public demo keeps the defaults.
 

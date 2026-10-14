@@ -8,23 +8,31 @@ function candidates(state: TriageUIState): FacilityCandidate[] {
     : []
 }
 
-/** Ids sent to POST /routes: the recommended facility first, then the alternatives. */
-export function candidateIds(state: TriageUIState): string[] {
-  return candidates(state).map(f => f.id)
+/**
+ * Ids sent to POST /routes: the recommended facility first, then the alternatives.
+ * Truncates to `upFront` ids to minimize unnecessary routing API requests before user interaction.
+ */
+export function candidateIds(state: TriageUIState, upFront: number = Number.POSITIVE_INFINITY): string[] {
+  return candidates(state).map(f => f.id).slice(0, upFront)
 }
 
 /** Candidates the backend could not route are dropped: a time is real or it is absent. */
 export function toRouteResults(response: RoutesResponse): RouteResult[] {
-  return response.routes.flatMap(route =>
-    route.eta_minutes === null || route.distance_km === null
-      ? []
-      : [{
-          facilityId: route.facility_id,
-          etaMinutes: route.eta_minutes,
-          distanceKm: route.distance_km,
-          geometry:   route.geometry,
-        }],
-  )
+  return response.routes.flatMap(route => {
+    if (route.eta_minutes === null || route.distance_km === null) {
+      return []
+    }
+    const result: RouteResult = {
+      facilityId: route.facility_id,
+      etaMinutes: route.eta_minutes,
+      distanceKm: route.distance_km,
+      geometry:   route.geometry,
+    }
+    if (route.estimated) {
+      result.estimated = true
+    }
+    return [result]
+  })
 }
 
 /**
@@ -45,6 +53,22 @@ export function promoteFacility(state: TriageUIState, facilityId: string): Triag
   }
 }
 
+/**
+ * Merges newly fetched routes into existing state.routes, replacing any existing route for the same facility.
+ * Sets routeLoading to false and preserves the current recommendation and road geometry so the user's
+ * view does not jump when background routes arrive.
+ */
+export function mergeRoutes(state: TriageUIState, response: RoutesResponse): TriageUIState {
+  const incoming = toRouteResults(response)
+  const incomingIds = new Set(incoming.map(r => r.facilityId))
+  const preserved = state.routes.filter(r => !incomingIds.has(r.facilityId))
+  return {
+    ...state,
+    routes: [...preserved, ...incoming],
+    routeLoading: false,
+  }
+}
+
 /** Applies a POST /routes answer: routes for `mode`, recommendation on the fastest candidate. */
 export function applyRoutes(
   state: TriageUIState,
@@ -61,3 +85,4 @@ export function applyRoutes(
     ? promoteFacility(next, response.fastest_facility_id)
     : { ...next, roadGeometry: null }
 }
+

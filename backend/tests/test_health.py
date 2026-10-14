@@ -60,3 +60,12 @@ def test_health_omits_demo_db_when_flag_off(monkeypatch):
     monkeypatch.delenv("DEMO_MODE", raising=False)
     body = main.health()
     assert body["demoMode"] is False and "demoDb" not in body
+
+
+def test_health_says_when_a_provider_is_stubbed(monkeypatch):
+    monkeypatch.delenv("DEMO_MODE", raising=False)
+    monkeypatch.delenv("GROQ_BASE_URL", raising=False)
+    monkeypatch.delenv("GEOAPIFY_BASE_URL", raising=False)
+    assert "stubbed" not in client.get("/health").json()
+    monkeypatch.setenv("GEOAPIFY_BASE_URL", "http://mock:9000")
+    assert client.get("/health").json()["stubbed"] is True

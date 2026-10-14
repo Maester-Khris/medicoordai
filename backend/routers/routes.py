@@ -5,9 +5,10 @@ from starlette.concurrency import run_in_threadpool
 
 import config
 from cache import get_cached_facilities
+from metrics import ROUTES_DEGRADED
 from middleware.auth import get_actor
-from models import RoutesRequest, RoutesResponse
-from services import routing
+from models import RoutesRequest, RoutesResponse, Severity
+from services import geoapify_limiter, routing, travel_time
 from services.rate_limit import busy_response, check_rate_limit, client_ip
 
 router = APIRouter(tags=["routes"])
@@ -40,10 +41,33 @@ async def post_routes(
         raise HTTPException(404, "Unknown facility")
     candidates = [by_id[facility_id] for facility_id in body.facility_ids]
 
-    try:
-        routes = await routing.routes_for(body.origin.model_dump(), candidates, body.mode)
-    except routing.RoutingNotConfigured as exc:
-        raise HTTPException(503, "Routing unavailable") from exc
+    # One Geoapify call per candidate. An urgent or emergent case always gets its calls; the
+    # others get an estimate, with no road shape, once the plan's rate is used up.
+    priority = body.severity in (Severity.urgent, Severity.emergent) if body.severity else False
+
+    if geoapify_limiter.take(len(candidates), priority):
+        try:
+            routes = await routing.routes_for(body.origin.model_dump(), candidates, body.mode)
+        except routing.RoutingNotConfigured as exc:
+            raise HTTPException(503, "Routing unavailable") from exc
+
+        for r in routes:
+            eta = r.get("eta_minutes")
+            if eta is not None:
+                travel_time.remember(
+                    body.origin.lat,
+                    body.origin.lng,
+                    r["facility_id"],
+                    body.mode,
+                    eta,
+                )
+    else:
+        ROUTES_DEGRADED.inc()
+        origin_dict = body.origin.model_dump()
+        routes = [
+            routing.estimated_route(origin_dict, facility, body.mode)
+            for facility in candidates
+        ]
 
     fastest = routing.fastest_facility_id(routes)
     if fastest is None:

@@ -1,26 +1,23 @@
+import hashlib
+import json
 import logging
 from datetime import datetime, date
 
-from fastapi import APIRouter, Depends, Request, Header, BackgroundTasks
+from fastapi import APIRouter, Depends, Request, Header, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse, Response
 from starlette.concurrency import run_in_threadpool
 
-from fastapi import HTTPException
-
+import config
 from middleware.auth import get_actor
-from services import guest_store
+from services import admission, guest_store
 from services.rate_limit import LLM_BUSY_RETRY_SECONDS, busy_response, check_rate_limit, client_ip
 from models import CreateSessionRequest, SendMessageRequest
 from services.chat import (
     generate_session_title, create_session, add_message,
-    get_past_conversations, get_older_messages,
+    get_past_conversations, get_older_messages, get_recent_messages,
 )
+from services.llm_agent import get_agent
 from services.geoapify_shadow import should_sample, log_routing_comparison
-from cache_chat import (
-    get_user_cache, set_user_cache,
-    append_message_to_cache, append_session_to_cache,
-    invalidate_user_cache,
-)
 
 
 def _ser(obj: object) -> object:
@@ -66,25 +63,18 @@ async def past_conversations(
     """
     user_id = str(current_user.id)  # type: ignore[attr-defined]
 
-    cached, cached_etag = get_user_cache(user_id)
+    sessions, messages = await run_in_threadpool(get_past_conversations, user_id)
+    payload = {"sessions": sessions, "messages": messages}
+    ser_payload = _ser(payload)
+    serialized = json.dumps(ser_payload, sort_keys=True)
+    etag = f'"{hashlib.sha256(serialized.encode()).hexdigest()[:32]}"'
 
-    if cached is None:
-        sessions, messages = get_past_conversations(user_id)
-        cached_etag = set_user_cache(user_id, sessions, messages)
-        cached = {"sessions": sessions, "messages": messages}
-        logger.info(
-            "chat cache miss — fetched from Supabase",
-            extra={"user_id": _trunc_uid(user_id), "session_count": len(sessions)},
-        )
-    else:
-        logger.info("chat cache hit", extra={"user_id": _trunc_uid(user_id)})
-
-    if if_none_match == cached_etag:
+    if if_none_match == etag:
         return Response(status_code=304)
 
     return JSONResponse(
-        content=_ser(cached),
-        headers={"ETag": cached_etag, "Cache-Control": "no-cache"},
+        content=ser_payload,
+        headers={"ETag": etag, "Cache-Control": "no-cache"},
     )
 
 
@@ -98,9 +88,8 @@ async def create_new_session(
     user_id = str(current_user.id)  # type: ignore[attr-defined]
     title = generate_session_title(body.first_message)
 
-    # Blocking database call: keep it off the event loop (see send_message).
+    # Blocking database call: keep it off the event loop.
     session = await run_in_threadpool(create_session, user_id=user_id, title=title)
-    append_session_to_cache(user_id, session)
     await _record_guest_event(current_user, "session_started", str(session["id"]))
 
     logger.info(
@@ -114,12 +103,11 @@ async def create_new_session(
     return _ser(session)
 
 
-@router.post("/message", response_model=None)
-async def send_message(
+async def _run_turn(
     body: SendMessageRequest,
     request: Request,
     background_tasks: BackgroundTasks,
-    current_user: object = Depends(get_actor),
+    current_user: object,
 ) -> Response | dict:
     """
     Saves a user message, runs the LLM triage agent, saves the assistant response.
@@ -134,14 +122,19 @@ async def send_message(
         if retry_after is not None:
             return busy_response(retry_after)
 
-    # Fetch history from cache for context window
-    cache_entry, _ = get_user_cache(user_id)
-    history: list[dict] = []
-    if cache_entry:
-        history = cache_entry.get("messages", {}).get(session_id, [])
+    # Answering without the earlier messages is worse than failing: triage requires context.
+    limit = config.env_int("CHAT_HISTORY_MESSAGES", 20, minimum=1, maximum=200)
+    try:
+        history = await run_in_threadpool(get_recent_messages, session_id, user_id, limit)
+    except Exception as exc:
+        logger.error(
+            "history_read_failed",
+            extra={"request_id": request_id, "session_id": session_id, "error_type": type(exc).__name__},
+        )
+        raise HTTPException(503, "Conversation unavailable") from exc
 
-    # The store calls and the agent are blocking (database, two LLM round trips). They run in the
-    # thread pool: on the event loop one chat turn would stall every other request of this worker.
+    # The store calls hit the database and run in the thread pool. The agent awaits the
+    # LLM on the event loop, so no thread is held for the seconds an LLM call takes.
     try:
         user_msg = await run_in_threadpool(
             add_message, session_id=session_id, user_id=user_id, role="user", content=body.content
@@ -149,16 +142,11 @@ async def send_message(
     except guest_store.SessionNotFound:
         raise HTTPException(404, "Session not found") from None
 
-    append_message_to_cache(user_id, session_id, user_msg)
-
     try:
-        from services.llm_agent import LLMAgent
-        from db import supabase_select
-        agent = LLMAgent()
-
         user_profile: dict | None = None
         if not _is_guest(current_user):
             try:
+                from db import supabase_select
                 user_profile = await run_in_threadpool(
                     supabase_select,
                     "profile",
@@ -168,8 +156,7 @@ async def send_message(
             except Exception as exc:
                 logger.warning("profile_fetch_failed", extra={"request_id": request_id, "error": str(exc)})
 
-        result = await run_in_threadpool(
-            agent.respond,
+        result = await get_agent().respond(
             user_message=body.content,
             history=history,
             lat=body.lat,
@@ -198,7 +185,6 @@ async def send_message(
     assistant_msg = await run_in_threadpool(
         add_message, session_id=session_id, user_id=user_id, role="assistant", content=result["response"]
     )
-    append_message_to_cache(user_id, session_id, assistant_msg)
 
     logger.info(
         "triage_agent_responded",
@@ -235,6 +221,25 @@ async def send_message(
     return _ser({"user_message": user_msg, "assistant_message": assistant_msg, "triage": triage})
 
 
+@router.post("/message", response_model=None)
+async def send_message(
+    body: SendMessageRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    current_user: object = Depends(get_actor),
+) -> Response | dict:
+    """
+    Admits the turn, or answers "busy" at once when this process is at its limit. The check
+    comes before the rate limit and before any write: a refused turn stores nothing and does
+    not use the guest's allowance, so the client can simply send it again.
+    """
+    try:
+        with admission.admit():
+            return await _run_turn(body, request, background_tasks, current_user)
+    except admission.Busy:
+        return busy_response(admission.retry_after_seconds())
+
+
 @router.get("/sessions/{session_id}/messages")
 async def load_older_messages(
     session_id: str,
@@ -247,12 +252,9 @@ async def load_older_messages(
     Always hits Supabase; older messages are not cached.
     """
     user_id = str(current_user.id)  # type: ignore[attr-defined]
-    messages = get_older_messages(session_id=session_id, before_id=before_id, user_id=user_id)
-
-    cached, _ = get_user_cache(user_id)
-    if cached:
-        existing = cached["messages"].get(session_id, [])
-        cached["messages"][session_id] = messages + existing
+    messages = await run_in_threadpool(
+        get_older_messages, session_id=session_id, before_id=before_id, user_id=user_id
+    )
 
     logger.info(
         "older messages loaded",
@@ -268,14 +270,8 @@ async def load_older_messages(
 
 @router.post("/sessions/invalidate")
 async def invalidate_cache(
-    request: Request,
     current_user: object = Depends(get_actor),
 ) -> dict:
-    """Clears the server-side chat cache for the user — call on logout."""
-    user_id = str(current_user.id)  # type: ignore[attr-defined]
-    invalidate_user_cache(user_id)
-    logger.info(
-        "chat cache invalidated",
-        extra={"request_id": getattr(request.state, "request_id", None), "user_id": _trunc_uid(user_id)},
-    )
+    """No-op endpoint kept for backward compatibility with web app logout; does nothing."""
     return {"status": "cache cleared"}
+

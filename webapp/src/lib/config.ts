@@ -8,6 +8,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   starter_prompts: [],
   downtown_fallback: { lat: 43.6532, lng: -79.3832 },
   modes_enabled: ["car", "bike", "bus", "walk"],
+  routes_up_front: 1,
 }
 
 let pending: Promise<AppConfig> | null = null

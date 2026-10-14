@@ -3,6 +3,7 @@ import os
 import anthropic
 from config import llm_timeout_seconds
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
+from .limits import connection_limits
 
 
 class AnthropicClient(BaseLLMClient):
@@ -13,17 +14,21 @@ class AnthropicClient(BaseLLMClient):
             raise RuntimeError("ANTHROPIC_API_KEY is not set")
         # max_retries=None keeps the SDK's own retries (single-provider mode). A fallback chain
         # passes 0: there the next provider is the retry.
-        options: dict = {"api_key": api_key, "timeout": llm_timeout_seconds()}
+        options: dict = {
+            "api_key": api_key,
+            "timeout": llm_timeout_seconds(),
+            "http_client": anthropic.DefaultAsyncHttpxClient(limits=connection_limits()),
+        }
         if max_retries is not None:
             options["max_retries"] = max_retries
-        self._client = anthropic.Anthropic(**options)
+        self._client = anthropic.AsyncAnthropic(**options)
         self._model = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-5-5")
 
     @property
     def model_name(self) -> str:
         return self._model
 
-    def chat(
+    async def chat(
         self,
         messages: list[LLMMessage],
         tools: list[ToolDefinition] | None = None,
@@ -63,7 +68,7 @@ class AnthropicClient(BaseLLMClient):
             kwargs["tools"] = anthropic_tools
             kwargs["tool_choice"] = tool_choice
 
-        resp = self._client.messages.create(**kwargs)
+        resp = await self._client.messages.create(**kwargs)
 
         content_text = None
         tool_calls = None

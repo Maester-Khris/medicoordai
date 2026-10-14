@@ -152,6 +152,7 @@ export interface RouteResult {
   etaMinutes:  number
   distanceKm:  number
   geometry:    [number, number][] | null
+  estimated?:  boolean
 }
 
 export interface TriageUIState {
@@ -177,6 +178,7 @@ export interface AppConfig {
   starter_prompts:   string[]
   downtown_fallback: { lat: number; lng: number }
   modes_enabled:     TravelModeKey[]
+  routes_up_front?:  number
 }
 
 export type Thumb = "up" | "down"
@@ -199,6 +201,7 @@ export interface RoutesRequest {
   origin:       { lat: number; lng: number }
   facility_ids: string[]        // 1 to 3, unique
   mode:         TravelModeKey
+  severity?:    Severity
 }
 
 export interface CandidateRoute {
@@ -206,6 +209,7 @@ export interface CandidateRoute {
   eta_minutes: number | null             // null when this candidate has no route
   distance_km: number | null
   geometry:    [number, number][] | null // [lat, lng] pairs
+  estimated?:  boolean
 }
 
 export interface RoutesResponse {
@@ -217,4 +221,17 @@ export interface RoutesResponse {
 export interface BusyResponse {
   code:        "busy"
   retry_after: number
+}
+
+// GET /internal/memory-profile — staging only (MEMORY_PROFILE), X-Internal token required
+export interface MemoryProfileSite {
+  site:            string   // "path/file.py:line"
+  size_diff_bytes: number   // growth since the baseline taken at startup
+  count_diff:      number
+}
+
+export interface MemoryProfileResponse {
+  traced_bytes: number      // live tracemalloc total
+  rss_bytes:    number      // resident set size of the process
+  top:          MemoryProfileSite[]  // largest growth first, at most 20
 }

@@ -1,6 +1,6 @@
 import os
 import sys
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
@@ -23,10 +23,10 @@ VIGNETTE = Vignette(
 class TestAnthropicPatientSimulator:
     def test_reply_returns_client_content(self):
         client = MagicMock()
-        client.chat.return_value = LLMResponse(
+        client.chat = AsyncMock(return_value=LLMResponse(
             content="It lasted a few seconds.", tool_calls=None,
             finish_reason="stop", model="claude-haiku-4-5", usage={},
-        )
+        ))
         simulator = AnthropicPatientSimulator(client=client)
 
         reply = simulator.reply(VIGNETTE, "How long did the dizziness last?", history=[])
@@ -35,9 +35,9 @@ class TestAnthropicPatientSimulator:
 
     def test_checklist_in_system_prompt_excludes_already_disclosed_items(self):
         client = MagicMock()
-        client.chat.return_value = LLMResponse(
+        client.chat = AsyncMock(return_value=LLMResponse(
             content="ok", tool_calls=None, finish_reason="stop", model="x", usage={},
-        )
+        ))
         VIGNETTE.disclosure_items[0].disclosed = True
         simulator = AnthropicPatientSimulator(client=client)
 
@@ -50,9 +50,9 @@ class TestAnthropicPatientSimulator:
 
     def test_history_and_question_included_as_conversation(self):
         client = MagicMock()
-        client.chat.return_value = LLMResponse(
+        client.chat = AsyncMock(return_value=LLMResponse(
             content="ok", tool_calls=None, finish_reason="stop", model="x", usage={},
-        )
+        ))
         simulator = AnthropicPatientSimulator(client=client)
         history = [
             ConversationTurn(0, "I feel dizzy.", "How long has this been going on?", False, [], []),

@@ -82,3 +82,22 @@ def get_older_messages(session_id: str, before_id: str, limit: int = 20, user_id
     }) or []
 
     return list(reversed(msgs))
+
+
+def get_recent_messages(session_id: str, user_id: str, limit: int = 20) -> list[dict]:
+    """
+    The last `limit` messages of a session, oldest first, read from the store on every turn
+    so any API process can continue any conversation.
+    """
+    if demo_mode():
+        return guest_store.recent_messages(user_id, session_id, limit)
+    msgs = supabase_select("messages", {
+        "select": "*",
+        "session_id": f"eq.{session_id}",
+        "user_id": f"eq.{user_id}",
+        "order": "created_at.desc",
+        "limit": str(limit),
+    })
+    if not msgs:
+        return []
+    return list(reversed(msgs))

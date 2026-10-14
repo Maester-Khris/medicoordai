@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 
@@ -64,7 +65,7 @@ class _Fake(BaseLLMClient):
     def model_name(self) -> str:
         return "fake-model"
 
-    def chat(self, messages, tools=None, temperature=0.2, stop=None, force_tool=None) -> LLMResponse:
+    async def chat(self, messages, tools=None, temperature=0.2, stop=None, force_tool=None) -> LLMResponse:
         self.calls.append({"messages": messages, "tools": tools, "temperature": temperature,
                            "stop": stop, "force_tool": force_tool})
         if isinstance(self.result, Exception):
@@ -88,7 +89,7 @@ def test_a_successful_call_is_timed_counted_and_its_tokens_added() -> None:
     labels = {"provider": "probe-ok", "outcome": "ok"}
     client = InstrumentedLLMClient(_Fake(_response(prompt=11, completion=5)), "probe-ok")
 
-    assert client.chat(MESSAGES).content == "hi"
+    assert asyncio.run(client.chat(MESSAGES)).content == "hi"
 
     assert _value("llm_calls_total", **labels) == 1
     assert _value("llm_call_duration_seconds_count", **labels) == 1
@@ -106,7 +107,7 @@ def test_a_failed_call_is_counted_under_its_outcome_and_re_raised(exc: Exception
     client = InstrumentedLLMClient(_Fake(exc), provider)
 
     with pytest.raises(type(exc)) as caught:
-        client.chat(MESSAGES)
+        asyncio.run(client.chat(MESSAGES))
 
     assert caught.value is exc
     assert _value("llm_calls_total", provider=provider, outcome=outcome) == 1
@@ -118,7 +119,7 @@ def test_a_failed_call_is_counted_under_its_outcome_and_re_raised(exc: Exception
 def test_arguments_and_model_name_pass_through_unchanged() -> None:
     inner = _Fake(_response())
     client = InstrumentedLLMClient(inner, "probe-args")
-    client.chat(MESSAGES, tools=["t"], temperature=0.7, stop=["END"], force_tool="triage_response")  # type: ignore[list-item]
+    asyncio.run(client.chat(MESSAGES, tools=["t"], temperature=0.7, stop=["END"], force_tool="triage_response"))  # type: ignore[list-item]
     assert inner.calls == [{"messages": MESSAGES, "tools": ["t"], "temperature": 0.7,
                             "stop": ["END"], "force_tool": "triage_response"}]
     assert client.model_name == "fake-model" and client.provider == "probe-args"
@@ -127,7 +128,7 @@ def test_arguments_and_model_name_pass_through_unchanged() -> None:
 def test_missing_usage_does_not_break_the_call() -> None:
     response = _response()
     response.usage = {}
-    assert InstrumentedLLMClient(_Fake(response), "probe-nousage").chat(MESSAGES) is response
+    assert asyncio.run(InstrumentedLLMClient(_Fake(response), "probe-nousage").chat(MESSAGES)) is response
 
 
 def _sdk_errors(module) -> dict[str, Exception]:

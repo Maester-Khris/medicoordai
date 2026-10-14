@@ -22,6 +22,7 @@ import { GpsPermissionModal } from './components/GpsPermissionModal'
 import { PWAInstallModal } from './components/pwa/PWAInstallModal'
 import { NotificationPermissionPrompt, shouldShowPermissionPrompt } from './components/pwa/NotificationPermissionPrompt'
 import { useFacilities } from './hooks/useFacilities'
+import { formatWaitAsOf } from "./lib/waitAsOf"
 import { useConversations } from './hooks/useConversations'
 import { useBreakpoint } from './hooks/useBreakpoint'
 import { useGeolocation } from './hooks/useGeolocation'
@@ -49,7 +50,8 @@ function AppInner() {
   const isMobile = useBreakpoint()
   const { user, isGuest } = useAuth()
   const { profile, refetch: refetchProfile } = useProfile()
-  const { facilities, loading: facilitiesLoading } = useFacilities()
+  const { facilities, loading: facilitiesLoading, waitAsOf } = useFacilities()
+  const waitAsOfLabel = formatWaitAsOf(waitAsOf)
   const { cache, busyUntil, sendMessage, createSession, loadOlderMessages } = useConversations()
   const geo = useGeolocation()
   const [gpsModalDismissed, setGpsModalDismissed] = useState(false)
@@ -113,6 +115,15 @@ function AppInner() {
   return (
     <>
       <Notification />
+      {waitAsOfLabel && (
+        <div
+          data-testid="wait-as-of"
+          className="fixed left-2 bottom-1 z-[400] text-[10px] font-mono pointer-events-none"
+          style={{ color: "#7AA0B0" }}
+        >
+          {waitAsOfLabel}
+        </div>
+      )}
       {showGpsModal && (
         <GpsPermissionModal
           onDismiss={() => setGpsModalDismissed(true)}

@@ -5,7 +5,7 @@ interface TriageCardProps {
   triage: TriageUIState
   emergencyContactPhone: string | null
   onModeChange: (mode: TravelModeKey) => void
-  onSelectFacility: (facilityId: string) => void
+  onSelectFacility: (facilityId: string) => void | Promise<void>
 }
 
 const MODE_CHIPS: { key: TravelModeKey; emoji: string; label: string }[] = [
@@ -235,7 +235,7 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
                   >
                     <div style={{ fontSize: 12, marginBottom: 2 }}>{chip.emoji}</div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: isActive ? "#48F6C1" : "#7AA0B0", fontFamily: "var(--font-mono)" }}>
-                      {isActive && recommendedRoute ? `${recommendedRoute.etaMinutes} min` : "—"}
+                      {isActive && recommendedRoute ? `${recommendedRoute.estimated ? "~" : ""}${recommendedRoute.etaMinutes} min` : "—"}
                     </div>
                     {isActive && recommendedRoute && (
                       <div style={{ fontSize: 8.5, color: "rgba(72,246,193,0.5)", fontFamily: "var(--font-mono)" }}>
@@ -246,6 +246,26 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
                 )
               })}
             </div>
+
+            {recommendedRoute?.estimated && (
+              <div
+                role="status"
+                data-testid="route-estimated"
+                style={{
+                  marginBottom: 10,
+                  padding: "8px 10px",
+                  borderRadius: 6,
+                  background: "rgba(245, 158, 11, 0.1)",
+                  border: "1px solid rgba(245, 158, 11, 0.3)",
+                  color: "#F59E0B",
+                  fontSize: 11,
+                  lineHeight: 1.4,
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                Route unavailable right now. The time shown is an estimate. If this is an emergency, call 911.
+              </div>
+            )}
 
             {/* Directions CTA — all non-emergent severities */}
             {triage.severity !== "emergent" && (
@@ -353,7 +373,7 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
                 key={facility.id ?? facility.name}
                 type="button"
                 data-testid="other-facility"
-                disabled={!route?.geometry}
+                disabled={triage.routeLoading}
                 onClick={() => onSelectFacility(facility.id)}
                 className="flex items-center justify-between"
                 style={{
@@ -363,7 +383,7 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
                   border: "none",
                   borderTop: "0.5px solid rgba(28,70,89,0.3)",
                   textAlign: "left",
-                  cursor: route?.geometry ? "pointer" : "default",
+                  cursor: triage.routeLoading ? "progress" : "pointer",
                 }}
               >
                 <span
@@ -374,7 +394,7 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
                 </span>
                 <div className="flex items-center gap-2 flex-none ml-2">
                   <span style={{ color: "#7AA0B0", fontFamily: "var(--font-mono)", fontSize: 10 }}>
-                    {route ? `${route.etaMinutes} min` : `~${facility.distanceKm} km`}
+                    {route ? `${route.estimated ? "~" : ""}${route.etaMinutes} min` : `~${facility.distanceKm} km`}
                   </span>
                   <span
                     style={{

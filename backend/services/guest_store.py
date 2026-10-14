@@ -121,6 +121,22 @@ def get_older_messages(guest_id: str, session_id: str, before_id: str, limit: in
     return list(reversed(rows))
 
 
+def recent_messages(guest_id: str, session_id: str, limit: int = 20) -> list[dict]:
+    """The last `limit` messages of a session, oldest first."""
+    if not (_is_uuid(guest_id) and _is_uuid(session_id)):
+        return []
+    rows = demo_db.fetch_all(
+        f"""
+        select {MESSAGE_COLUMNS} from messages
+        where session_id = %s and guest_id = %s
+        order by created_at desc
+        limit %s
+        """,
+        (session_id, guest_id, limit),
+    )
+    return list(reversed(rows)) if rows else []
+
+
 def upsert_feedback(guest_id: str, session_id: str, message_id: str, thumb: str, comment: str | None) -> bool:
     written = demo_db.execute(
         """

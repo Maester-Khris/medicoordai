@@ -802,6 +802,74 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 ---
 
+## [Sprint 22 — Started] · Guest Demo Launch — Sprint 3: demo scaling
+
+**Started — 2026-10-10 · branch: `feat/demo-scaling`.** Third sprint of the guest demo launch. Goal: 1,000 to 2,000 concurrent chat turns, with numbers that hold up under review. Baseline and profile: Sprint 21 phase 2 (below).
+
+### Scope
+
+- [x] Async chat path: the providers' own async clients instead of the thread pool.
+- [x] Facility list encoded once per data version and served as bytes (see Decisions). Includes a fix: `If-None-Match` is matched weakly, so a 304 is returned behind Railway's compressing proxy (0 of 134 conditional requests answered 304 before, 21 of 135 after).
+- [x] Facility recommendation and route drawing: cell index, load-aware choice, one route up front, Geoapify budget protection (see Decisions).
+- [x] Conversation history and the facility cache out of process memory (history read from the store on every turn); metrics that work across replicas. Horizontal scaling proved with a local Docker Compose test: history kept across replicas, load counters exact, one replica stopped mid-run lost 0.4% of turns. The throughput ratio (1 : 1.52 : 2.16 at 1, 2, 4 replicas) was measured on a laptop, which is the suspected limit; not re-measured on larger hardware.
+- [x] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
+- [x] Database pool size chosen from measurement: 5 on a 1 vCPU process. Pools of 10 and 20 lowered throughput (CPU per turn roughly doubled); a control run at 5 reproduced the first result.
+- [x] Wait-time read path: in-memory copy on the API plus browser caching (decided 2026-10-10, see Decisions).
+- [x] One-hour soak and the chat breakpoint, on the final code (results below).
+- [ ] ~~Final tasks: a new `METRICS_BEARER_TOKEN` generated locally, set on `python-api` and staging, registered in Grafana Cloud with its scrape job.~~ Deferred (see below).
+
+### Results (staging, 1 vCPU / 1 GB, one worker, 2026-10-14)
+
+Provider mock calibrated against OpenAI `gpt-4o-mini` (1,935 real turns): mean 1.69 s both, p95 2.54 s real and 2.60 s mock, 51% and 50% of turns ending in a recommendation. Report: `artifacts/perf/2026-10-13-phase5-report.md`.
+
+- **Capacity of one box:** about 35 chat turns a second (2,100 a minute), flat up to about 60 turns in flight, about 16 ms of API CPU per turn. Past that it queues (p95 10.3 s at 250 conversations, 19.6 s at 500) and nothing fails.
+- **Admission at 50 turns in flight:** the limit holds; accepted turns stay near the unloaded time up to 2.5 times capacity (p95 3.3 s) and slow to p95 7.1 s at 5 times, where the pool of 5 is the limit (session creation is not behind admission).
+- **Soak, one hour at 75 conversations:** 93,322 turns, 0 failed, 1.75% busy answers, p95 2.60 to 2.66 s in every 10-minute window, resident memory 155 MB to 155 MB over the last 30 minutes.
+- **The 1,000 to 2,000 target is not met on this box:** it bends near 60 turns in flight. Reaching it needs more processes (several uvicorn workers on a larger box; the Hobby plan allows one replica per service) and the async database pool.
+
+### Spec amendments
+
+- Success criterion 7 (the 27-vignette triage check): dropped from this sprint, a triage evaluation rather than a load test.
+- The horizontal scaling ratio was measured locally only (see Scope).
+- Railway's Hobby plan allows one replica per service: production scales by box size and uvicorn workers, not replicas.
+- Phase 5 was reduced (2026-10-13) to calibration, breakpoint, admission, pool size and soak.
+
+### Deferred
+
+- Phase 5 runs 6 (map path breakpoint), 7 (Geoapify calls per 1,000 guests) and 8 (2 vCPU with 2 workers).
+- `python-api` and the demo Postgres to US East.
+- A new `METRICS_BEARER_TOKEN` and the Grafana Cloud scrape job.
+- After the run: why a larger pool costs CPU (profile first), `AsyncConnectionPool` for the demo database, session creation behind admission, pool 10 against 20 in one session, Upstash plan limits under load, the mock's `/stats` read in the load scripts.
+- `VITE_GEOAPIFY_API_KEY` in Doppler and Vercel: kept for now (read-only, negligible).
+
+### Decisions (2026-10-10)
+
+- **Wait-time read path: both layers.** The API keeps the wait-time data in memory and reloads it on a short TTL with jitter, so replicas do not all hit Redis at the same moment. The worker writes a "last successful run" key on every run. Each API instance derives the ETag from that key and sets `max-age` to the time left until that run plus 15 minutes, so an instance started at any moment gives the same answer as the others. The browser caches on those headers.
+- **Facility list: encode once per data version, serve bytes.** (1) The version is the facility snapshot plus the worker's last-run key. (2) The response bytes and the ETag are built once per version and kept in memory, in a small bounded cache keyed by the filter combination. (3) Per request: look up the version, compare `If-None-Match`, return 304 or the stored bytes, with no encoding and no hashing. Replaces "serialise once per request"; JSONL, a faster JSON library and protobuf were considered and set aside, since each still encodes per request.
+
+**Facility recommendation and route drawing** (research: `artifacts/research/2026-10-10-nearest-facility-lookup-and-request-batching.md`):
+
+- **No request batching window.** Considered: hold guests for 5 s and resolve them together, as ride-hailing does. Rejected: those platforms batch because a driver is exclusive, which a facility is not; Geoapify's matrix call costs as many credits or more and returns no road shape; and 5 s is added to a step that takes 1 s.
+- **Candidate lookup through an in-memory cell index** (`cell → facility ids`, built once per facility snapshot). Why: the scan grows with the number of facilities, the index with the number nearby, so the design holds at 100k facilities.
+- **One route up front, the others on demand.** Only the chosen facility is routed; another candidate is routed when the guest selects it, and a mode change is one call. Why: 3 Geoapify calls per guest become about 1, and the vendor's rate limit is the real ceiling. Accepted cost: no road-time comparison across the three on a cold cache. May be revisited. Any calls that remain per guest still run in parallel.
+- **Load-aware choice.** Score = estimated travel time + posted wait + a penalty for guests recently sent to that facility, with a random pick among close scores. Why: sending everyone to the shortest posted wait, on data refreshed every 15 minutes, herds them to one place. Applies to routine and moderate only; urgent and emergent always get the fastest appropriate facility. The penalty per guest starts as a configured value per facility type, since there is no real capacity data.
+- **Load counters in Redis, without locks.** One counter per facility per minute with an expiry, incremented atomically, one field per server; the load is the sum of the last few minutes. Each server reads a local copy refreshed every few seconds with jitter. Why: shared across replicas with no request waiting on another, and the per-server fields show every replica contributing in the horizontal test. The same counts, by cell, severity and facility type, are kept for a later city-spread view.
+- **Travel-time cache in process**, bounded, with a time limit on entries, keyed by origin cell, facility and mode. Why: it only improves the ranking (the drawn route always starts at the guest's real position), so a Redis round trip per recommendation is not worth it.
+- **Geoapify budget protection.** A limiter at the plan's rate with emergent requests first; when the budget is spent the guest gets the recommendation with an estimated time and no drawn route. A paid plan is needed for 5,000 guests.
+- **Designed, not built:** at 1M daily users, a self-hosted routing engine with matrix calls for ranking and a precomputed cell-to-facility time table.
+- **To check as we go:** whether Geoapify's terms allow storing Routing results.
+
+### Also open
+
+- [x] Real-call test of the OpenAI client with gpt-4o-mini: 1,935 real turns in the calibration run, none failed.
+- [x] `ANTHROPIC_MODEL`: `claude-haiku-4-5` and `claude-haiku-5-5` both passed a plain and a forced-tool call (2026-10-14); `claude-haiku-4-5` stays pinned by env var on Doppler `stg`, `python-api` and staging.
+- [ ] ~~Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel.~~ Deferred (read-only key, negligible).
+- [ ] ~~Decide: API and Redis in the same region; box size.~~ Deferred with the US East move and run 8.
+- [x] Load-test guest rows deleted from the demo database before the runs, and the 68,276 internal guests of these runs after them; the four non-internal guests, `8fe1df4f` included, are kept.
+- [x] Emergent cases go only to facilities with an emergency department (branch `fix/emergent-er-only`; demo database fixed and `python-api` restarted 2026-10-14). Before: 16% of a Toronto grid sent an emergent case to a rehabilitation, hospice, psychiatric or surgical site.
+
+---
+
 ## [Sprint 21 — Closed] · Guest Demo Launch — Sprint 2: demo user experience
 
 **Started — 2026-10-08 · branch: `feat/demo-user-experience`.** Second sprint of the guest demo launch, building on
