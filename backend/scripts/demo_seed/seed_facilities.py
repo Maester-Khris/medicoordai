@@ -26,6 +26,25 @@ OUT = REPO / "artifacts" / "demo-seed"
 CATEGORIES = {"hospital", "ambulatory", "residential"}
 SEVERITIES = {"emergent", "urgent", "moderate", "routine"}
 FILES = {"clean": OUT / "facilities_clean.json", "raw": OUT / "facilities_raw.json"}
+ER_LIST = Path(__file__).resolve().parent / "emergency_departments.json"
+ALL_SEVERITIES = ["emergent", "urgent", "moderate", "routine"]
+NON_EMERGENT = ["urgent", "moderate", "routine"]
+
+
+def load_emergency_department_ids(path: Path = ER_LIST) -> frozenset[str]:
+    """Ids of the facilities with an emergency department. Stops on a missing or empty list:
+    loading without it would silently keep or strip emergent on every hospital."""
+    ids = frozenset(entry["id"] for entry in json.loads(path.read_text()).get("facilities", []))
+    if not ids:
+        sys.exit(f"{path}: no facilities listed")
+    return ids
+
+
+def accepted_severity_for(row: dict, er_ids: frozenset[str]) -> list[str]:
+    """Emergent goes only to hospitals with an emergency department; other categories keep the source."""
+    if row["category"] != "hospital":
+        return row["accepted_severity"]
+    return list(ALL_SEVERITIES if row["facility_id"] in er_ids else NON_EMERGENT)  # a copy: rows must not share one list
 
 
 # ── export ────────────────────────────────────────────────────────────────────
@@ -69,7 +88,7 @@ def _problems(r: dict) -> list[str]:
     return out
 
 
-def prepare(clean: list[dict], raw: list[dict]) -> tuple[list[dict], list[tuple[str, str]], list[str]]:
+def prepare(clean: list[dict], raw: list[dict], er_ids: frozenset[str]) -> tuple[list[dict], list[tuple[str, str]], list[str]]:
     """Returns (rows ready to insert, rejected [(name, reason)], warnings)."""
     extras = {r["id"]: r for r in raw}
     by_id: dict[str, dict] = {}
@@ -119,7 +138,7 @@ def prepare(clean: list[dict], raw: list[dict]) -> tuple[list[dict], list[tuple[
         hours = r.get("weekday_hours")
         ready.append({
             "id": r["facility_id"], "name": r["facility_name"], "category": r["category"],
-            "source_facility_type": r["source_facility_type"], "accepted_severity": r["accepted_severity"],
+            "source_facility_type": r["source_facility_type"], "accepted_severity": accepted_severity_for(r, er_ids),
             "address": r["address"], "lat": float(r["lat"]), "lng": float(r["lng"]),
             "phone": r.get("phone"), "business_status": status,
             "weekday_hours": hours if hours is None or isinstance(hours, str) else json.dumps(hours),
@@ -134,6 +153,10 @@ def prepare(clean: list[dict], raw: list[dict]) -> tuple[list[dict], list[tuple[
     missing_extra = sum(1 for r in ready if r["id"] not in extras)
     if missing_extra:
         warnings.append(f"{missing_extra} row(s) not found in facilities (source defaulted to 'odhf')")
+    hospital_ids = {r["id"] for r in ready if r["category"] == "hospital"}
+    stray = er_ids - hospital_ids
+    if stray:
+        warnings.append(f"{len(stray)} listed ER id(s) are not hospitals in this load: {sorted(stray)}")
     return ready, rejected, warnings
 
 
@@ -163,7 +186,7 @@ def load(dry_run: bool) -> None:
             sys.exit(f"{p} not found: run `export` first")
     clean = json.loads(FILES["clean"].read_text())
     raw = json.loads(FILES["raw"].read_text())
-    ready, rejected, warnings = prepare(clean, raw)
+    ready, rejected, warnings = prepare(clean, raw, load_emergency_department_ids())
 
     cats: dict[str, int] = {}
     for r in ready:
