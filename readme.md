@@ -105,6 +105,25 @@ Infrastructure
 
 ---
 
+## Performance
+
+Load-tested in Sprint 22 (2026-10-13) with k6 against the deployed API on a single
+1 vCPU / 1 GB instance. LLM and routing calls ran through a provider mock calibrated
+against 1,935 real OpenAI turns (mean 1.69 s and p95 within 2% of real).
+Sprint details: [CHANGELOG.md](CHANGELOG.md) (Sprint 22).
+
+| Result | Value |
+|---|---|
+| Throughput, one instance | ~35 chat turns/s (2,100/min), ~16 ms API CPU per turn |
+| Admission control at 2.5x capacity | accepted turns p95 3.3 s (10.3 s without it); excess gets a fast retry-after answer |
+| 60-minute soak | 93,322 turns, 0 failures, p95 2.6 s, memory flat (+0.2%) |
+| Breakpoint run | 14,238 turns, 0 failures; past ~60 turns in flight it queues instead of failing |
+| DB pool sizing | measured: pool 5 beats 10 and 20 on one vCPU (control run reproduced) |
+
+Next: an async database pool and a 2-worker box, re-measured with the same ladder.
+
+---
+
 ## Tech Stack
 
 **Current (hackathon build)**
