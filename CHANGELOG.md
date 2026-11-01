@@ -765,8 +765,8 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 - [x] Spec/design session: `/app` 404 (likely Vercel routing), pipeline-to-demo-database feed
 - [x] Railway Postgres (PostGIS-capable) with a restricted app role; schema for facilities, `wait_times`, `guests`, guest-keyed `sessions`/`messages`, `feedback`, events
-- [ ] (Phase 0) One-time facility load from Supabase; worker dual-writes to Supabase and the demo database
-- [ ] (Phase 0) Worker rewrite: strict hospital-only matching, one name per facility, predicted ranges flagged, bounded `wait_times`, batched sinks, Sentry alerts, bad-data cleanup (built and tested; real run and cleanup wait for the `preview` merge and Railway worker redeploy)
+- [x] (Phase 0) One-time facility load from Supabase; worker dual-writes to Supabase and the demo database
+- [x] (Phase 0) Worker rewrite: strict hospital-only matching, one name per facility, predicted ranges flagged, bounded `wait_times`, batched sinks, Sentry alerts, bad-data cleanup (built, tested, and run for real at close-out; see below)
 - [x] Expose `raw_wait` and `predicted` through the API and show the range on the front (the API returns only `wait_minutes` today)
 - [x] Backend data layer on the new database (real driver replaces the REST helpers)
 - [x] Guest identity under `DEMO_MODE`; profile lookup skipped for guests
@@ -778,8 +778,8 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 - [x] Minimal events: session started, recommendation shown, route drawn; internal-tester marker on guest rows
 - [x] Starter prompts, visible not-medical-advice/911 notice, updated disclosure page, 30-day chat-text purge
 - [x] Delete the hardcoded Geoapify key file (`webapp/src/Menucomponents/utils/geoapify.ts`, no importers; the live code reads `VITE_GEOAPIFY_API_KEY`). Rotation skipped (decided 2026-10-08): the key is read-only and the risk negligible
-- [ ] Deployed Playwright smoke test: landing → starter → chat → recommendation → route drawn → feedback
-- [ ] Update `CLAUDE.md` (Supabase "non-negotiable / out of scope" lines) and this changelog
+- [x] Deployed Playwright smoke test: landing → starter → chat → recommendation → route drawn → feedback
+- [x] Update `CLAUDE.md` (Supabase "non-negotiable / out of scope" lines) and this changelog
 
 
 **Closed 2026-10-08 (PR #52 merged to `preview`).** Verified on the preview deployment:
@@ -894,7 +894,7 @@ then performance tracking and measurement. Plan for the second phase: `artifacts
 
 **Phase 1 — guest experience (one spec, plan and implementation turn)**
 
-- [ ] Baseline read, no code: route latency and error rate, Web Vitals in Sentry, journey timings from message and event timestamps; check the Railway worker count and whether the Grafana push is still live
+- [ ] ~~Baseline read, no code: route latency and error rate, Web Vitals in Sentry, journey timings from message and event timestamps; check the Railway worker count and whether the Grafana push is still live~~ Partly done: before/after snapshots of route latency, error rate and journey timings exist (`artifacts/perf/2026-10-09-1722-before-phase1.md` and later). Web Vitals at p75 from Sentry and the worker-count check: deferred.
 - [x] Routing calls moved to the backend with a timeout and a fallback; `VITE_GEOAPIFY_API_KEY` out of the browser bundle
 - [x] Real vehicle modes: mode change re-selects among the top candidates and redraws the route; hidden mode buttons re-enabled; mode recorded on the `route_drawn` event
 - [x] Mode-change latency measured in the browser (click to route redrawn)
@@ -918,13 +918,13 @@ branch is deployed. Spec and plan: `docs/superpowers/specs/2026-10-08-guest-demo
 - [x] Rate-limit values from environment variables, defaults unchanged, raised on staging only
 - [x] `pg_stat_statements` enabled on the demo database (admin step, needs a restart)
 - [x] `/metrics` read directly during tests (Grafana Cloud holds no data yet, see the last item) during tests
-- [ ] Test A, non-LLM: smoke, average load and breakpoint done; the one-hour soak is not run (moved to the next sprint, on the final code)
+- [x] Test A, non-LLM: smoke, average load and breakpoint done; the one-hour soak moved to Sprint 22 and was run there on the final code
 - [x] Test B, chat: concurrent turns ramped to the breakpoint
 - [x] Profiling protocol (py-spy, or the Sentry profiler if attaching is blocked)
 - [x] Web Vitals at the 75th percentile compared with the published "good" thresholds
 - [x] Report: environment, mix, one row per load step, breakpoint and first bottleneck
-- [ ] Latency fix, only if the report or the journey timings show one dominant cost
-- [ ] Fix the metrics push to Grafana Cloud (code done: the push thread is removed and `/metrics` is closed without a token; the Grafana Cloud scrape job is still to create). Found 2026-10-10: the Prometheus store there has never received an API metric (only Grafana's own three alert series in 90 days; "Service down" is firing, the two others are in no-data). The push thread in `backend/observability.py` fails every 30 seconds with `'Response' object is not callable`, and it uses the Pushgateway method against a remote-write URL, which are different protocols. Until it is fixed, `/metrics` read directly (it resets on every deploy) is the only source
+- [x] Latency fix, only if the report or the journey timings show one dominant cost. Done in Sprint 22: wait-time data in memory (`3b6fb16`), facility list encoded once per data version (`53a71ff`), weak `If-None-Match` (`d32fba0`)
+- [ ] ~~Fix the metrics push to Grafana Cloud (code done: the push thread is removed and `/metrics` is closed without a token; the Grafana Cloud scrape job is still to create). Found 2026-10-10: the Prometheus store there has never received an API metric (only Grafana's own three alert series in 90 days; "Service down" is firing, the two others are in no-data). The push thread in `backend/observability.py` fails every 30 seconds with `'Response' object is not callable`, and it uses the Pushgateway method against a remote-write URL, which are different protocols. Until it is fixed, `/metrics` read directly (it resets on every deploy) is the only source~~ Deferred: the code half is done, the Grafana Cloud scrape job and a new `METRICS_BEARER_TOKEN` are external setup.
 
 Phase 2 code as built (2026-10-10): application metrics on `/metrics` (LLM, routing and graph
 timings, LLM outcomes and tokens, database pool gauges); pool size, pool wait, rate limits and the
@@ -947,16 +947,16 @@ git-ignored `artifacts/perf/2026-10-10-phase2-report.md`):
 - **Provider fallback** verified with real calls: an invalid Groq key falls through to `claude-haiku-5-5`, visible in the log and in `llm_calls_total`.
 - 40 threads and a database pool of 5 are implementation limits, not capacity numbers. Next sprint: async chat path, conversation and facility state out of process memory, admission control with a waiting state in the UI, the wait-time cache, and the soak on the final code.
 
-Carried to the next sprint (demo scaling, target 1,000 to 2,000 concurrent chat turns):
+Carried to Sprint 22 (demo scaling, target 1,000 to 2,000 concurrent chat turns); all done there except the last item, which stays deferred:
 
-- [ ] Async chat path: async provider clients and agent.
-- [ ] Facility list serialised once per request instead of twice (the largest CPU cost in the map profile).
-- [ ] Conversation history and the facility cache out of process memory (Redis in front of Postgres); metrics that work across replicas. Horizontal scaling is tested locally with Docker Compose, since the Railway plan does not allow several replicas.
-- [ ] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
-- [ ] Database pool size chosen from measurement (5 today).
-- [ ] Wait-time data kept in memory for a short time instead of one Redis call per map request (decision still open).
-- [ ] One-hour soak and the chat breakpoint, on the final code.
-- [ ] Final tasks: a new `METRICS_BEARER_TOKEN` generated locally and set on both the `python-api` and staging services; how to register it on the Grafana Cloud side, and the scrape job itself, are open.
+- [x] Async chat path: async provider clients and agent.
+- [x] Facility list serialised once per request instead of twice (the largest CPU cost in the map profile).
+- [x] Conversation history and the facility cache out of process memory (Redis in front of Postgres); metrics that work across replicas. Horizontal scaling is tested locally with Docker Compose, since the Railway plan does not allow several replicas.
+- [x] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
+- [x] Database pool size chosen from measurement (5 today).
+- [x] Wait-time data kept in memory for a short time instead of one Redis call per map request (decided 2026-10-10: in-memory copy plus browser caching).
+- [x] One-hour soak and the chat breakpoint, on the final code.
+- [ ] ~~Final tasks: a new `METRICS_BEARER_TOKEN` generated locally and set on both the `python-api` and staging services; how to register it on the Grafana Cloud side, and the scrape job itself, are open.~~ Deferred (same as Sprint 22).
 
 **Exit:** deployed to `preview`, smoke test passing.
 
@@ -965,7 +965,7 @@ Carried to the next sprint (demo scaling, target 1,000 to 2,000 concurrent chat 
 - [x] **Migration 0005 on `medicoord-db-demo` — applied 2026-10-09, with the deploy.** A first attempt the same day was rolled back: the migration is not additive (the narrowed unique index on `events` no longer matches the `on conflict` clause of the previous backend, which then cannot write any event row; chat keeps working, events are lost), so it has to go in the same window as the backend deploy.
 - [x] **Phase 1 deployed to `preview` (PR #54, merged 2026-10-10 04:03 UTC).** The four smoke scenarios pass against the preview deployment. Events are recorded with their mode, and `mode_changed` rows carry a duration.
 - [x] **Before and after snapshots** (`backend/scripts/perf_baseline/run_baseline.py`, reports in the git-ignored `artifacts/perf/`). Small samples from repeated smoke runs, same prompt and location, so indicative only. Recommendation shown to route drawn: median 1.69 s before (n=6, two Geoapify calls from the browser), 1.18 s after (n=10, one `POST /routes`). `POST /routes` mean 651 ms over 15 calls. Mode change to redraw (bike): median 0.76 s (n=5). User message to assistant reply: median about 1.5 s in both, but three of ten replies after the deploy took about 10 s, which is the LLM provider and not routing.
-- [ ] Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel (owner).
+- [ ] ~~Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel (owner).~~ Deferred (read-only key, negligible).
 
 ### Side-tracks (do not block the scope)
 
