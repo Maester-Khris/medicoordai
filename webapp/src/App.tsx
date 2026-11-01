@@ -22,6 +22,7 @@ import { GpsPermissionModal } from './components/GpsPermissionModal'
 import { PWAInstallModal } from './components/pwa/PWAInstallModal'
 import { NotificationPermissionPrompt, shouldShowPermissionPrompt } from './components/pwa/NotificationPermissionPrompt'
 import { useFacilities } from './hooks/useFacilities'
+import { formatWaitAsOf } from "./lib/waitAsOf"
 import { useConversations } from './hooks/useConversations'
 import { useBreakpoint } from './hooks/useBreakpoint'
 import { useGeolocation } from './hooks/useGeolocation'
@@ -31,8 +32,12 @@ import { useAuth } from './auth/useAuth'
 import { useProfile } from './hooks/useProfile'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth()
-  // ponytail: no loading guard — redirect on null, tolerate auth flash in phase 1
+  const { user, isGuest, loading } = useAuth()
+  // Until /config and auth resolve we cannot tell a guest from a signed-out visitor;
+  // redirecting now would send a guest (or a signed-in user on a deep link) to the landing page.
+  if (loading) return null
+  // Guests have no account pages: send them to the app instead of the landing page.
+  if (isGuest) return <Navigate to="/app" replace />
   if (!user) return <Navigate to="/" replace />
   return <>{children}</>
 }
@@ -43,10 +48,11 @@ function LandingRoute() {
 
 function AppInner() {
   const isMobile = useBreakpoint()
-  const { user } = useAuth()
+  const { user, isGuest } = useAuth()
   const { profile, refetch: refetchProfile } = useProfile()
-  const { facilities, loading: facilitiesLoading } = useFacilities()
-  const { cache, sendMessage, createSession, loadOlderMessages } = useConversations()
+  const { facilities, loading: facilitiesLoading, waitAsOf } = useFacilities()
+  const waitAsOfLabel = formatWaitAsOf(waitAsOf)
+  const { cache, busyUntil, sendMessage, createSession, loadOlderMessages } = useConversations()
   const geo = useGeolocation()
   const [gpsModalDismissed, setGpsModalDismissed] = useState(false)
 
@@ -65,16 +71,17 @@ function AppInner() {
     permissionState,
     requesting,
     requestPermission,
-  } = useNotificationPermission(user?.id ?? null)
+  } = useNotificationPermission(isGuest ? null : user?.id ?? null)
 
   const [permissionPromptDismissed, setPermissionPromptDismissed] = useState(false)
   const [installConfirmed, setInstallConfirmed] = useState(installState === "standalone")
 
-  const showOnboarding = Boolean(user && profile && !profile.getting_started_done)
+  const showOnboarding = Boolean(!isGuest && user && profile && !profile.getting_started_done)
 
   const showGpsModal = geo.permission === "denied" && !gpsModalDismissed && !showOnboarding
 
   const showInstallModal =
+    !isGuest &&
     !installModalDismissed &&
     installState !== "standalone" &&
     (platform === "ios_safari" || platform === "android_chrome" || isIosNonSafari) &&
@@ -82,6 +89,7 @@ function AppInner() {
     !showOnboarding
 
   const showPermissionPrompt =
+    !isGuest &&
     !showInstallModal &&
     isPushSupported &&
     permissionState !== "granted" &&
@@ -97,6 +105,7 @@ function AppInner() {
     sendMessage,
     createSession,
     loadOlderMessages,
+    busyUntil,
   }
 
   if (isMobile && showOnboarding) {
@@ -106,8 +115,20 @@ function AppInner() {
   return (
     <>
       <Notification />
+      {waitAsOfLabel && (
+        <div
+          data-testid="wait-as-of"
+          className="fixed left-2 bottom-1 z-[400] text-[10px] font-mono pointer-events-none"
+          style={{ color: "#7AA0B0" }}
+        >
+          {waitAsOfLabel}
+        </div>
+      )}
       {showGpsModal && (
-        <GpsPermissionModal onDismiss={() => setGpsModalDismissed(true)} />
+        <GpsPermissionModal
+          onDismiss={() => setGpsModalDismissed(true)}
+          dismissLabel={isGuest ? "Continue with downtown Toronto" : undefined}
+        />
       )}
       {showInstallModal && (
         <PWAInstallModal

@@ -4,7 +4,9 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from services.chat import create_session, add_message, get_past_conversations, get_older_messages
+from services.chat import (
+    create_session, add_message, get_past_conversations, get_older_messages, get_recent_messages,
+)
 
 
 class TestCreateSession:
@@ -79,3 +81,29 @@ class TestGetOlderMessages:
         assert result == [{"id": "m1", "created_at": "2024-01-14T10:00:00"}]
         messages_call = mock_select.call_args_list[1]
         assert messages_call.args[1]["created_at"] == "lt.2024-01-15T10:00:00"
+
+
+class TestGetRecentMessages:
+    @patch("services.chat.supabase_select")
+    def test_reads_the_newest_messages_of_the_users_session_oldest_first(self, mock_select, monkeypatch):
+        monkeypatch.delenv("DEMO_MODE", raising=False)
+        mock_select.return_value = [{"id": "m2", "created_at": "2"}, {"id": "m1", "created_at": "1"}]
+
+        assert get_recent_messages("s1", "u1", limit=7) == [
+            {"id": "m1", "created_at": "1"}, {"id": "m2", "created_at": "2"}]
+
+        table, params = mock_select.call_args.args
+        assert table == "messages"
+        assert params["session_id"] == "eq.s1" and params["user_id"] == "eq.u1"
+        assert params["order"] == "created_at.desc" and params["limit"] == "7"
+
+    @patch("services.chat.supabase_select", return_value=None)
+    def test_no_rows_is_an_empty_list(self, _mock_select, monkeypatch):
+        monkeypatch.delenv("DEMO_MODE", raising=False)
+        assert get_recent_messages("s1", "u1") == []
+
+    @patch("services.chat.guest_store.recent_messages", return_value=[{"id": "m1"}])
+    def test_demo_mode_reads_the_guest_store(self, mock_recent, monkeypatch):
+        monkeypatch.setenv("DEMO_MODE", "true")
+        assert get_recent_messages("s1", "g1", limit=5) == [{"id": "m1"}]
+        mock_recent.assert_called_once_with("g1", "s1", 5)

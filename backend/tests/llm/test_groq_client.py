@@ -2,6 +2,7 @@
 Unit tests for GroqClient's retry-once-on-malformed-tool-call behavior.
 No real network access — the underlying Groq SDK client is mocked.
 """
+import asyncio
 import os
 import sys
 
@@ -53,10 +54,10 @@ class TestGroqClientRetry:
             client._client.chat.completions, "create",
             side_effect=[_tool_use_failed_error(), _ok_completion()],
         ) as mock_create:
-            resp = client.chat(
+            resp = asyncio.run(client.chat(
                 messages=[LLMMessage(role="user", content="hi")],
                 tools=[TRIAGE_RESPONSE],
-            )
+            ))
 
         assert mock_create.call_count == 2
         assert resp.tool_calls[0]["name"] == "triage_response"
@@ -72,10 +73,10 @@ class TestGroqClientRetry:
             side_effect=[_tool_use_failed_error(), _tool_use_failed_error()],
         ) as mock_create:
             with pytest.raises(BadRequestError):
-                client.chat(
+                asyncio.run(client.chat(
                     messages=[LLMMessage(role="user", content="hi")],
                     tools=[TRIAGE_RESPONSE],
-                )
+                ))
 
         assert mock_create.call_count == 2
 
@@ -95,9 +96,9 @@ class TestGroqClientRetry:
             client._client.chat.completions, "create", side_effect=[unrelated_error],
         ) as mock_create:
             with pytest.raises(BadRequestError):
-                client.chat(
+                asyncio.run(client.chat(
                     messages=[LLMMessage(role="user", content="hi")],
                     tools=[TRIAGE_RESPONSE],
-                )
+                ))
 
         assert mock_create.call_count == 1

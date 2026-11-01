@@ -74,6 +74,9 @@ export function FacilityMarkerLayer({ displayedFacilities, triageCandidates, pin
               address={facility.address}
               phone={facility.phone}
               weekday_hours={facility.weekday_hours}
+              wait_minutes={facility.wait_minutes}
+              raw_wait={facility.raw_wait}
+              predicted={facility.predicted}
               distanceKm={facility.id ? distanceMap?.get(facility.id) : undefined}
             />
           </Popup>

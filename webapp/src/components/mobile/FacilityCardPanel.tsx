@@ -1,13 +1,15 @@
 // webapp/src/components/mobile/FacilityCardPanel.tsx
-import { useState } from 'react'
 import { motion } from 'motion/react'
 import { MapPin } from '@phosphor-icons/react'
-import type { TriageUIState } from '@shared/types'
-import { TransitModeGrid, type TransitMode } from './TransitModeGrid'
+import type { TravelModeKey, TriageUIState } from '@shared/types'
+import { TransitModeGrid } from './TransitModeGrid'
+import { FeedbackControl } from '../triage/FeedbackControl'
 
 interface FacilityCardPanelProps {
   triage: TriageUIState
   onGetDirections: (name: string, lat: number, lng: number) => void
+  onModeChange: (mode: TravelModeKey) => void
+  feedback: { sessionId: string; messageId: string } | null
 }
 
 function monogram(name: string): string {
@@ -30,10 +32,9 @@ const SECONDARY_ETA_COLOR: Record<string, string> = {
   emergent: '#FF7B93',
 }
 
-export function FacilityCardPanel({ triage, onGetDirections }: FacilityCardPanelProps) {
-  const [activeMode, setActiveMode] = useState<TransitMode>('drive')
-
+export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedback }: FacilityCardPanelProps) {
   const facility = triage.recommendedFacility
+  const recommendedRoute = triage.routes.find(r => r.facilityId === triage.recommendedFacilityId)
 
   if (!facility || !triage.active) return null
 
@@ -114,10 +115,31 @@ export function FacilityCardPanel({ triage, onGetDirections }: FacilityCardPanel
 
         {/* Transit mode grid */}
         <TransitModeGrid
-          routes={triage.routes}
-          activeMode={activeMode}
-          onModeChange={setActiveMode}
+          etaMinutes={recommendedRoute?.etaMinutes ?? null}
+          activeMode={triage.travelMode}
+          loading={triage.routeLoading}
+          onModeChange={onModeChange}
         />
+
+        {recommendedRoute?.estimated && (
+          <div
+            role="status"
+            data-testid="route-estimated"
+            style={{
+              marginTop: 10,
+              padding: "8px 10px",
+              borderRadius: 6,
+              background: "rgba(245, 158, 11, 0.1)",
+              border: "1px solid rgba(245, 158, 11, 0.3)",
+              color: "#F59E0B",
+              fontSize: 11,
+              lineHeight: 1.4,
+              fontFamily: "var(--font-mono)",
+            }}
+          >
+            Route unavailable right now. The time shown is an estimate. If this is an emergency, call 911.
+          </div>
+        )}
 
         {/* CTA button */}
         <button
@@ -133,6 +155,7 @@ export function FacilityCardPanel({ triage, onGetDirections }: FacilityCardPanel
         >
           Get Directions →
         </button>
+        {feedback && <FeedbackControl sessionId={feedback.sessionId} messageId={feedback.messageId} />}
       </div>
 
       {/* Secondary facilities */}

@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
+import { useConfig } from '../hooks/useConfig'
 
 interface WebNavBarProps {
   rightContent?: React.ReactNode
 }
 
 export function WebNavBar({ rightContent }: WebNavBarProps) {
+  const config = useConfig()
   return (
     <header
       className="flex-none flex items-center justify-between px-8 z-10 sticky top-0"
@@ -40,6 +42,7 @@ export function WebNavBar({ rightContent }: WebNavBarProps) {
       </Link>
 
       <div className="flex items-center gap-4 ml-auto">
+        {!config.demo_mode && (
         <Link
           to="/sandbox"
           className="flex items-center gap-1.5 no-underline transition-all active:scale-95 hover:scale-102"
@@ -66,6 +69,7 @@ export function WebNavBar({ rightContent }: WebNavBarProps) {
           <i className="ti ti-test-pipe" style={{ fontSize: 13 }} />
           Sandbox
         </Link>
+        )}
         {rightContent && <div className="flex items-center gap-4">{rightContent}</div>}
       </div>
     </header>

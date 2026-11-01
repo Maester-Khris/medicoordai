@@ -19,7 +19,7 @@ medicoordai/
 - **Backend:** Python 3.11, FastAPI
 - **AI:** Groq (primary, free tier) or Anthropic Claude — controlled via feature flag `LLM_PROVIDER`
 - **Routing:** Geoapify Route Matrix API
-- **Auth / DB:** Supabase — not in scope for current phase, do not scaffold yet
+- **DB:** Railway Postgres (`medicoord-db-demo`) for the guest demo; Supabase stays the legacy store until the later Postgres move. **Auth:** none (guest-only) under `DEMO_MODE`
 - **Env vars:** Doppler — all `run` commands must use `doppler run --`
 - **Frontend deploy:** Vercel (preview on PR, production on main)
 - **Backend deploy:** Railway (web service + cron/worker services; deploy via Railway CLI from `backend/`)
@@ -28,11 +28,15 @@ medicoordai/
 ## Running Commands
 
 ### Python virtualenv
-Always activate the pydev virtualenv before any Python or dbt command:
+`/home/niki/Documents/workenv/pydev/` is the only Python environment for this repo. Activate it before any Python command:
 ```bash
 source /home/niki/Documents/workenv/pydev/bin/activate
 ```
-This applies to all Python, pip, dbt, pytest, and uvicorn invocations.
+This applies to everything: python, pip, pytest, uvicorn, alembic, dbt, ruff, mypy, and one-off scripts or inline `python -` snippets.
+- Never use the system interpreter (`/usr/bin/python3`, `/usr/bin/pip`).
+- Never create another environment (`python -m venv`, `uv venv`, `poetry`, `pipenv`, `conda`) and never install with `--user` or `--break-system-packages`.
+- New dependencies go in `requirements.txt` and are installed into pydev.
+- This rule applies to every agent working in the repo, including delegated executors.
 
 ### Environment variables
 Inject environment variables via Doppler when they are not already exported:
@@ -49,15 +53,17 @@ doppler run -- npm run test
 ```
 If env vars are already exported in the shell session, skip Doppler.
 Never hardcode secrets. Never use a raw `.env` file in commands.
+`DEMO_MODE=true` is set on the API service only (the wait-time worker does not read it).
 
 
 ## Current Scope (Phase 1)
 **In scope:** User ↔ chatbot interaction only.
 - Symptom input → severity classification → facility routing → map response
 - `/triage` endpoint and LLM tool orchestration
+- Guest demo (sprint 20): `DEMO_MODE`, `/config`, `/feedback`, `/events`, guest ids via `X-Guest-Id`
 
 **Out of scope (do not implement or scaffold):**
-- Supabase auth or database integration
+- New Supabase work (auth, new tables); the demo uses guest ids on Railway Postgres
 - Emergency contact notifications
 - Predictive analytics tab
 - Admin dashboard

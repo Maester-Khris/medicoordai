@@ -726,6 +726,254 @@ technical trigger for it is real (not scale/file-size alone).
 
 ---
 
+## [Sprint 20 — Closed] · Guest Demo Launch — Sprint 1: guest session, demo database, feedback
+
+**Started — 2026-10-04 · branch: `feat/guest-demo-core`.** First of a multi-sprint demo launch. Goal: a public,
+sign-in-free guest demo that produces real user evidence (interviews keep asking "did you get user feedback?",
+and sign-in slows our own testing). Scenario: chat → facility recommendation → route drawn on the map. Reference
+design: the `fintech-prod` repo's pre-launch demo sprint (guest ids, `DEMO_MODE`, per-guest/IP rate limit,
+feedback capture, deployed smoke test). Decisions and the sprint-1 list were worked out in a product-thinker
+session; the spec/design session comes next.
+
+### Decisions
+
+- Guest-only, sign-in hidden completely. Ships on `main` behind `DEMO_MODE` (no demo branch); the frontend learns the flag from a `/config` endpoint.
+- One metric: % of guest sessions that reach a drawn route (counter-metric: thumbs-down rate). Line in the sand for the first 10 guest sessions: ≥ 60% reach a route and ≥ 5 leave feedback; under 30% reaching a route means fix onboarding first.
+- Feedback = thumbs plus free text, stored per guest and turn.
+- New Railway Postgres demo database `medicoord-db-demo`, PostGIS-capable template so the later proximity-search feature needs no second migration. Supabase is **not touched** before the demo; leaving Supabase is a later sprint.
+- Facilities come from the `facilities_clean` table (the one the backend serves). The Railway worker (`workers/scraper.py`, cron every 15 min) will **dual-write** new facilities and `wait_times` to Supabase and `medicoord-db-demo` until the full Postgres move. The AWS pipeline's EventBridge/Step Functions schedule was never saved, so it only runs by hand and the Railway worker is the live pipeline: the demo database is fed by a one-time load plus the worker, and enrichment/dbt runs stay manual (run against both databases when needed). Note: The enrichment script is ported to Geoapify (since Google Places expired), but Geoapify doesn't cover all initial attributes Google Places added (e.g. `business_status`). We will look for a replacement later.
+- Chat text kept 30 days (purged on new-guest arrival), feedback and event rows kept, no raw IPs stored; the data-disclosure page is updated to match.
+- LLM stays Groq with the existing direct SDKs in this sprint.
+
+### Phase 0 — data foundation (first, before the spec session)
+
+Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time data is currently wrong (provincial hospitals averaged onto unrelated Toronto facilities, wait times written to non-hospital rows, expired Google Places key), so it is fixed and observed first; the rest of the sprint builds on it.
+
+1. **Done 2026-10-05:** minimal schema deployed on Railway `medicoord-db-demo` (PostgreSQL 18.6) through Alembic (`migrations/postgres/`, revisions `0001`–`0003`, rehearsed on a local throwaway Postgres 18 first). One `facilities` table in the cleaned shape (provider-neutral `place_id`, `weekday_hours` kept as text, no PostGIS yet) and a one-row-per-facility `wait_times` (no history) that can only reference hospital-category facilities, enforced by a composite foreign key. Two least-privilege roles (backend: read-only; worker: insert facilities, upsert `wait_times`; neither can delete, truncate, create objects or update facilities) with RLS enabled and explicit per-role policies. Driven by `backend/script.demo.local.sh` (git-ignored, reads `backend/.env.demo.local`). Facility load done the same day with `backend/scripts/demo_seed/seed_facilities.py` (`seed export` reads Supabase over REST into untracked `artifacts/demo-seed/`; `seed load` is an idempotent upsert on id, rehearsed locally first): 308 rows (35 hospitals, 99 ambulatory, 174 residential), Supabase ids preserved, place ids shared by several facilities (an artefact of the old Google lookup) kept only on an unambiguous hospital row.
+2. Fix the whole wait-time worker (`workers/scraper.py`):
+   - Google Places removed from the worker (the API key expired). **The worker no longer creates facilities** (decided 2026-10-05): a scraped name is never turned into a facility, because a geocoder guess is the riskiest step; the few genuinely missing Toronto hospitals (e.g. Birchmount) are added with the manual Geoapify enrichment script (restored from `stash@{0}`, to be ported to the demo database). `GEOAPIFY_API_KEY` stays set on the services for that script.
+   - Three independent sinks, each a single batched write: demo Postgres (one `unnest` upsert), Supabase (one POST), Redis (one pipeline). A failing sink never blocks the others, is reported to Sentry, and makes the run exit non-zero (the worker had no alerting before). Each service reads its own connection string, `POSTGRES_DB_URL_APP` / `POSTGRES_DB_URL_WORKER`, set in Doppler (a Doppler sync limit prevents a worker-only config, so both services receive both).
+   - Matching: a scraped name must share all its distinctive words with exactly one hospital (Jaccard ≥ 0.6, clear lead over the runner-up) or be in the reviewed alias file `workers/hospital_aliases.json`; one value per source per facility. Replaces the fuzzy match that mapped e.g. Kingston/Brantford/Hamilton General onto Toronto General.
+   - **ERstat "Predicted" ranges are kept, flagged** (decided 2026-10-05; it replaces the first decision to ignore them, reversed after a dry run at 07:00 Toronto time showed ERstat with 47 live, 95 predicted and 35 no-data rows out of 177, and only 4 of the 16 matched Toronto hospitals with a live wait). Migration `0003`: `wait_times.predicted boolean`, `wait_minutes` nullable (NULL, never 0, for a predicted range), `raw_wait` holds the display text (`45m–2h`), and a check keeps the two shapes from mixing. Live data always beats a predicted range and is never averaged with it. NULL minutes already pass every wait filter in the backend. The Supabase sink receives live rows only (its schema is left untouched); Redis gets everything, with a `predicted` flag.
+   - `wait_times` growth bounded: one row per facility in the demo database (upsert); Supabase keeps inserting history, hospitals only, until the Postgres move.
+   - One-time cleanup of the bad data: wait-time rows for non-hospital facilities in Supabase and the Redis hash, and the `scraper:unresolved_places` Redis set.
+3. **Deferred (decided 2026-10-07):** first real run of the rewritten worker and its three-sink check happen when the code is merged to `preview` and the Railway worker is redeployed, after sprint 1 is done. Until then the old worker keeps running on Railway. The one-time bad-data cleanup was already run; re-run it right after the redeploy in case the old worker contaminated the data again.
+4. **Done 2026-10-05:** Geoapify gap-fill script ported to demo database (`enrich_facilities_geoapify.py`). Executed remote apply to fill missing `phone`, `weekday_hours`, and `place_id`. 11 matched, 122 rejected by strict Jaccard/proximity checks to prevent bad overwrites.
+5. Then the spec/design session and the rest of sprint 1.
+
+### Scope (sprint 1, in order)
+
+- [x] Spec/design session: `/app` 404 (likely Vercel routing), pipeline-to-demo-database feed
+- [x] Railway Postgres (PostGIS-capable) with a restricted app role; schema for facilities, `wait_times`, `guests`, guest-keyed `sessions`/`messages`, `feedback`, events
+- [x] (Phase 0) One-time facility load from Supabase; worker dual-writes to Supabase and the demo database
+- [x] (Phase 0) Worker rewrite: strict hospital-only matching, one name per facility, predicted ranges flagged, bounded `wait_times`, batched sinks, Sentry alerts, bad-data cleanup (built, tested, and run for real at close-out; see below)
+- [x] Expose `raw_wait` and `predicted` through the API and show the range on the front (the API returns only `wait_minutes` today)
+- [x] Backend data layer on the new database (real driver replaces the REST helpers)
+- [x] Guest identity under `DEMO_MODE`; profile lookup skipped for guests
+- [x] Frontend: `/config`, no sign-in UI/onboarding/route guard for guests, `/app` fixed
+- [x] "Use downtown Toronto" when geolocation is denied or outside the city
+- [x] Hide bike/bus modes until sprint 2 (their ETAs are multipliers, not real routes)
+- [x] Rate limit per guest (10) and per IP (30) per 10 minutes; clear "busy" message on 429 and LLM quota errors
+- [x] Feedback UI (thumbs + free text) on the recommendation message
+- [x] Minimal events: session started, recommendation shown, route drawn; internal-tester marker on guest rows
+- [x] Starter prompts, visible not-medical-advice/911 notice, updated disclosure page, 30-day chat-text purge
+- [x] Delete the hardcoded Geoapify key file (`webapp/src/Menucomponents/utils/geoapify.ts`, no importers; the live code reads `VITE_GEOAPIFY_API_KEY`). Rotation skipped (decided 2026-10-08): the key is read-only and the risk negligible
+- [x] Deployed Playwright smoke test: landing → starter → chat → recommendation → route drawn → feedback
+- [x] Update `CLAUDE.md` (Supabase "non-negotiable / out of scope" lines) and this changelog
+
+
+**Closed 2026-10-08 (PR #52 merged to `preview`).** Verified on the preview deployment:
+- Migration 0004 was already on `medicoord-db-demo`; the grants and RLS verify passed on all seven tables for both roles. `DEMO_MODE=true` is on the Railway API service (`/health` and `/config` report demo mode, `modes_enabled: ["car"]`).
+- Deployed smoke test passed against `https://medicoordai-git-preview-nkops-projects.vercel.app` (landing → starter → recommendation → route drawn → feedback, `/events` and `/feedback` 204). Its guest row was marked `is_internal`.
+- First real run of the rewritten worker (16:32 UTC): 16 of 35 hospitals matched (4 live, 6 predicted), wrote 10 rows to demo Postgres, 4 live rows to Supabase, 16 to Redis; no sink failed.
+- Bad-data cleanup re-run with `--apply`: 7,609 non-hospital Supabase `wait_times` rows, 30 Redis hash fields and the `scraper:unresolved_places` set removed; a second dry run finds nothing.
+- Geoapify key rotation skipped on purpose (read-only key). Not yet done: promote `preview` to `main`, and watch the first 10 guest sessions against the line in the sand above.
+
+### Known and accepted until the Postgres move
+
+- On Supabase, `wait_times` and `facilities_clean` have RLS off and `anon` has write grants, so anyone with the public anon key can modify them via REST. Left as-is on purpose; resolved by the move to raw Postgres.
+- `GET /facilities/nearby` errors in production (`nearby_facilities()` references a `coordinates` column that does not exist on `facilities_clean`) and nothing calls it. Proximity search stays a core feature, out of this sprint.
+
+### Next sprints in this demo launch (not this sprint)
+
+- **Sprint 2:** real vehicle modes (all Geoapify modes, mode change re-selects among the top candidates, latency work), moderated test sessions.
+- **Sprint 2 or 3 — LLM gateway:** self-deployed **static** LiteLLM proxy as its own Railway service (`config.yaml`, no Postgres/Redis, pinned image digest, private network only; the API holds only the proxy URL and master key; primary and fallback as separate model names; one retry layer). It ships to guests only after a one-day spike passes (tool tests and the 27-vignette harness through the gateway on both providers, forced Groq 429 and `tool_use_failed`, proxy memory measured on Railway). Rollback is the existing `LLM_PROVIDER` flag. Not the Railway one-click template (DB-backed, floating tag).
+- **After the demo:** the `GRAPH_RAG_PROVIDER` improvement sprint; Supabase → raw Postgres move.
+
+---
+
+## [Sprint 22 — Closed] · Guest Demo Launch — Sprint 3: demo scaling
+
+**Closed — 2026-10-14.** PR #56 merged into `preview` (`fa4aabb`) after CI went green (the OpenAI SDK pinned below 3); PR #57, emergent routing to ERs only, merged before it (`c58f3c2`). `python-api` and the wait-time worker deployed from `preview`; the four-scenario smoke suite passed on the preview deployment. The load-test mock and staging are stopped, not deleted.
+
+**Started — 2026-10-10 · branch: `feat/demo-scaling`.** Third sprint of the guest demo launch. Goal: 1,000 to 2,000 concurrent chat turns, with numbers that hold up under review. Baseline and profile: Sprint 21 phase 2 (below).
+
+### Scope
+
+- [x] Async chat path: the providers' own async clients instead of the thread pool.
+- [x] Facility list encoded once per data version and served as bytes (see Decisions). Includes a fix: `If-None-Match` is matched weakly, so a 304 is returned behind Railway's compressing proxy (0 of 134 conditional requests answered 304 before, 21 of 135 after).
+- [x] Facility recommendation and route drawing: cell index, load-aware choice, one route up front, Geoapify budget protection (see Decisions).
+- [x] Conversation history and the facility cache out of process memory (history read from the store on every turn); metrics that work across replicas. Horizontal scaling proved with a local Docker Compose test: history kept across replicas, load counters exact, one replica stopped mid-run lost 0.4% of turns. The throughput ratio (1 : 1.52 : 2.16 at 1, 2, 4 replicas) was measured on a laptop, which is the suspected limit; not re-measured on larger hardware.
+- [x] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
+- [x] Database pool size chosen from measurement: 5 on a 1 vCPU process. Pools of 10 and 20 lowered throughput (CPU per turn roughly doubled); a control run at 5 reproduced the first result.
+- [x] Wait-time read path: in-memory copy on the API plus browser caching (decided 2026-10-10, see Decisions).
+- [x] One-hour soak and the chat breakpoint, on the final code (results below).
+- [ ] ~~Final tasks: a new `METRICS_BEARER_TOKEN` generated locally, set on `python-api` and staging, registered in Grafana Cloud with its scrape job.~~ Deferred (see below).
+
+### Results (staging, 1 vCPU / 1 GB, one worker, 2026-10-14)
+
+Provider mock calibrated against OpenAI `gpt-4o-mini` (1,935 real turns): mean 1.69 s both, p95 2.54 s real and 2.60 s mock, 51% and 50% of turns ending in a recommendation. Report: `artifacts/perf/2026-10-13-phase5-report.md`.
+
+- **Capacity of one box:** about 35 chat turns a second (2,100 a minute), flat up to about 60 turns in flight, about 16 ms of API CPU per turn. Past that it queues (p95 10.3 s at 250 conversations, 19.6 s at 500) and nothing fails.
+- **Admission at 50 turns in flight:** the limit holds; accepted turns stay near the unloaded time up to 2.5 times capacity (p95 3.3 s) and slow to p95 7.1 s at 5 times, where the pool of 5 is the limit (session creation is not behind admission).
+- **Soak, one hour at 75 conversations:** 93,322 turns, 0 failed, 1.75% busy answers, p95 2.60 to 2.66 s in every 10-minute window, resident memory 155 MB to 155 MB over the last 30 minutes.
+- **The 1,000 to 2,000 target is not met on this box:** it bends near 60 turns in flight. Reaching it needs more processes (several uvicorn workers on a larger box; the Hobby plan allows one replica per service) and the async database pool.
+
+### Spec amendments
+
+- Success criterion 7 (the 27-vignette triage check): dropped from this sprint, a triage evaluation rather than a load test.
+- The horizontal scaling ratio was measured locally only (see Scope).
+- Railway's Hobby plan allows one replica per service: production scales by box size and uvicorn workers, not replicas.
+- Phase 5 was reduced (2026-10-13) to calibration, breakpoint, admission, pool size and soak.
+
+### Deferred
+
+- Phase 5 runs 6 (map path breakpoint), 7 (Geoapify calls per 1,000 guests) and 8 (2 vCPU with 2 workers).
+- `python-api` and the demo Postgres to US East.
+- A new `METRICS_BEARER_TOKEN` and the Grafana Cloud scrape job.
+- After the run: why a larger pool costs CPU (profile first), `AsyncConnectionPool` for the demo database, session creation behind admission, pool 10 against 20 in one session, Upstash plan limits under load, the mock's `/stats` read in the load scripts.
+- `VITE_GEOAPIFY_API_KEY` in Doppler and Vercel: kept for now (read-only, negligible).
+
+### Decisions (2026-10-10)
+
+- **Wait-time read path: both layers.** The API keeps the wait-time data in memory and reloads it on a short TTL with jitter, so replicas do not all hit Redis at the same moment. The worker writes a "last successful run" key on every run. Each API instance derives the ETag from that key and sets `max-age` to the time left until that run plus 15 minutes, so an instance started at any moment gives the same answer as the others. The browser caches on those headers.
+- **Facility list: encode once per data version, serve bytes.** (1) The version is the facility snapshot plus the worker's last-run key. (2) The response bytes and the ETag are built once per version and kept in memory, in a small bounded cache keyed by the filter combination. (3) Per request: look up the version, compare `If-None-Match`, return 304 or the stored bytes, with no encoding and no hashing. Replaces "serialise once per request"; JSONL, a faster JSON library and protobuf were considered and set aside, since each still encodes per request.
+
+**Facility recommendation and route drawing** (research: `artifacts/research/2026-10-10-nearest-facility-lookup-and-request-batching.md`):
+
+- **No request batching window.** Considered: hold guests for 5 s and resolve them together, as ride-hailing does. Rejected: those platforms batch because a driver is exclusive, which a facility is not; Geoapify's matrix call costs as many credits or more and returns no road shape; and 5 s is added to a step that takes 1 s.
+- **Candidate lookup through an in-memory cell index** (`cell → facility ids`, built once per facility snapshot). Why: the scan grows with the number of facilities, the index with the number nearby, so the design holds at 100k facilities.
+- **One route up front, the others on demand.** Only the chosen facility is routed; another candidate is routed when the guest selects it, and a mode change is one call. Why: 3 Geoapify calls per guest become about 1, and the vendor's rate limit is the real ceiling. Accepted cost: no road-time comparison across the three on a cold cache. May be revisited. Any calls that remain per guest still run in parallel.
+- **Load-aware choice.** Score = estimated travel time + posted wait + a penalty for guests recently sent to that facility, with a random pick among close scores. Why: sending everyone to the shortest posted wait, on data refreshed every 15 minutes, herds them to one place. Applies to routine and moderate only; urgent and emergent always get the fastest appropriate facility. The penalty per guest starts as a configured value per facility type, since there is no real capacity data.
+- **Load counters in Redis, without locks.** One counter per facility per minute with an expiry, incremented atomically, one field per server; the load is the sum of the last few minutes. Each server reads a local copy refreshed every few seconds with jitter. Why: shared across replicas with no request waiting on another, and the per-server fields show every replica contributing in the horizontal test. The same counts, by cell, severity and facility type, are kept for a later city-spread view.
+- **Travel-time cache in process**, bounded, with a time limit on entries, keyed by origin cell, facility and mode. Why: it only improves the ranking (the drawn route always starts at the guest's real position), so a Redis round trip per recommendation is not worth it.
+- **Geoapify budget protection.** A limiter at the plan's rate with emergent requests first; when the budget is spent the guest gets the recommendation with an estimated time and no drawn route. A paid plan is needed for 5,000 guests.
+- **Designed, not built:** at 1M daily users, a self-hosted routing engine with matrix calls for ranking and a precomputed cell-to-facility time table.
+- **To check as we go:** whether Geoapify's terms allow storing Routing results.
+
+### Also open
+
+- [x] Real-call test of the OpenAI client with gpt-4o-mini: 1,935 real turns in the calibration run, none failed.
+- [x] `ANTHROPIC_MODEL`: `claude-haiku-4-5` and `claude-haiku-5-5` both passed a plain and a forced-tool call (2026-10-14); `claude-haiku-4-5` stays pinned by env var on Doppler `stg`, `python-api` and staging.
+- [ ] ~~Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel.~~ Deferred (read-only key, negligible).
+- [ ] ~~Decide: API and Redis in the same region; box size.~~ Deferred with the US East move and run 8.
+- [x] Load-test guest rows deleted from the demo database before the runs, and the 68,276 internal guests of these runs after them; the four non-internal guests, `8fe1df4f` included, are kept.
+- [x] Emergent cases go only to facilities with an emergency department (PR #57; demo database fixed and `python-api` restarted 2026-10-14). Before: 16% of a Toronto grid sent an emergent case to a rehabilitation, hospice, psychiatric or surgical site.
+- [x] `python-api` settings from the measurements: `DEMO_DB_POOL_MAX=5`, `MAX_TURNS_IN_FLIGHT=50`, `GEOAPIFY_RATE_PER_SECOND=5` (1 vCPU / 1 GB, one worker).
+- [x] Provider fallback on for the public demo: `LLM_PROVIDER_CHAIN=groq,anthropic` (Doppler `stg`), so a Groq refusal is answered by Anthropic instead of the busy answer. The proactive token budget per provider is planned: `docs/superpowers/plans/2026-10-14-llm-provider-budget.md`.
+
+---
+
+## [Sprint 21 — Closed] · Guest Demo Launch — Sprint 2: demo user experience
+
+**Started — 2026-10-08 · branch: `feat/demo-user-experience`.** Second sprint of the guest demo launch, building on
+Sprint 20 (guest sessions, demo database, feedback, deployed smoke test). Two phases: the guest-facing experience,
+then performance tracking and measurement. Plan for the second phase: `artifacts/2026-10-08-min-perf-tracking.md`.
+
+### Decisions (2026-10-08)
+
+- No promotion to `main` in this sprint. Railway and Vercel serve the `preview` branch; before real tests the demo domain is pointed at `preview`. `main` is promoted once every demo-launch sprint is done.
+- GraphRAG is not put in front of guests. Only its timing hook is added now, so the next sprint measures it without new code. Recreating the Neo4j instance and the LiteLLM gateway spike are side-tracks that never block the scope below.
+- Proximity search is fixed in this sprint: `GET /facilities/nearby` has no demo branch and returns 500 (the Supabase function references a missing column), so the radius chips silently show every facility.
+- Load tests target the `medicoordai-staging` service and run before any guest gets the link. `/facilities/nearby` joins the workload mix only after the fix.
+- Chat load is ramped through several steps until a threshold fails (a breakpoint, not a fixed ceiling); the report states what failed first. The LLM provider for that test is an open decision, taken when it runs: Groq's free tier (30 requests and 8,000 tokens per minute, 200,000 tokens per day) cannot carry it, Groq's next tier up was ruled out (enterprise account, out of scope) and Anthropic tokens were judged too expensive.
+- The one-hour soak is in, on the non-LLM mix. Load generator: k6, run from a laptop.
+- Recruiting, moderated sessions and reading guest analytics happen after the sprint; they are not dev steps.
+
+### Scope, in order
+
+**Phase 1 — guest experience (one spec, plan and implementation turn)**
+
+- [ ] ~~Baseline read, no code: route latency and error rate, Web Vitals in Sentry, journey timings from message and event timestamps; check the Railway worker count and whether the Grafana push is still live~~ Partly done: before/after snapshots of route latency, error rate and journey timings exist (`artifacts/perf/2026-10-09-1722-before-phase1.md` and later). Web Vitals at p75 from Sentry and the worker-count check: deferred.
+- [x] Routing calls moved to the backend with a timeout and a fallback; `VITE_GEOAPIFY_API_KEY` out of the browser bundle
+- [x] Real vehicle modes: mode change re-selects among the top candidates and redraws the route; hidden mode buttons re-enabled; mode recorded on the `route_drawn` event
+- [x] Mode-change latency measured in the browser (click to route redrawn)
+- [x] Proximity search on the demo database (demo branch for `/facilities/nearby`)
+- [x] Sandbox links hidden in demo mode (the page already redirects guests)
+- [x] End-to-end: mixed filter chips including a radius, mode change and redraw, no sandbox link for guests
+
+Phase 1 as built (2026-10-08): `POST /routes` makes one Geoapify Routing call per candidate in
+parallel (Route Matrix rejects the transit mode), so the browser holds the road shape of every
+candidate and switching facility needs no request; each mode's result is kept for the current
+recommendation. Bus uses Geoapify `transit`. Migration 0005 adds `mode` and `duration_ms` to
+`events` and a repeatable `mode_changed` type. Routes have their own guest rate limit (60 per
+guest, 180 per IP per 10 minutes). The end-to-end scenarios are written; they pass only once the
+branch is deployed. Spec and plan: `docs/superpowers/specs/2026-10-08-guest-demo-sprint2-phase1-design.md`,
+`docs/superpowers/plans/2026-10-08-guest-demo-sprint2-phase1.md`.
+
+**Phase 2 — performance tracking and measurement**
+
+- [x] Latency histograms with one shape for the LLM call, routing and the graph call (the last records nothing until the instance is back); LLM outcome counter (errors, 429s); pool stats exported
+- [x] Demo pool size from an environment variable (hardcoded to 5 today), default set from the load test
+- [x] Rate-limit values from environment variables, defaults unchanged, raised on staging only
+- [x] `pg_stat_statements` enabled on the demo database (admin step, needs a restart)
+- [x] `/metrics` read directly during tests (Grafana Cloud holds no data yet, see the last item) during tests
+- [x] Test A, non-LLM: smoke, average load and breakpoint done; the one-hour soak moved to Sprint 22 and was run there on the final code
+- [x] Test B, chat: concurrent turns ramped to the breakpoint
+- [x] Profiling protocol (py-spy, or the Sentry profiler if attaching is blocked)
+- [x] Web Vitals at the 75th percentile compared with the published "good" thresholds
+- [x] Report: environment, mix, one row per load step, breakpoint and first bottleneck
+- [x] Latency fix, only if the report or the journey timings show one dominant cost. Done in Sprint 22: wait-time data in memory (`3b6fb16`), facility list encoded once per data version (`53a71ff`), weak `If-None-Match` (`d32fba0`)
+- [ ] ~~Fix the metrics push to Grafana Cloud (code done: the push thread is removed and `/metrics` is closed without a token; the Grafana Cloud scrape job is still to create). Found 2026-10-10: the Prometheus store there has never received an API metric (only Grafana's own three alert series in 90 days; "Service down" is firing, the two others are in no-data). The push thread in `backend/observability.py` fails every 30 seconds with `'Response' object is not callable`, and it uses the Pushgateway method against a remote-write URL, which are different protocols. Until it is fixed, `/metrics` read directly (it resets on every deploy) is the only source~~ Deferred: the code half is done, the Grafana Cloud scrape job and a new `METRICS_BEARER_TOKEN` are external setup.
+
+Phase 2 code as built (2026-10-10): application metrics on `/metrics` (LLM, routing and graph
+timings, LLM outcomes and tokens, database pool gauges); pool size, pool wait, rate limits and the
+LLM timeout from environment variables; an OpenAI provider and an ordered provider fallback behind
+`LLM_PROVIDER_CHAIN`, off by default and not to be enabled for guests before the triage vignette
+check; k6 scripts for the non-LLM mix and the chat path under `backend/scripts/load/`; chat turns
+moved off the event loop (one turn used to stall every other request of the single worker). The
+measurement runbook (load tests, profiling, report, Grafana scrape job) is still to run. Spec and
+plan: `docs/superpowers/specs/2026-10-10-guest-demo-sprint2-phase2-design.md`,
+`docs/superpowers/plans/2026-10-10-guest-demo-sprint2-phase2.md`.
+
+Phase 2 measurements (2026-10-10, staging: 1 worker, 1 vCPU, 1 GB, US West; report in the
+git-ignored `artifacts/perf/2026-10-10-phase2-report.md`):
+
+- **Map and routing endpoints:** 0 errors up to 200 requests per second (p50 168 ms, p95 251 ms, CPU 67%). Breakpoint between 200 and 250: at 250 the p95 reaches 790 ms with CPU at 88%, still without errors. Past the limit there is no admission control and latency collapses into an unbounded queue.
+- **Profile:** 74.5% of working thread time is one Redis read per map request for wait-time data that changes every 15 minutes (API in US West, Redis in US East). CPU goes mostly to JSON encoding of the 127 KB facility list, serialised twice per request. Neither is changed in this sprint.
+- **Chat turns, before the fix:** one turn at a time. About 15 turns per minute whatever the concurrency, turn p50 31 s at 10 concurrent, `/health` timing out, CPU at 1%.
+- **Chat turns, after the fix:** turn p50 flat at about 4.2 s from 1 to 40 concurrent, 431 turns per minute at 40, `/health` at 0.21 s, CPU 17%, no busy answer and no failure. No breakpoint reached; the thread pool of 40 is the expected next limit.
+- **Open finding:** memory rose from 106 MB to 397 MB during the 13-minute chat run and did not level off. The in-process conversation cache, which never evicts, is the first suspect.
+- **Provider fallback** verified with real calls: an invalid Groq key falls through to `claude-haiku-5-5`, visible in the log and in `llm_calls_total`.
+- 40 threads and a database pool of 5 are implementation limits, not capacity numbers. Next sprint: async chat path, conversation and facility state out of process memory, admission control with a waiting state in the UI, the wait-time cache, and the soak on the final code.
+
+Carried to Sprint 22 (demo scaling, target 1,000 to 2,000 concurrent chat turns); all done there except the last item, which stays deferred:
+
+- [x] Async chat path: async provider clients and agent.
+- [x] Facility list serialised once per request instead of twice (the largest CPU cost in the map profile).
+- [x] Conversation history and the facility cache out of process memory (Redis in front of Postgres); metrics that work across replicas. Horizontal scaling is tested locally with Docker Compose, since the Railway plan does not allow several replicas.
+- [x] Admission control: a busy answer past a server-side threshold, with a waiting state on screen.
+- [x] Database pool size chosen from measurement (5 today).
+- [x] Wait-time data kept in memory for a short time instead of one Redis call per map request (decided 2026-10-10: in-memory copy plus browser caching).
+- [x] One-hour soak and the chat breakpoint, on the final code.
+- [ ] ~~Final tasks: a new `METRICS_BEARER_TOKEN` generated locally and set on both the `python-api` and staging services; how to register it on the Grafana Cloud side, and the scrape job itself, are open.~~ Deferred (same as Sprint 22).
+
+**Exit:** deployed to `preview`, smoke test passing.
+
+### Pending at deploy
+
+- [x] **Migration 0005 on `medicoord-db-demo` — applied 2026-10-09, with the deploy.** A first attempt the same day was rolled back: the migration is not additive (the narrowed unique index on `events` no longer matches the `on conflict` clause of the previous backend, which then cannot write any event row; chat keeps working, events are lost), so it has to go in the same window as the backend deploy.
+- [x] **Phase 1 deployed to `preview` (PR #54, merged 2026-10-10 04:03 UTC).** The four smoke scenarios pass against the preview deployment. Events are recorded with their mode, and `mode_changed` rows carry a duration.
+- [x] **Before and after snapshots** (`backend/scripts/perf_baseline/run_baseline.py`, reports in the git-ignored `artifacts/perf/`). Small samples from repeated smoke runs, same prompt and location, so indicative only. Recommendation shown to route drawn: median 1.69 s before (n=6, two Geoapify calls from the browser), 1.18 s after (n=10, one `POST /routes`). `POST /routes` mean 651 ms over 15 calls. Mode change to redraw (bike): median 0.76 s (n=5). User message to assistant reply: median about 1.5 s in both, but three of ten replies after the deploy took about 10 s, which is the LLM provider and not routing.
+- [ ] ~~Remove `VITE_GEOAPIFY_API_KEY` from Doppler and Vercel (owner).~~ Deferred (read-only key, negligible).
+
+### Side-tracks (do not block the scope)
+
+- LiteLLM gateway one-day spike; ships to guests only if it passes.
+- Neo4j: find why the instance was deleted, recreate, repopulate, keep-alive, default left on the static provider, fail-open fallback, internal-only override. Guest-facing random assignment is a later sprint.
+
+---
+
 ## [Deferred — v2.1+] · Core Product Features
 
 **These are the next product milestones after Sprint 5 and 6 close.**

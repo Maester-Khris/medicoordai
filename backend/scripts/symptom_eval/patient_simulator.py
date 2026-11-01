@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 
 from llm.anthropic_client import AnthropicClient
 from llm.base import BaseLLMClient, LLMMessage
+from llm.sync import run_sync
 from scripts.symptom_eval.domain import ConversationTurn, Vignette
 
 SIMULATOR_SYSTEM_PROMPT = """You are role-playing a patient in a triage chat, following a strict script. You will ONLY disclose the facts listed below, and ONLY when the assistant's question actually asks about that fact. Never volunteer a fact that wasn't asked about. Never state a CTAS level, triage category, or diagnosis. Keep every reply to 1-2 short sentences, in first person, as a real patient would speak.
@@ -52,5 +53,5 @@ class AnthropicPatientSimulator(PatientSimulatorPort):
             messages.append(LLMMessage(role="assistant", content=turn.patient_message))
         messages.append(LLMMessage(role="user", content=system_question))
 
-        resp = self._client.chat(messages=messages, tools=None, temperature=0.3)
+        resp = run_sync(self._client.chat(messages=messages, tools=None, temperature=0.3))
         return resp.content or "I'm not sure."

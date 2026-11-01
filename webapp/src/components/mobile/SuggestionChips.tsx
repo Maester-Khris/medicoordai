@@ -1,14 +1,13 @@
 // webapp/src/components/mobile/SuggestionChips.tsx
 import { useState } from 'react'
 
-const CHIPS = ['I have a fever', 'Chest pain', 'Sore throat', 'Dizziness'] as const
-
 interface SuggestionChipsProps {
   onSelect: (text: string) => void
   disabled?: boolean
+  chips: readonly string[]
 }
 
-export function SuggestionChips({ onSelect, disabled = false }: SuggestionChipsProps) {
+export function SuggestionChips({ onSelect, disabled = false, chips }: SuggestionChipsProps) {
   const [activeChip, setActiveChip] = useState<string | null>(null)
 
   const handleTap = (chip: string) => {
@@ -19,11 +18,12 @@ export function SuggestionChips({ onSelect, disabled = false }: SuggestionChipsP
 
   return (
     <div className="flex gap-2 overflow-x-auto no-scrollbar" style={{ paddingBottom: 2 }}>
-      {CHIPS.map(chip => {
+      {chips.map(chip => {
         const isActive = activeChip === chip
         return (
           <button
             key={chip}
+            data-testid="starter-prompt"
             onClick={() => handleTap(chip)}
             disabled={disabled}
             className="flex-none h-8 px-3 rounded-full whitespace-nowrap transition-colors disabled:opacity-50 cursor-pointer"

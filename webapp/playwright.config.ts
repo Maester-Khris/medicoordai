@@ -14,6 +14,7 @@ export const BACKEND_LOG = path.resolve(__dirname, "e2e/.tmp/backend.log")
 // wired up — required for GRAPH_RAG_PROVIDER=neo4j to construct at all.
 export default defineConfig({
   testDir: "./e2e",
+  testIgnore: /.*\.smoke\.spec\.ts/,
   timeout: 30_000,
   use: {
     baseURL: "http://localhost:5173",

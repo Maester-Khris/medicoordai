@@ -15,6 +15,7 @@ export function useNextActions(severity: Severity | null): NextActionHandlers {
     // TODO (separate task): implement tel:911 deep link
   }, [severity])
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const messageEmergencyContact = useCallback((_contactPhone: string | null) => {
     // LEGAL NOTE: This opens the native SMS composer pre-filled with a template.
     // No server-side message sending. User must tap Send in their SMS app.
@@ -22,8 +23,11 @@ export function useNextActions(severity: Severity | null): NextActionHandlers {
   }, [])
 
   const getDirections = useCallback((
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _facilityName: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _lat: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _lng: number,
   ) => {
     // TODO (separate task): open Google Maps deep link

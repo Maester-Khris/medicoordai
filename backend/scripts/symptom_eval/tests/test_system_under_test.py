@@ -1,6 +1,6 @@
 import os
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
@@ -44,7 +44,7 @@ class TestLiveLLMAgentAdapter:
                 "nearby_facilities": [], "turn_type": "triage",
             }
 
-        mock_agent.respond.side_effect = _respond_side_effect
+        mock_agent.respond = AsyncMock(side_effect=_respond_side_effect)
         mock_agent_cls.return_value = mock_agent
 
         adapter = LiveLLMAgentAdapter(graph_rag_provider="static")

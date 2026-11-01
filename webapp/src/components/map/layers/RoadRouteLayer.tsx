@@ -1,6 +1,7 @@
 import L from 'leaflet'
 import { useEffect, useRef } from 'react'
 import { useMap } from 'react-leaflet'
+import type { RouteResult } from '../../../../../shared/types'
 import { useMapContext } from '../context/MapContext'
 import { buildTriageCandidates } from '../config/constants'
 import { CATEGORY_STYLES, DEFAULT_STYLE } from '../config/categories'
@@ -109,13 +110,9 @@ function buildDestinationIcon(
   })
 }
 
-function getScaledEta(minutes: number, mode: 'car' | 'bike' | 'bus'): number {
-  if (mode === 'bike') return Math.round(minutes * 2.5)
-  if (mode === 'bus') return Math.round(minutes * 1.8)
-  return minutes
-}
+const NO_ROUTES: RouteResult[] = []
 
-export function RoadRouteLayer({ travelMode }: { travelMode: 'car' | 'bike' | 'bus' }) {
+export function RoadRouteLayer() {
   const map = useMap()
   const { activeTriage, recommendedId } = useMapContext()
   const layerRef = useRef<L.LayerGroup | null>(null)
@@ -127,7 +124,7 @@ export function RoadRouteLayer({ travelMode }: { travelMode: 'car' | 'bike' | 'b
 
   const userCoords   = activeTriage.active ? activeTriage.userCoords   : null
   const roadGeometry = activeTriage.active ? activeTriage.roadGeometry : null
-  const routes       = activeTriage.active ? activeTriage.routes       : []
+  const routes       = activeTriage.active ? activeTriage.routes       : NO_ROUTES
 
   useEffect(() => {
     if (layerRef.current) {
@@ -173,8 +170,7 @@ export function RoadRouteLayer({ travelMode }: { travelMode: 'car' | 'bike' | 'b
     })
 
     const route = routes.find(r => r.facilityId === recommendedFacility.id)
-    const scaledMinutes = route ? getScaledEta(route.etaMinutes, travelMode) : 0
-    const etaLabel = route ? `${scaledMinutes} min · ${route.distanceKm} km` : null
+    const etaLabel = route ? `${route.etaMinutes} min · ${route.distanceKm} km` : null
     const catStyle = CATEGORY_STYLES[recommendedFacility.category] ?? DEFAULT_STYLE
     const destMarker = L.marker([facilityLat, facilityLng], {
       icon: buildDestinationIcon(recommendedFacility.category, catStyle.color, etaLabel),
@@ -187,11 +183,15 @@ export function RoadRouteLayer({ travelMode }: { travelMode: 'car' | 'bike' | 'b
 
     secondaryCandidates.forEach(cand => {
       const candRoute = routes.find(r => r.facilityId === cand.id)
-      const candEta = candRoute ? getScaledEta(candRoute.etaMinutes, travelMode) : null
-      const candEtaLabel = candEta ? `Alt: ${candEta} min` : null
+      const candEtaLabel = candRoute ? `Alt: ${candRoute.etaMinutes} min` : null
       const candStyle = CATEGORY_STYLES[cand.category] ?? DEFAULT_STYLE
+      // Real road shape when the backend routed this alternative, straight connector otherwise.
+      const candPositions: [number, number][] =
+        candRoute?.geometry && candRoute.geometry.length > 1
+          ? candRoute.geometry
+          : [[userLat, userLng], [cand.lat, cand.lng]]
 
-      const candLine = L.polyline([[userLat, userLng], [cand.lat, cand.lng]], {
+      const candLine = L.polyline(candPositions, {
         ...ROUND,
         color: "#7AA0B0",
         weight: 2,
@@ -233,7 +233,7 @@ export function RoadRouteLayer({ travelMode }: { travelMode: 'car' | 'bike' | 'b
         layerRef.current = null
       }
     }
-  }, [map, userCoords?.lat, userCoords?.lng, recommendedFacility?.lat, recommendedFacility?.lng, roadGeometry, routes.length, travelMode])
+  }, [map, userCoords?.lat, userCoords?.lng, recommendedFacility?.lat, recommendedFacility?.lng, roadGeometry, routes])
 
   return null
 }

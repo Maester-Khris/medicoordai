@@ -1,8 +1,5 @@
 requests==2.32.3
 beautifulsoup4==4.12.3
-supabase==2.*
 redis==5.0.8
-# APScheduler==3.10.4  # ponytail: unused — Railway cron handles scheduling now, not in-process. Remove once Railway deploy is confirmed passing.
-thefuzz==0.22.1
-python-Levenshtein==0.25.1
-# flask  # ponytail: unused — scraper.py is a single-shot script, no server. Remove once Railway deploy is confirmed passing.
+psycopg[binary]==3.*
+sentry-sdk==2.*

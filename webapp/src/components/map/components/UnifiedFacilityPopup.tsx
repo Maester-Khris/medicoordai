@@ -1,3 +1,4 @@
+import { formatWaitLabel } from "../../../utils/waitTimeUtils"
 import { CATEGORY_STYLES, DEFAULT_STYLE } from '../config/categories'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -9,15 +10,19 @@ interface UnifiedFacilityPopupProps {
   phone?:         string | null
   weekday_hours?: string[] | null
   distanceKm?:    number
+  wait_minutes?:  number | null
+  raw_wait?:      string | null
+  predicted?:     boolean
 }
 
-export function UnifiedFacilityPopup({ name, category, address, phone, weekday_hours, distanceKm }: UnifiedFacilityPopupProps) {
+export function UnifiedFacilityPopup({ name, category, address, phone, weekday_hours, distanceKm, wait_minutes, raw_wait, predicted }: UnifiedFacilityPopupProps) {
   const style = CATEGORY_STYLES[category] ?? DEFAULT_STYLE
 
   const today = DAYS[new Date().getDay()]
   const todayEntry = weekday_hours?.find(h => h.startsWith(`${today}:`))
   const todayHours = todayEntry ? todayEntry.replace(`${today}: `, '') : null
   const hasHoursData = weekday_hours && weekday_hours.length > 0
+  const waitLabel = formatWaitLabel(wait_minutes, raw_wait, predicted)
 
   return (
     <div style={{ minWidth: 160, fontFamily: 'var(--font-sans)' }}>
@@ -53,6 +58,12 @@ export function UnifiedFacilityPopup({ name, category, address, phone, weekday_h
               : 'Hours unavailable'}
           </span>
         </div>
+        {waitLabel && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <i className="ti ti-clock" style={{ fontSize: 11, color: '#8C8273' }} />
+            <span style={{ fontSize: 10, color: '#7A756D', fontWeight: 500 }}>{waitLabel}</span>
+          </div>
+        )}
         {phone && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <i className="ti ti-phone" style={{ fontSize: 11, color: '#8C8273' }} />

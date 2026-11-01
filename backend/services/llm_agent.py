@@ -1,28 +1,69 @@
 import json
 import os
 import logging
+from config import llm_provider_chain
 from graph.base import GraphContextProvider
 from graph.factory import get_graph_provider
 from llm.base import BaseLLMClient, LLMMessage
 from llm.tools import ALL_TOOLS, TRIAGE_RESPONSE
 from llm.prompts import build_system_prompt, build_medical_context_block, build_graph_context_block
+from services import facility_load
 from services.proximity import find_nearest_facilities
+from services.recommendation import rank_facilities
 from services.triage_eval import check_emergency_mismatch, check_facility_groundedness
+from starlette.concurrency import run_in_threadpool
 
 logger = logging.getLogger(__name__)
 
 
-def get_llm_client() -> BaseLLMClient:
-    """
-    Factory. Reads LLM_PROVIDER env var.
-    Import is deferred so unused provider packages don't cause ImportError.
-    """
-    provider = os.environ.get("LLM_PROVIDER", "groq").lower()
+KNOWN_PROVIDERS = ("groq", "openai", "anthropic")
+
+
+def _build_provider_client(provider: str, max_retries: int | None) -> BaseLLMClient:
+    """One provider client. Imports are deferred so unused provider packages don't cause ImportError."""
     if provider == "anthropic":
         from llm.anthropic_client import AnthropicClient
-        return AnthropicClient()
+        return AnthropicClient(max_retries=max_retries)
+    if provider == "openai":
+        from llm.openai_client import OpenAIClient
+        return OpenAIClient(max_retries=max_retries)
     from llm.groq_client import GroqClient
-    return GroqClient()
+    return GroqClient(max_retries=max_retries)
+
+
+def get_llm_client() -> BaseLLMClient:
+    """
+    Factory. Every provider client comes back wrapped in InstrumentedLLMClient.
+
+    LLM_PROVIDER_CHAIN unset: one client chosen by LLM_PROVIDER (groq by default), with the SDK's
+    own retries, exactly as before.
+    LLM_PROVIDER_CHAIN="groq,openai,anthropic": those providers in that order behind
+    FallbackLLMClient, each with SDK retries off (the next provider is the retry). A name that is
+    unknown, or whose key is missing, is skipped with a warning.
+    """
+    from llm.instrumented import InstrumentedLLMClient
+
+    chain = llm_provider_chain()
+    if not chain:
+        provider = os.environ.get("LLM_PROVIDER", "groq").lower()
+        if provider not in KNOWN_PROVIDERS:
+            provider = "groq"
+        return InstrumentedLLMClient(_build_provider_client(provider, None), provider)
+
+    from llm.fallback import FallbackLLMClient
+
+    clients: list[BaseLLMClient] = []
+    for provider in chain:
+        if provider not in KNOWN_PROVIDERS:
+            logger.warning("llm_provider_skipped", extra={"provider": provider, "reason": "unknown provider"})
+            continue
+        try:
+            clients.append(InstrumentedLLMClient(_build_provider_client(provider, 0), provider))
+        except RuntimeError as exc:  # a missing key or model
+            logger.warning("llm_provider_skipped", extra={"provider": provider, "reason": str(exc)})
+    if not clients:
+        raise RuntimeError("LLM_PROVIDER_CHAIN names no usable provider")
+    return FallbackLLMClient(clients)
 
 
 class LLMAgent:
@@ -30,7 +71,7 @@ class LLMAgent:
     Stateless triage agent facade.
 
     Stateless: caller provides full conversation history on every call.
-    Context window: last TRIAGE_CONTEXT_WINDOW messages from cache_chat.
+    Context window: last TRIAGE_CONTEXT_WINDOW messages (caller reads history from the store).
 
     Two-pass design:
       Pass 1: LLM classifies severity via triage_response tool (no facility knowledge)
@@ -52,7 +93,7 @@ class LLMAgent:
         self._response_temperature = 0.3
         self._stop_sequences = ["</response>"]
 
-    def respond(
+    async def respond(
         self,
         user_message: str,
         history: list[dict],
@@ -71,11 +112,13 @@ class LLMAgent:
             "turn_type": "followup" | "triage",
         }
         """
-        messages = self._build_messages(user_message, history, user_profile=user_profile)
+        messages = await run_in_threadpool(
+            self._build_messages, user_message, history, user_profile=user_profile
+        )
         user_turns = sum(1 for m in history if m.get("role") == "user")
         force_classify = user_turns >= self._max_followups
 
-        return self._run(
+        return await self._run(
             messages, lat, lng,
             force=force_classify,
             user_turns=user_turns,
@@ -122,7 +165,7 @@ class LLMAgent:
         msgs.append(LLMMessage(role="user", content=user_message))
         return msgs
 
-    def _run(
+    async def _run(
         self,
         messages: list[LLMMessage],
         lat: float | None,
@@ -132,7 +175,7 @@ class LLMAgent:
     ) -> dict:
         force_tool = TRIAGE_RESPONSE.name if force else None
 
-        resp = self._client.chat(
+        resp = await self._client.chat(
             messages=messages,
             tools=ALL_TOOLS,
             temperature=self._temperature,
@@ -170,7 +213,7 @@ class LLMAgent:
                             "turn_type": "followup",
                         }
 
-                    return self._handle_triage(tool_call, messages, lat, lng, user_turns)
+                    return await self._handle_triage(tool_call, messages, lat, lng, user_turns)
             logger.warning("unexpected_tool_call")
             return {
                 "response": "I need a bit more information. Can you describe your symptoms?",
@@ -191,7 +234,7 @@ class LLMAgent:
             "turn_type": "followup",
         }
 
-    def _handle_triage(
+    async def _handle_triage(
         self,
         tool_call: dict,
         messages: list[LLMMessage],
@@ -228,10 +271,12 @@ class LLMAgent:
         if needs_location:
             facilities = find_nearest_facilities(lat=lat, lng=lng, severity=severity)
             if facilities:
-                recommended_facility = facilities[0]
-                nearby_facilities = facilities[1:]
+                ranked = rank_facilities(facilities, severity, lat, lng)
+                recommended_facility = ranked[0]
+                nearby_facilities = ranked[1:]
+                facility_load.record(recommended_facility, severity, lat, lng)
 
-        response_text = self._generate_grounded_response(
+        response_text = await self._generate_grounded_response(
             messages=messages,
             severity=severity,
             reasoning=reasoning,
@@ -258,7 +303,7 @@ class LLMAgent:
             "turn_type": "triage",
         }
 
-    def _generate_grounded_response(
+    async def _generate_grounded_response(
         self,
         messages: list[LLMMessage],
         severity: str,
@@ -292,10 +337,25 @@ class LLMAgent:
             ),
         )
 
-        resp = self._client.chat(
+        resp = await self._client.chat(
             messages=messages + [grounding],
             tools=None,
             temperature=self._response_temperature,
         )
 
         return resp.content or "Please proceed to the recommended facility for assessment."
+
+
+_agent: LLMAgent | None = None
+
+
+def get_agent() -> LLMAgent:
+    """Return the process-wide LLMAgent instance, building it on first use.
+
+    Reused because the agent keeps no conversation state and its provider clients
+    hold the HTTP connection pools.
+    """
+    global _agent
+    if _agent is None:
+        _agent = LLMAgent()
+    return _agent

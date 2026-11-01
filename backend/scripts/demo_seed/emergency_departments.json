@@ -1,0 +1,85 @@
+{
+ "_about": "Facilities with an emergency department: the only ones that accept emergent cases. Built 2026-10-14 from the wait-time scraper's matches against the demo facility list; the unmatched Toronto-area names were reviewed and none is a facility we hold. The scraper never adds to this list by itself.",
+ "facilities": [
+  {
+   "id": "936d7bcd-2194-432e-9f33-1e4f77b261d5",
+   "name": "Cortellucci Vaughan Hospital",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "29503de5-f283-42f9-8f4a-14821da5810b",
+   "name": "Hospital for Sick Children",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "87615653-95b3-472b-bba7-6016a49ad0f5",
+   "name": "Humber River Hospital",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "76f99d36-5d02-45c9-8062-a2c6066e10fd",
+   "name": "Humber River Hospital -York Finch",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "f2685aba-b596-473b-9710-8a66b5ed820e",
+   "name": "Humber River Regional Hospital - Church St. Site",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "ec5f9b81-135e-488f-8ebb-cc2a08374b24",
+   "name": "Mount Sinai Hospital",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "90f5de42-5147-4068-828b-acd79dca7b41",
+   "name": "North York General Hospital - General Division",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "dbc25706-5f7e-4c77-8fe4-e434656a0832",
+   "name": "Scarborough Health Network - Centenary Hospital",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "d091d29d-4d48-4deb-817e-3b31730ec038",
+   "name": "St. Joseph's Health Centre - Toronto",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "0b2784b7-c5fc-4edb-9fee-b47b7776ca34",
+   "name": "St. Michael's Hospital - Bond St. Site",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "80eefbc6-4062-44a4-8c93-31f25eaf5faf",
+   "name": "Sunnybrook Health Sciences Centre",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "217779ee-ed35-4d03-b947-81fd5225ff5a",
+   "name": "Toronto East General Hospital",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "6c86e896-65a9-4269-be09-592ffaf85467",
+   "name": "Trillium Health Partners - Queensway Health Centre",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "3f966080-5de9-4a53-869b-874d71ab8920",
+   "name": "University Health Network - Toronto General Hospital",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "e2d3dacc-f671-4a32-bde8-08cf8a067fad",
+   "name": "University Health Network - Toronto Western Hospital",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  },
+  {
+   "id": "b191902a-3210-4168-bacc-d57ce8b19d5d",
+   "name": "William Osler Health System - Etobicoke",
+   "evidence": "wait-time match (ERstat / HowLongWillIWait) 2026-10-14"
+  }
+ ]
+}

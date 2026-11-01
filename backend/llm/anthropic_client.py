@@ -1,23 +1,34 @@
 import json
 import os
 import anthropic
+from config import llm_timeout_seconds
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
+from .limits import connection_limits
 
 
 class AnthropicClient(BaseLLMClient):
 
-    def __init__(self) -> None:
+    def __init__(self, max_retries: int | None = None) -> None:
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             raise RuntimeError("ANTHROPIC_API_KEY is not set")
-        self._client = anthropic.Anthropic(api_key=api_key)
-        self._model = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5")
+        # max_retries=None keeps the SDK's own retries (single-provider mode). A fallback chain
+        # passes 0: there the next provider is the retry.
+        options: dict = {
+            "api_key": api_key,
+            "timeout": llm_timeout_seconds(),
+            "http_client": anthropic.DefaultAsyncHttpxClient(limits=connection_limits()),
+        }
+        if max_retries is not None:
+            options["max_retries"] = max_retries
+        self._client = anthropic.AsyncAnthropic(**options)
+        self._model = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-5-5")
 
     @property
     def model_name(self) -> str:
         return self._model
 
-    def chat(
+    async def chat(
         self,
         messages: list[LLMMessage],
         tools: list[ToolDefinition] | None = None,
@@ -41,10 +52,12 @@ class AnthropicClient(BaseLLMClient):
         elif tools:
             tool_choice = {"type": "auto"}
 
+        # `temperature` is accepted by the interface but not sent: current Claude models reject a
+        # non-default value with a 400 ("`temperature` is deprecated for this model").
+        # max_tokens leaves room for thinking, which is on by default and counts toward the cap.
         kwargs: dict = dict(
             model=self._model,
-            max_tokens=1024,
-            temperature=temperature,
+            max_tokens=4096,
             messages=filtered,
         )
         if system_content:
@@ -55,7 +68,7 @@ class AnthropicClient(BaseLLMClient):
             kwargs["tools"] = anthropic_tools
             kwargs["tool_choice"] = tool_choice
 
-        resp = self._client.messages.create(**kwargs)
+        resp = await self._client.messages.create(**kwargs)
 
         content_text = None
         tool_calls = None

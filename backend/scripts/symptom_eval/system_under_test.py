@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 
 from graph.factory import get_graph_provider
 from llm.groq_client import GroqClient
+from llm.sync import run_sync
 from services.llm_agent import LLMAgent
 from scripts.symptom_eval.graph_capture import CapturingGraphProvider
 
@@ -37,11 +38,13 @@ class SystemUnderTestPort(ABC):
 class LiveLLMAgentAdapter(SystemUnderTestPort):
     def __init__(self, graph_rag_provider: str = "off"):
         os.environ["GRAPH_RAG_PROVIDER"] = graph_rag_provider
+        # Evaluation runs must not depend on a random pick or write counters to the shared Redis.
+        os.environ["LOAD_AWARE_ROUTING"] = "off"
         self._capturing_provider = CapturingGraphProvider(get_graph_provider())
         self._agent = LLMAgent(client=GroqClient(), graph_provider=self._capturing_provider)
 
     def respond(self, patient_message: str, history: list[dict]) -> SystemTurnResult:
-        result = self._agent.respond(patient_message, history)
+        result = run_sync(self._agent.respond(patient_message, history))
         context = self._capturing_provider.last_context
 
         return SystemTurnResult(

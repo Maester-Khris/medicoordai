@@ -1,14 +1,12 @@
 import logging
 import os
-import threading
-import time
 import uuid
 
 logger = logging.getLogger(__name__)
 
 import sentry_sdk
 from fastapi import Header, HTTPException
-from prometheus_client import CollectorRegistry, push_to_gateway
+from prometheus_client import CollectorRegistry
 from prometheus_fastapi_instrumentator import Instrumentator
 from pythonjsonlogger import jsonlogger
 from sentry_sdk.integrations.fastapi import FastApiIntegration
@@ -63,48 +61,18 @@ def init_metrics(app) -> Instrumentator:  # type: ignore[type-arg]
     instrumentator = Instrumentator(registry=_registry)
     instrumentator.instrument(app)
 
-    remote_write_url = os.environ.get("GRAFANA_PROMETHEUS_REMOTE_WRITE_URL")
-    instance_id = os.environ.get("GRAFANA_PROMETHEUS_INSTANCE_ID")
-    api_token = os.environ.get("GRAFANA_API_TOKEN")
-
-    if not all([remote_write_url, instance_id, api_token]):
-        logger.warning("metrics_push_disabled", extra={"reason": "Grafana Prometheus vars not set"})
-        return instrumentator
-
-    def push_loop() -> None:
-        while True:
-            try:
-                push_to_gateway(
-                    remote_write_url,
-                    job="medicoord-api",
-                    registry=_registry,
-                    handler=lambda url, method, timeout, headers, data: (
-                        __import__("requests").request(
-                            method,
-                            url,
-                            data=data,
-                            headers={
-                                **dict(headers),
-                                "Authorization": "Bearer " + api_token,  # type: ignore[operator]
-                            },
-                            timeout=timeout,
-                        )
-                    ),
-                )
-            except Exception as exc:
-                logging.getLogger(__name__).warning(
-                    "Metrics push failed", extra={"error": str(exc)}
-                )
-            time.sleep(30)
-
-    thread = threading.Thread(target=push_loop, daemon=True)
-    thread.start()
+    # Metrics are pulled, not pushed: Grafana Cloud scrapes GET /metrics (Metrics Endpoint
+    # integration, Bearer METRICS_BEARER_TOKEN). The push thread that used to live here never
+    # delivered a sample.
     return instrumentator
 
 
 def verify_metrics_token(authorization: str = Header(default="")) -> None:
-    token = os.environ.get("METRICS_BEARER_TOKEN")
-    if token and authorization != f"Bearer {token}":
+    token = os.environ.get("METRICS_BEARER_TOKEN", "").strip()
+    if not token:
+        # Fail closed: without a configured token the endpoint would be open to anyone.
+        raise HTTPException(status_code=503, detail="Metrics token not configured")
+    if authorization != f"Bearer {token}":
         raise HTTPException(status_code=403, detail="Forbidden")
 
 

@@ -1,3 +1,7 @@
+# LEGACY / DISABLED (2026-10): Google Places enrichment.
+# The Google Places API key expired and the demo no longer uses Google data. Kept for reference only;
+# it is NOT referenced by pipeline/infra/template.yaml (the PlacesEnricher resource is commented out there).
+# Replacement: backend/scripts/demo_seed/enrich_facilities_geoapify.py (manual, gap-fill, Geoapify).
 import json
 import boto3
 import requests

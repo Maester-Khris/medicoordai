@@ -1,0 +1,9 @@
+{
+  "_comment": "Scraped hospital name -> facilities.name (hospital category). Only for names the automatic distinctive-word match cannot get right (renames, network branding). Reviewed by hand; run `--dry-run` to see what is still unmatched.",
+  "Michael Garron Hospital": "Toronto East General Hospital",
+  "Etobicoke General Hospital": "William Osler Health System - Etobicoke",
+  "Queensway Health Centre": "Trillium Health Partners - Queensway Health Centre",
+  "St. Josephs Health Centre (Unity) Toronto": "St. Joseph's Health Centre - Toronto",
+  "St. Michaels (Unity) Toronto": "St. Michael's Hospital - Bond St. Site",
+  "Cortellucci Vaughan (Mackenzie Health)": "Cortellucci Vaughan Hospital"
+}

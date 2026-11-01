@@ -40,7 +40,7 @@ class BaseLLMClient(ABC):
     """
 
     @abstractmethod
-    def chat(
+    async def chat(
         self,
         messages: list[LLMMessage],
         tools: list[ToolDefinition] | None = None,

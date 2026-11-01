@@ -43,6 +43,8 @@ export interface Facility {
   business_status?:     string | null;
   weekday_hours?:       string[] | null;
   wait_minutes?:        number | null;
+  raw_wait?:            string | null;
+  predicted?:           boolean;
 }
 
 // ── Proximity ─────────────────────────────────────────────────────────────────
@@ -149,6 +151,8 @@ export interface RouteResult {
   facilityId:  string
   etaMinutes:  number
   distanceKm:  number
+  geometry:    [number, number][] | null
+  estimated?:  boolean
 }
 
 export interface TriageUIState {
@@ -161,4 +165,73 @@ export interface TriageUIState {
   routes:                RouteResult[]
   recommendedFacilityId: string | null
   roadGeometry:          [number, number][] | null
+  travelMode:            TravelModeKey
+  routeLoading:          boolean
+}
+
+// ── Guest demo ────────────────────────────────────────────────────────────────
+
+export type TravelModeKey = "car" | "bike" | "bus" | "walk"
+
+export interface AppConfig {
+  demo_mode:         boolean
+  starter_prompts:   string[]
+  downtown_fallback: { lat: number; lng: number }
+  modes_enabled:     TravelModeKey[]
+  routes_up_front?:  number
+}
+
+export type Thumb = "up" | "down"
+
+export interface FeedbackRequest {
+  session_id: string
+  message_id: string
+  thumb:      Thumb
+  comment?:   string | null
+}
+
+export interface GuestEventRequest {
+  type:         "route_drawn" | "mode_changed"
+  session_id:   string
+  mode?:        TravelModeKey   // required for mode_changed; sent with route_drawn
+  duration_ms?: number          // mode_changed only: click to route redrawn, 0..120000
+}
+
+export interface RoutesRequest {
+  origin:       { lat: number; lng: number }
+  facility_ids: string[]        // 1 to 3, unique
+  mode:         TravelModeKey
+  severity?:    Severity
+}
+
+export interface CandidateRoute {
+  facility_id: string
+  eta_minutes: number | null             // null when this candidate has no route
+  distance_km: number | null
+  geometry:    [number, number][] | null // [lat, lng] pairs
+  estimated?:  boolean
+}
+
+export interface RoutesResponse {
+  mode:                TravelModeKey
+  routes:              CandidateRoute[]  // same order as facility_ids
+  fastest_facility_id: string | null
+}
+
+export interface BusyResponse {
+  code:        "busy"
+  retry_after: number
+}
+
+// GET /internal/memory-profile — staging only (MEMORY_PROFILE), X-Internal token required
+export interface MemoryProfileSite {
+  site:            string   // "path/file.py:line"
+  size_diff_bytes: number   // growth since the baseline taken at startup
+  count_diff:      number
+}
+
+export interface MemoryProfileResponse {
+  traced_bytes: number      // live tracemalloc total
+  rss_bytes:    number      // resident set size of the process
+  top:          MemoryProfileSite[]  // largest growth first, at most 20
 }
