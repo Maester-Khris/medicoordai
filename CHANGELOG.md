@@ -802,6 +802,21 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 ---
 
+## [Sprint 23 — Started] · Eval Hardening — W1 triage evidence baseline
+
+**Started — 2026-11-02 · branch: `feat/eval-hardening`**
+
+Scope is W1 of the late-December plan only (`rx-next/interview-prep/product-thinker-sprint-plan-2026-11-01-ai-platform.md`). Details, order and approach are set in the planning session that follows.
+
+### Scope (W1)
+
+- [ ] Triage eval on the 27 vignettes: v1 vs v2 vs no graph, under-triage rate as the metric, accuracy as the counter-metric, three repeats with intervals, paired comparison; plus a reworded lay-language set.
+- [ ] README rewrite: remove the stale May audit state, add measured numbers and honest limits.
+- [ ] Guest provider-chain safety: per-conversation spend cap, circuit breaker, narrow retry policy, each fallback scored on the eval first.
+- [ ] Eval gate in CI on a PR label (deterministic under-triage rate only, no judge).
+
+---
+
 ## [Sprint 22 — Closed] · Guest Demo Launch — Sprint 3: demo scaling
 
 **Closed — 2026-10-14.** PR #56 merged into `preview` (`fa4aabb`) after CI went green (the OpenAI SDK pinned below 3); PR #57, emergent routing to ERs only, merged before it (`c58f3c2`). `python-api` and the wait-time worker deployed from `preview`; the four-scenario smoke suite passed on the preview deployment. The load-test mock and staging are stopped, not deleted.
