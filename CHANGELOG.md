@@ -802,18 +802,57 @@ Agreed 2026-10-05. The Railway worker is the live pipeline and its wait-time dat
 
 ---
 
-## [Sprint 23 — Started] · Eval Hardening — W1 triage evidence baseline
+## [Sprint 23 — Started] · Eval Hardening — triage evidence baseline and graph v3
 
 **Started — 2026-11-02 · branch: `feat/eval-hardening`**
 
-Scope is W1 of the late-December plan only (`rx-next/interview-prep/product-thinker-sprint-plan-2026-11-01-ai-platform.md`). Details, order and approach are set in the planning session that follows.
+Starts as W1 of the late-December plan (`rx-next/interview-prep/product-thinker-sprint-plan-2026-11-01-ai-platform.md`) and also takes in the graph rebuild that plan had placed in W5. Goal: one triage number with an interval that holds up under review, measured in the language guests actually use, with a rebuilt graph compared against v1 and no graph.
 
-### Scope (W1)
+### Decisions (2026-11-02)
 
-- [ ] Triage eval on the 27 vignettes: v1 vs v2 vs no graph, under-triage rate as the metric, accuracy as the counter-metric, three repeats with intervals, paired comparison; plus a reworded lay-language set.
-- [ ] README rewrite: remove the stale May audit state, add measured numbers and honest limits.
-- [ ] Guest provider-chain safety: per-conversation spend cap, circuit breaker, narrow retry policy, each fallback scored on the eval first.
-- [ ] Eval gate in CI on a PR label (deterministic under-triage rate only, no judge).
+- **Wording dependence is proven for retrieval only.** Both v1 and v2 scored 0/10 on the vocabulary-neutral `LAY_SCENARIOS` set (both do literal substring matching). Whether wording also drives end-to-end triage has never been measured. This sprint measures it.
+- **A lay-language version of the 27 vignettes** is the instrument. It rewrites the `opening_message` and `first_person_phrasing` fields of each checklist; the case, the gold severity and the scoring stay the same. It serves four purposes: the eval measures the real user, it answers the open August question, it is the pass/fail bar for v3's semantic layer, and it tests emergent under-triage on the guest demo.
+- **Metric:** under-triage rate (emergent classified lower). **Counter-metric:** overall accuracy. Both are scored in code, so the LLM judges (elicitation coverage, information gain) are off for the paid run.
+- **Track B is skipped** (DeepEval judge; it would only repeat what Track A shows).
+
+### Scope, in order
+
+**1. Freeze the harness (no spend)**
+- [ ] Paired comparison (McNemar and paired bootstrap), repeats, intervals.
+- [ ] `graph_context_matched` persisted for every turn in the checkpoint.
+- [ ] A flag to switch the judges off.
+- [ ] A run manifest pinning model, provider, temperature and prompt hash.
+- [ ] Lay-language versions of the 27 checklists: meaning kept, wording changed, each line checked clinically; cases whose lay version can no longer support the gold label are marked and left out of the paired comparison. Frozen before v3 is designed, so it is not written in v3's vocabulary.
+- [ ] Dry run of the whole harness against the Sprint 22 provider mock.
+
+**2. Changes that alter what the system answers (no spend), landed before the paid run**
+- [ ] Per-conversation spend cap.
+- [ ] Circuit breaker on provider failures; narrow retry policy (429, 5xx and connection resets only, never on a 400).
+- [ ] Decide how this relates to the planned per-provider token budget (`docs/superpowers/plans/2026-10-14-llm-provider-budget.md`), so the two guards are not built separately.
+
+**3. Graph v3 design (no spend)**
+- [ ] Clustering redone.
+- [ ] A semantic (embedding) step in the live retrieval path; without it v3 is substring matching again.
+- [ ] Hosting decided (AuraDB Free paused and deleted the last graph and caps at 200,000 nodes).
+
+**4. Graph v3 build and retrieval screen (no LLM spend apart from one-time embeddings)**
+- [ ] Track A on the main and lay sets after each rebuild.
+- [ ] Gate: v3 clearly beats 0/10 on the lay set. If not, stop before step 5 and record why.
+
+**5. Paid pilot**
+- [ ] 5 vignettes, 1 repeat, all legs, judges off. Measures tokens per conversation, which sizes step 6.
+
+**6. Full paid run**
+- [ ] `off`, `static` and `v3`, each on the original and lay sets, paired, with repeats (count set from the pilot).
+- [ ] The live fallback (`LLM_PROVIDER_CHAIN=groq,anthropic`) scored on `off` only.
+
+**7. After the numbers**
+- [ ] README rewrite: remove the stale May audit state, add the measured numbers and honest limits.
+- [ ] Eval gate in CI on a PR label, threshold taken from the measured interval. Not free: under-triage needs live conversations.
+
+### Line in the sand
+
+Publish under-triage for `off`, `static` and `v3` on both sets, with intervals. If `v3` does not beat `off` beyond the paired interval on the lay set, keep `off` as the production default and publish the negative result.
 
 ---
 
