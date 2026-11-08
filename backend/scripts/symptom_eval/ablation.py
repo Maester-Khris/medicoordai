@@ -41,58 +41,87 @@ class AblationLegResult:
 
 
 class CheckpointStore:
-    """Append-only JSONL checkpoint, one line per completed vignette-leg.
+    """Append-only JSONL checkpoint, one line per completed vignette-leg-repeat.
 
-    Loading an existing file reconstructs what's already done; rerunning
-    run_ablation/run_leg against the same path skips those vignette-legs and
-    resumes from wherever a crash (e.g. a Groq 429) left off — a rerun after
-    a fresh daily quota loses at most the one vignette in flight when it
-    died, not the whole run.
+    A line is keyed by (variant, provider, case_id, repeat). Lines written
+    before variants and repeats existed carry neither field and load as
+    variant "original", repeat 0. Loading an existing file reconstructs what's
+    already done; rerunning run_leg against the same path skips those keys and
+    resumes where a crash (e.g. a Groq 429) left off.
+
+    A line that is not valid JSON or lacks provider/case_id stops the load with
+    its line number: silently skipping it would let a corrupt checkpoint pass
+    for a complete one.
     """
 
     def __init__(self, path: str):
         self._path = path
-        self.entries: dict[str, list[dict]] = defaultdict(list)
-        self.done: set[tuple[str, str]] = set()
+        self.entries: dict[tuple[str, str], list[dict]] = defaultdict(list)
+        self.done: set[tuple[str, str, str, int]] = set()
         if os.path.exists(path):
             with open(path) as f:
-                for line in f:
+                for line_number, line in enumerate(f, start=1):
                     line = line.strip()
                     if not line:
                         continue
-                    entry = json.loads(line)
-                    self.entries[entry["provider"]].append(entry)
-                    self.done.add((entry["provider"], entry["case_id"]))
+                    self._record(self._parse_line(line, line_number))
 
-    def has(self, provider: str, case_id: str) -> bool:
-        return (provider, case_id) in self.done
+    def _parse_line(self, line: str, line_number: int) -> dict:
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError as error:
+            raise ValueError(f"{self._path}: line {line_number} is not valid JSON ({error})") from error
+        if "provider" not in entry or "case_id" not in entry:
+            raise ValueError(f"{self._path}: line {line_number} has no provider/case_id")
+        entry.setdefault("variant", "original")
+        entry.setdefault("repeat", 0)
+        return entry
+
+    def _record(self, entry: dict) -> None:
+        self.entries[(entry["variant"], entry["provider"])].append(entry)
+        self.done.add((entry["variant"], entry["provider"], entry["case_id"], entry["repeat"]))
+
+    def has(self, variant: str, provider: str, case_id: str, repeat: int) -> bool:
+        return (variant, provider, case_id, repeat) in self.done
 
     def append(
         self,
+        variant: str,
         provider: str,
+        repeat: int,
         confusion_row: ConfusionMatrixRow,
-        coverage: ElicitationCoverageResult,
-        gain: InformationGainResult,
+        coverage: ElicitationCoverageResult | None,
+        gain: InformationGainResult | None,
+        graph_context_matched: list[bool],
     ) -> None:
         entry = {
+            "variant": variant,
             "provider": provider,
             "case_id": confusion_row.case_id,
+            "repeat": repeat,
             "confusion_row": asdict(confusion_row),
-            "coverage": asdict(coverage),
-            "gain": asdict(gain),
+            "coverage": asdict(coverage) if coverage is not None else None,
+            "gain": asdict(gain) if gain is not None else None,
+            "graph_context_matched": graph_context_matched,
         }
         with open(self._path, "a") as f:
             f.write(json.dumps(entry) + "\n")
-        self.entries[provider].append(entry)
-        self.done.add((provider, confusion_row.case_id))
+        self._record(entry)
+
+    def entries_for(self, variant: str, provider: str) -> list[dict]:
+        return list(self.entries[(variant, provider)])
 
     def rows_for(
-        self, provider: str
-    ) -> tuple[list[ConfusionMatrixRow], list[ElicitationCoverageResult], list[InformationGainResult]]:
-        entries = self.entries[provider]
+        self, variant: str, provider: str
+    ) -> tuple[
+        list[ConfusionMatrixRow],
+        list[ElicitationCoverageResult | None],
+        list[InformationGainResult | None],
+    ]:
+        entries = self.entries[(variant, provider)]
         confusion_rows = [ConfusionMatrixRow(**e["confusion_row"]) for e in entries]
-        coverages = [ElicitationCoverageResult(**e["coverage"]) for e in entries]
-        gains = [InformationGainResult(**e["gain"]) for e in entries]
+        coverages = [ElicitationCoverageResult(**e["coverage"]) if e["coverage"] else None for e in entries]
+        gains = [InformationGainResult(**e["gain"]) if e["gain"] else None for e in entries]
         return confusion_rows, coverages, gains
 
 
@@ -104,27 +133,33 @@ def run_leg(
     feature_judge: FeaturePresenceJudgePort,
     rubric_judge: RubricJudgePort,
     checkpoint: CheckpointStore | None = None,
+    variant: str = "original",
+    repeats: int = 1,
 ) -> AblationLegResult:
     system = system_factory(provider)
     if checkpoint is not None:
-        confusion_rows, coverage_results, gain_results = checkpoint.rows_for(provider)
+        confusion_rows, coverage_results, gain_results = checkpoint.rows_for(variant, provider)
     else:
         confusion_rows, coverage_results, gain_results = [], [], []
 
     for vignette in vignettes:
-        if checkpoint is not None and checkpoint.has(provider, vignette.case_id):
-            continue
+        for repeat in range(repeats):
+            if checkpoint is not None and checkpoint.has(variant, provider, vignette.case_id, repeat):
+                continue
 
-        transcript = run_vignette_conversation(vignette, simulator, system)
-        row = confusion_matrix.score_vignette(vignette, transcript)
-        coverage = elicitation_coverage.score_vignette(vignette, transcript, feature_judge)
-        gain = information_gain.score_vignette(transcript, rubric_judge)
+            transcript = run_vignette_conversation(vignette, simulator, system)
+            row = confusion_matrix.score_vignette(vignette, transcript)
+            coverage = elicitation_coverage.score_vignette(vignette, transcript, feature_judge)
+            gain = information_gain.score_vignette(transcript, rubric_judge)
 
-        confusion_rows.append(row)
-        coverage_results.append(coverage)
-        gain_results.append(gain)
-        if checkpoint is not None:
-            checkpoint.append(provider, row, coverage, gain)
+            confusion_rows.append(row)
+            coverage_results.append(coverage)
+            gain_results.append(gain)
+            if checkpoint is not None:
+                checkpoint.append(
+                    variant, provider, repeat, row, coverage, gain,
+                    [turn.graph_context_matched for turn in transcript.turns],
+                )
 
     return AblationLegResult(
         provider=provider,
@@ -142,11 +177,13 @@ def run_ablation(
     rubric_judge: RubricJudgePort,
     providers: tuple[str, ...] = ("off", "neo4j"),
     checkpoint: CheckpointStore | None = None,
+    variant: str = "original",
+    repeats: int = 1,
 ) -> list[AblationLegResult]:
     return [
         run_leg(
             provider, vignettes, system_factory, simulator, feature_judge, rubric_judge,
-            checkpoint=checkpoint,
+            checkpoint=checkpoint, variant=variant, repeats=repeats,
         )
         for provider in providers
     ]
