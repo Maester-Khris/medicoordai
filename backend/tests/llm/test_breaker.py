@@ -37,7 +37,7 @@ class _Scripted(BaseLLMClient):
         self.calls += 1
         if self.gate is not None:
             await self.gate.wait()
-        if isinstance(outcome, Exception):
+        if isinstance(outcome, BaseException):
             raise outcome
         return LLMResponse(content=str(outcome), tool_calls=None, finish_reason="stop",
                            model=self.model_name, usage={"prompt_tokens": 1, "completion_tokens": 1})
@@ -179,3 +179,26 @@ def test_every_state_change_is_counted() -> None:
 
 def test_the_model_name_is_the_inner_clients() -> None:
     assert _breaker(_Scripted("ok"), _Clock()).model_name == "scripted-model"
+
+
+def test_a_cancelled_probe_does_not_leave_the_breaker_half_open_for_good() -> None:
+    clock = _Clock()
+    inner = _Scripted(*([_StatusError(503)] * THRESHOLD), asyncio.CancelledError(), "ok")
+    client = _breaker(inner, clock)
+    _fail(client, THRESHOLD, _StatusError(503))
+    clock.now += COOLDOWN
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(client.chat(MESSAGES))  # the probe is cancelled (a wait_for around the call, a shutdown)
+    assert client.state == "open"
+    clock.now += COOLDOWN
+    assert _call(client) == "ok"
+    assert client.state == "closed"
+
+
+def test_a_cancelled_call_is_not_a_provider_failure() -> None:
+    inner = _Scripted(_StatusError(503), _StatusError(503), asyncio.CancelledError(), _StatusError(503))
+    client = _breaker(inner, _Clock())
+    _fail(client, 2, _StatusError(503))
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(client.chat(MESSAGES))
+    assert client.state == "closed"

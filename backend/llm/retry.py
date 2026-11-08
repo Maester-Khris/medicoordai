@@ -20,8 +20,8 @@ def is_retryable(exc: BaseException) -> bool:
     if classify_llm_error(exc) == "timeout":
         return False
     status = getattr(exc, "status_code", None)
-    if isinstance(status, int) and not isinstance(status, bool) and (status == 429 or status >= 500):
-        return True
+    if isinstance(status, int) and not isinstance(status, bool):
+        return status == 429 or status >= 500  # with a status, the status alone decides
     return isinstance(exc, ConnectionError) or any("Connection" in cls.__name__ for cls in type(exc).__mro__)
 
 
@@ -43,6 +43,8 @@ class RetryingLLMClient(BaseLLMClient):
         sleep: Callable[[float], Awaitable[Any]] = asyncio.sleep,
         jitter: Callable[[], float] = random.random,
     ) -> None:
+        if attempts < 1:
+            raise ValueError("attempts must be at least 1")
         self._inner = inner
         self.provider = provider
         self.attempts = attempts
@@ -78,4 +80,4 @@ class RetryingLLMClient(BaseLLMClient):
                 LLM_RETRIES.labels(provider=self.provider).inc()
                 delay = self._jitter() * min(self.max_delay, self.base_delay * (2 ** attempt))
                 await self._sleep(delay)
-        raise RuntimeError("No attempts configured")
+        raise AssertionError("unreachable: the last attempt returns or raises")

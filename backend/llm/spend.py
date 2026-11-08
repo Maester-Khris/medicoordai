@@ -17,10 +17,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from starlette.concurrency import run_in_threadpool
 
-try:
-    from metrics import LLM_SPEND_STORE_ERRORS
-except ImportError:
-    from backend.metrics import LLM_SPEND_STORE_ERRORS
+from metrics import LLM_SPEND_STORE_ERRORS
 
 logger = logging.getLogger(__name__)
 
@@ -82,12 +79,13 @@ class RedisSpendStore:
             return
         key = f"llm_spend:{conversation_id}"
         try:
-            await run_in_threadpool(self._client.incrby, key, tokens)
-            await run_in_threadpool(self._client.expire, key, self._ttl_seconds)
+            pipe = self._client.pipeline()
+            pipe.incrby(key, tokens)
+            pipe.expire(key, self._ttl_seconds)  # same round trip: a key can never exist without its expiry
+            await run_in_threadpool(pipe.execute)
         except Exception as exc:
             logger.warning("spend_store_add_failed", extra={"error_type": type(exc).__name__})
             LLM_SPEND_STORE_ERRORS.inc()
-            return None
 
 
 def conversation_cap_reached(spent: int, cap: int) -> bool:

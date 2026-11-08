@@ -22,18 +22,44 @@ def test_an_unknown_conversation_has_spent_nothing_and_spend_accumulates_per_con
     assert asyncio.run(scenario()) == (0, 150, 7)
 
 
+class _FakePipeline:
+    """Queues commands and applies them together on execute(), like redis-py's pipeline."""
+
+    def __init__(self, redis_client: "_FakeRedis") -> None:
+        self._redis = redis_client
+        self._queued: list[tuple[str, tuple]] = []
+
+    def incrby(self, key: str, amount: int) -> "_FakePipeline":
+        self._queued.append(("incrby", (key, amount)))
+        return self
+
+    def expire(self, key: str, seconds: int) -> "_FakePipeline":
+        self._queued.append(("expire", (key, seconds)))
+        return self
+
+    def execute(self) -> list:
+        self._redis.executions += 1
+        results = []
+        for name, args in self._queued:
+            if name == "incrby":
+                key, amount = args
+                self._redis.values[key] = self._redis.values.get(key, 0) + amount
+                results.append(self._redis.values[key])
+            else:
+                key, seconds = args
+                self._redis.expiries[key] = seconds
+                results.append(True)
+        return results
+
+
 class _FakeRedis:
     def __init__(self) -> None:
         self.values: dict[str, int] = {}
         self.expiries: dict[str, int] = {}
+        self.executions = 0
 
-    def incrby(self, key: str, amount: int) -> int:
-        self.values[key] = self.values.get(key, 0) + amount
-        return self.values[key]
-
-    def expire(self, key: str, seconds: int) -> bool:
-        self.expiries[key] = seconds
-        return True
+    def pipeline(self) -> _FakePipeline:
+        return _FakePipeline(self)
 
     def get(self, key: str) -> str | None:
         value = self.values.get(key)
@@ -41,10 +67,7 @@ class _FakeRedis:
 
 
 class _BrokenRedis:
-    def incrby(self, key: str, amount: int) -> int:
-        raise ConnectionError("down")
-
-    def expire(self, key: str, seconds: int) -> bool:
+    def pipeline(self) -> _FakePipeline:
         raise ConnectionError("down")
 
     def get(self, key: str) -> str | None:
@@ -63,6 +86,7 @@ def test_redis_store_increments_a_namespaced_key_and_sets_the_expiry() -> None:
     assert asyncio.run(scenario()) == (150, 0)
     assert redis_client.values == {"llm_spend:session-1": 150}
     assert redis_client.expiries == {"llm_spend:session-1": 3600}
+    assert redis_client.executions == 2  # one round trip per add: the increment and the expiry travel together
 
 
 def test_redis_store_ignores_a_zero_or_negative_amount() -> None:

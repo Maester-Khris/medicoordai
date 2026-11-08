@@ -71,7 +71,7 @@ def llm_provider_chain() -> list[str]:
 
 
 def llm_retry_attempts() -> int:
-    return env_int("LLM_RETRY_ATTEMPTS", 2, minimum=1)
+    return env_int("LLM_RETRY_ATTEMPTS", 2, minimum=1, maximum=5)
 
 
 def llm_breaker_failures() -> int:

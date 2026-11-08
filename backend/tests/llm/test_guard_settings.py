@@ -25,3 +25,10 @@ def test_guard_settings_default_read_the_environment_and_survive_a_bad_value(
     assert getter() == default
     monkeypatch.setenv(setting, "0")
     assert getter() == default
+
+
+def test_the_retry_attempts_have_a_ceiling_so_a_typo_cannot_multiply_provider_traffic(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LLM_RETRY_ATTEMPTS", "5")
+    assert config.llm_retry_attempts() == 5
+    monkeypatch.setenv("LLM_RETRY_ATTEMPTS", "50")
+    assert config.llm_retry_attempts() == 2

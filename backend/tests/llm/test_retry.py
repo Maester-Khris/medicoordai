@@ -25,6 +25,13 @@ class APITimeoutError(APIConnectionError):
     """In the Groq, OpenAI and Anthropic SDKs a timeout is a kind of connection error."""
 
 
+class _ConnectionNamedStatusError(_StatusError):
+    """A status error whose class name mentions Connection: the status code must win."""
+
+
+_ConnectionNamedStatusError.__name__ = "ConnectionStatusError"
+
+
 @pytest.mark.parametrize("exc,expected", [
     (_StatusError(429), True),
     (_StatusError(500), True),
@@ -40,6 +47,8 @@ class APITimeoutError(APIConnectionError):
     (_StatusError(403), False),
     (_StatusError(404), False),
     (ValueError("bad json"), False),
+    (_ConnectionNamedStatusError(400), False),  # the status decides when there is one
+    (_ConnectionNamedStatusError(503), True),
 ])
 def test_is_retryable(exc: Exception, expected: bool) -> None:
     assert is_retryable(exc) is expected
@@ -143,3 +152,8 @@ def test_a_success_on_the_first_call_never_sleeps_or_counts_a_retry() -> None:
 
 def test_the_model_name_is_the_inner_clients() -> None:
     assert _client(_Scripted("ok")).model_name == "scripted-model"
+
+
+def test_fewer_than_one_attempt_is_rejected() -> None:
+    with pytest.raises(ValueError):
+        _client(_Scripted("ok"), attempts=0)
