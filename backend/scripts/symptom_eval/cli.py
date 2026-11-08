@@ -17,6 +17,7 @@ import argparse
 import json
 import os
 import subprocess
+import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Callable
@@ -26,6 +27,7 @@ from llm.prompts import build_system_prompt
 from scripts.symptom_eval.ablation import AblationLegResult, CheckpointStore, run_ablation
 from scripts.symptom_eval.checklist_extractor import OpenAIChecklistExtractor
 from scripts.symptom_eval.compare_legs import compare_legs, format_comparison
+from scripts.symptom_eval.dry_run import FakeSimulator, FakeSystem
 from scripts.symptom_eval.elicitation_coverage import DeepEvalFeaturePresenceJudge, FeaturePresenceJudgePort
 from scripts.symptom_eval.information_gain import DeepEvalRubricJudge, RubricJudgePort
 from scripts.symptom_eval.patient_simulator import (
@@ -66,6 +68,13 @@ def live_dependencies() -> RunDependencies:
         simulator=simulator,
         system_model=GroqClient().model_name,
         simulator_model=simulator.model_name,
+    )
+
+
+def dry_run_dependencies() -> RunDependencies:
+    return RunDependencies(
+        system_factory=FakeSystem, simulator=FakeSimulator(),
+        system_model="dry-run-fake", simulator_model="dry-run-fake",
     )
 
 
@@ -139,9 +148,17 @@ def run_ablation_command(
     repeats: int = 1,
     judges: bool = True,
     seed: int = BOOTSTRAP_SEED,
-    results_dir: str = RESULTS_DIR,
+    results_dir: str | None = None,
     dependencies: RunDependencies | None = None,
+    dry_run: bool = False,
 ) -> None:
+    label = "DRY RUN " if dry_run else ""
+    if dry_run:
+        judges = False  # the judges are LLM calls; a dry run makes none
+        results_dir = results_dir or tempfile.mkdtemp(prefix="eval_dry_run_")
+        dependencies = dependencies or dry_run_dependencies()
+        print("DRY RUN: fake system and simulator, no provider calls. These numbers are not results.")
+    results_dir = results_dir or RESULTS_DIR
     vignettes = load_all_vignettes(variant=variant)
     if limit:
         vignettes = vignettes[:limit]
@@ -169,7 +186,7 @@ def run_ablation_command(
     checkpoint = CheckpointStore(checkpoint_path)
     already_done = len(checkpoint.done)
     if already_done:
-        print(f"Resuming from checkpoint {checkpoint_path} — {already_done} vignette-legs already recorded")
+        print(f"{label}Resuming from checkpoint {checkpoint_path} — {already_done} vignette-legs already recorded")
 
     feature_judge, rubric_judge = build_judges(judges)
     legs = run_ablation(
@@ -190,8 +207,8 @@ def run_ablation_command(
         json.dump([serialize_leg(leg) for leg in legs], f, indent=2)
 
     for leg in legs:
-        print(f"{leg.provider}: {leg.confusion_matrix}")
-    print(f"Full results written to {path}")
+        print(f"{label}{leg.provider}: {leg.confusion_matrix}")
+    print(f"{label}Full results written to {path}")
 
 
 def compare_legs_command(checkpoint_path: str, variant: str, leg_a: str, leg_b: str, seed: int) -> None:
@@ -222,6 +239,9 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--repeats", type=int, default=1, help="Conversations per vignette per leg.")
     run_parser.add_argument("--no-judges", action="store_true",
                             help="Score severity in code only; skip both LLM judges (no judge spend).")
+    run_parser.add_argument("--dry-run", action="store_true",
+                            help="Use fake system and simulator, write to a temp directory, make no provider "
+                                 "calls and run no judges. Output is labelled DRY RUN and is not a result.")
     run_parser.add_argument("--seed", type=int, default=BOOTSTRAP_SEED, help="Bootstrap seed, recorded in the manifest.")
 
     compare_parser = subparsers.add_parser("compare-legs")
@@ -241,7 +261,7 @@ def main() -> None:
     elif args.command == "run-ablation":
         run_ablation_command(
             args.limit, args.checkpoint, tuple(p.strip() for p in args.providers.split(",")),
-            variant=args.variant, repeats=args.repeats, judges=not args.no_judges, seed=args.seed,
+            variant=args.variant, repeats=args.repeats, judges=not args.no_judges, seed=args.seed, dry_run=args.dry_run,
         )
     elif args.command == "compare-legs":
         compare_legs_command(args.checkpoint, args.variant, args.leg_a, args.leg_b, args.seed)
