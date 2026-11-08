@@ -93,6 +93,7 @@ class CheckpointStore:
         coverage: ElicitationCoverageResult | None,
         gain: InformationGainResult | None,
         graph_context_matched: list[bool],
+        transcript: list[dict] | None = None,
     ) -> None:
         entry = {
             "variant": variant,
@@ -104,6 +105,8 @@ class CheckpointStore:
             "gain": asdict(gain) if gain is not None else None,
             "graph_context_matched": graph_context_matched,
         }
+        if transcript is not None:
+            entry["transcript"] = transcript
         with open(self._path, "a") as f:
             f.write(json.dumps(entry) + "\n")
         self._record(entry)
@@ -165,6 +168,15 @@ def run_leg(
                 checkpoint.append(
                     variant, provider, repeat, row, coverage, gain,
                     [turn.graph_context_matched for turn in transcript.turns],
+                    transcript=[
+                        {
+                            "turn_index": turn.turn_index,
+                            "patient_message": turn.patient_message,
+                            "system_response": turn.system_response,
+                            "graph_context_matched": turn.graph_context_matched,
+                        }
+                        for turn in transcript.turns
+                    ],
                 )
 
     return AblationLegResult(

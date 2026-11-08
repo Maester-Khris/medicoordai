@@ -216,3 +216,29 @@ class TestOptionalJudges:
 
         assert result.elicitation_coverage == [None, None]
         assert all(gain is not None for gain in result.information_gain)
+
+
+class TestTranscriptPersistence:
+    def test_transcript_roundtrips(self, tmp_path):
+        path = str(tmp_path / "checkpoint.jsonl")
+        _run(path, _FakeSystem("emergent"))
+
+        entry = CheckpointStore(path).entries_for("original", "off")[0]
+
+        assert entry["transcript"] == [{
+            "turn_index": 0, "patient_message": "dizzy", "system_response": "classified",
+            "graph_context_matched": False,
+        }]
+
+    def test_entry_without_transcript_still_loads(self, tmp_path):
+        path = tmp_path / "checkpoint.jsonl"
+        path.write_text(json.dumps({
+            "provider": "off", "case_id": "1",
+            "confusion_row": {"case_id": "1", "predicted": "emergent", "gold": "emergent",
+                              "correct": True, "under_triaged": False},
+            "coverage": None, "gain": None,
+        }) + "\n")
+
+        entry = CheckpointStore(str(path)).entries_for("original", "off")[0]
+
+        assert "transcript" not in entry
