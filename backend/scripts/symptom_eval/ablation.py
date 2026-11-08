@@ -36,8 +36,8 @@ from scripts.symptom_eval.system_under_test import SystemUnderTestPort
 class AblationLegResult:
     provider: str
     confusion_matrix: dict
-    elicitation_coverage: list
-    information_gain: list
+    elicitation_coverage: list[ElicitationCoverageResult | None]
+    information_gain: list[InformationGainResult | None]
 
 
 class CheckpointStore:
@@ -130,8 +130,8 @@ def run_leg(
     vignettes: list[Vignette],
     system_factory: Callable[[str], SystemUnderTestPort],
     simulator: PatientSimulatorPort,
-    feature_judge: FeaturePresenceJudgePort,
-    rubric_judge: RubricJudgePort,
+    feature_judge: FeaturePresenceJudgePort | None,
+    rubric_judge: RubricJudgePort | None,
     checkpoint: CheckpointStore | None = None,
     variant: str = "original",
     repeats: int = 1,
@@ -149,8 +149,14 @@ def run_leg(
 
             transcript = run_vignette_conversation(vignette, simulator, system)
             row = confusion_matrix.score_vignette(vignette, transcript)
-            coverage = elicitation_coverage.score_vignette(vignette, transcript, feature_judge)
-            gain = information_gain.score_vignette(transcript, rubric_judge)
+            coverage = (
+                elicitation_coverage.score_vignette(vignette, transcript, feature_judge)
+                if feature_judge is not None else None
+            )
+            gain = (
+                information_gain.score_vignette(transcript, rubric_judge)
+                if rubric_judge is not None else None
+            )
 
             confusion_rows.append(row)
             coverage_results.append(coverage)
@@ -173,8 +179,8 @@ def run_ablation(
     vignettes: list[Vignette],
     system_factory: Callable[[str], SystemUnderTestPort],
     simulator: PatientSimulatorPort,
-    feature_judge: FeaturePresenceJudgePort,
-    rubric_judge: RubricJudgePort,
+    feature_judge: FeaturePresenceJudgePort | None,
+    rubric_judge: RubricJudgePort | None,
     providers: tuple[str, ...] = ("off", "neo4j"),
     checkpoint: CheckpointStore | None = None,
     variant: str = "original",

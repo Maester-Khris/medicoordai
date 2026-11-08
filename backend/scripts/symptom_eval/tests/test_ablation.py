@@ -178,3 +178,41 @@ class TestCheckpointKey:
 
         with pytest.raises(ValueError, match="line 2"):
             CheckpointStore(str(path))
+
+
+class TestOptionalJudges:
+    def test_no_judges_stores_null_and_scores_severity_only(self, tmp_path):
+        path = str(tmp_path / "checkpoint.jsonl")
+        result = run_leg(
+            "off", VIGNETTES, lambda provider: _FakeSystem("emergent"),
+            _FakeSimulator(), None, None, checkpoint=CheckpointStore(path),
+        )
+
+        entry = CheckpointStore(path).entries_for("original", "off")[0]
+        assert entry["coverage"] is None
+        assert entry["gain"] is None
+        assert result.confusion_matrix["count"] == 2
+        assert result.elicitation_coverage == [None, None]
+        assert result.information_gain == [None, None]
+
+    def test_null_scores_survive_reload(self, tmp_path):
+        path = str(tmp_path / "checkpoint.jsonl")
+        run_leg(
+            "off", VIGNETTES, lambda provider: _FakeSystem("emergent"),
+            _FakeSimulator(), None, None, checkpoint=CheckpointStore(path),
+        )
+
+        rows, coverages, gains = CheckpointStore(path).rows_for("original", "off")
+        assert len(rows) == 2
+        assert coverages == [None, None]
+        assert gains == [None, None]
+
+    def test_one_judge_off_other_on(self, tmp_path):
+        path = str(tmp_path / "checkpoint.jsonl")
+        result = run_leg(
+            "off", VIGNETTES, lambda provider: _FakeSystem("emergent"),
+            _FakeSimulator(), None, _FakeRubricJudge(), checkpoint=CheckpointStore(path),
+        )
+
+        assert result.elicitation_coverage == [None, None]
+        assert all(gain is not None for gain in result.information_gain)
