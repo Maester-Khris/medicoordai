@@ -28,6 +28,7 @@ class SystemTurnResult:
     surfaced_red_flag_indicators: list[str] = field(default_factory=list)
     surfaced_followup_questions: list[str] = field(default_factory=list)
     cap_reached: bool = False
+    tokens_used: int = 0
 
 
 class SystemUnderTestPort(ABC):
@@ -70,4 +71,5 @@ class LiveLLMAgentAdapter(SystemUnderTestPort):
                 [rf.followup_question for rf in context.red_flags] if context else []
             ),
             cap_reached=result.get("cap_reached", False),
+            tokens_used=result.get("tokens_used", 0),
         )

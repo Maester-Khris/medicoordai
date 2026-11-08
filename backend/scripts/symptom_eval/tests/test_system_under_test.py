@@ -69,7 +69,7 @@ class TestLiveLLMAgentAdapter:
         mock_agent = MagicMock()
         mock_agent.respond = AsyncMock(return_value={
             "response": "Wrapping up.", "severity": "urgent", "reasoning": "r",
-            "recommended_facility": None, "nearby_facilities": [], "turn_type": "triage", "cap_reached": True,
+            "recommended_facility": None, "nearby_facilities": [], "turn_type": "triage", "cap_reached": True, "tokens_used": 321,
         })
         mock_agent_cls.return_value = mock_agent
 
@@ -80,3 +80,4 @@ class TestLiveLLMAgentAdapter:
         assert isinstance(mock_agent_cls.call_args.kwargs["spend_store"], InMemorySpendStore)
         assert mock_agent.respond.call_args.kwargs["conversation_id"] == "lay:static:7:1"
         assert result.cap_reached is True
+        assert result.tokens_used == 321

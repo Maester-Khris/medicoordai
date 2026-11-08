@@ -35,6 +35,7 @@ def run_vignette_conversation(
                 surfaced_red_flag_indicators=result.surfaced_red_flag_indicators,
                 surfaced_followup_questions=result.surfaced_followup_questions,
                 cap_reached=result.cap_reached,
+                tokens_used=result.tokens_used,
             )
         )
         history.append({"role": "user", "content": patient_message})

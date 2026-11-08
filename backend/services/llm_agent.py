@@ -1,7 +1,7 @@
 import json
 import os
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from config import (
     llm_breaker_cooldown_seconds,
     llm_breaker_failures,
@@ -149,12 +149,16 @@ def capped_reply_fingerprint() -> str:
     ])
 
 
-@dataclass(frozen=True)
+@dataclass
 class _TurnContext:
-    """What one turn needs to know about its conversation's spend."""
+    """What one turn needs to know about its conversation's spend, and what it has spent so far.
+
+    One instance per turn, never shared: `tokens_used` is added to by every model call of the turn.
+    """
 
     conversation_id: str | None
     capped: bool
+    tokens_used: int = field(default=0)
 
 
 def _followup(text: str, ctx: _TurnContext) -> dict:
@@ -167,6 +171,7 @@ def _followup(text: str, ctx: _TurnContext) -> dict:
         "nearby_facilities": [],
         "turn_type": "followup",
         "cap_reached": ctx.capped,
+        "tokens_used": ctx.tokens_used,
     }
 
 
@@ -218,6 +223,7 @@ class LLMAgent:
             "nearby_facilities": list[dict],
             "turn_type": "followup" | "triage",
             "cap_reached": bool,
+            "tokens_used": int,  # prompt + completion tokens of this turn's model calls
         }
 
         With a `conversation_id` (and a spend store) every model call's tokens are counted against
@@ -251,9 +257,10 @@ class LLMAgent:
     async def _chat(self, ctx: _TurnContext, **call: object) -> LLMResponse:
         """The one place a model call is made and its tokens are counted."""
         resp = await self._client.chat(**call)
+        usage = resp.usage or {}
+        tokens = (usage.get("prompt_tokens") or 0) + (usage.get("completion_tokens") or 0)
+        ctx.tokens_used += tokens
         if ctx.conversation_id is not None and self._spend_store is not None:
-            usage = resp.usage or {}
-            tokens = (usage.get("prompt_tokens") or 0) + (usage.get("completion_tokens") or 0)
             await self._spend_store.add(ctx.conversation_id, tokens)
         return resp
 
@@ -305,8 +312,9 @@ class LLMAgent:
         lng: float | None,
         force: bool,
         user_turns: int = 0,
-        ctx: _TurnContext = _TurnContext(conversation_id=None, capped=False),
+        ctx: _TurnContext | None = None,
     ) -> dict:
+        ctx = ctx or _TurnContext(conversation_id=None, capped=False)
         force_tool = TRIAGE_RESPONSE.name if force else None
 
         resp = await self._chat(
@@ -355,8 +363,9 @@ class LLMAgent:
         lat: float | None,
         lng: float | None,
         user_turns: int = 0,
-        ctx: _TurnContext = _TurnContext(conversation_id=None, capped=False),
+        ctx: _TurnContext | None = None,
     ) -> dict:
+        ctx = ctx or _TurnContext(conversation_id=None, capped=False)
         args = json.loads(tool_call["arguments"])
         severity = args["severity"]
         reasoning = args["reasoning"]
@@ -421,6 +430,7 @@ class LLMAgent:
             "nearby_facilities": nearby_facilities,
             "turn_type": "triage",
             "cap_reached": ctx.capped,
+            "tokens_used": ctx.tokens_used,
         }
 
     async def _generate_grounded_response(

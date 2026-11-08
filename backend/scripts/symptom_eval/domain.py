@@ -39,6 +39,7 @@ class ConversationTurn:
     surfaced_red_flag_indicators: list[str] = field(default_factory=list)
     surfaced_followup_questions: list[str] = field(default_factory=list)
     cap_reached: bool = False
+    tokens_used: int = 0
 
 
 @dataclass

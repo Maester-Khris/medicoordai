@@ -171,7 +171,7 @@ class TestCheckpointKey:
         class _Recording:
             def respond(self, patient_message, history, conversation_id=None):
                 ids.append(conversation_id)
-                return SystemTurnResult("classified", "urgent", "why", False, cap_reached=True)
+                return SystemTurnResult("classified", "urgent", "why", False, cap_reached=True, tokens_used=640)
 
         checkpoint = CheckpointStore(str(tmp_path / "checkpoint.jsonl"))
         run_leg("static", VIGNETTES[:1], lambda provider: _Recording(), _FakeSimulator(), None, None,
@@ -180,6 +180,7 @@ class TestCheckpointKey:
         assert ids == ["lay:static:1:0", "lay:static:1:1"]
         entries = checkpoint.entries_for("lay", "static")
         assert [e["transcript"][0]["cap_reached"] for e in entries] == [True, True]
+        assert [e["transcript"][0]["tokens_used"] for e in entries] == [640, 640]
 
     def test_graph_context_matched_roundtrips(self, tmp_path):
         path = str(tmp_path / "checkpoint.jsonl")
@@ -243,7 +244,7 @@ class TestTranscriptPersistence:
 
         assert entry["transcript"] == [{
             "turn_index": 0, "patient_message": "dizzy", "system_response": "classified",
-            "graph_context_matched": False, "cap_reached": False,
+            "graph_context_matched": False, "cap_reached": False, "tokens_used": 0,
         }]
 
     def test_entry_without_transcript_still_loads(self, tmp_path):

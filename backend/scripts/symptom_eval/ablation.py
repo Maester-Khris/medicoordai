@@ -178,6 +178,7 @@ def run_leg(
                             "system_response": turn.system_response,
                             "graph_context_matched": turn.graph_context_matched,
                             "cap_reached": turn.cap_reached,
+                            "tokens_used": turn.tokens_used,
                         }
                         for turn in transcript.turns
                     ],

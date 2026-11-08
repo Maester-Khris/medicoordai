@@ -72,6 +72,7 @@ def test_under_the_cap_the_turn_is_unchanged_and_every_call_is_counted() -> None
     assert result["response"] == "Go to the clinic."
     assert len(client.calls) == 2
     assert asyncio.run(store.total("c1")) == 180
+    assert result["tokens_used"] == 180  # the turn reports what it spent, classify call plus reply call
 
 
 def test_without_a_conversation_id_nothing_is_counted_and_no_cap_applies() -> None:
@@ -101,6 +102,7 @@ def test_at_the_cap_the_turn_is_forced_to_classify_with_one_call_and_a_templated
     assert result["response"] == capped_reply("urgent", None)
     assert CAPPED_NOTE in result["response"]
     assert _cap_reached_count() == before + 1
+    assert result["tokens_used"] == 120  # one call only: the templated reply costs nothing
 
 
 def test_the_capped_reply_names_the_recommended_facility() -> None:
@@ -153,3 +155,15 @@ def test_a_broken_counter_does_not_stop_the_agent() -> None:
 
 def test_the_safety_line_names_911_and_211() -> None:
     assert "911" in SAFETY_LINE and "211" in SAFETY_LINE
+
+
+def test_tokens_are_reported_even_without_a_conversation_id() -> None:
+    client = _Scripted(_text("Since when?", usage=(70, 5)))
+    result = _run(LLMAgent(client=client), [])
+    assert result["tokens_used"] == 75
+
+
+def test_two_turns_do_not_share_a_token_count() -> None:
+    agent = LLMAgent(client=_Scripted(_text("Since when?", usage=(70, 5))))
+    assert _run(agent, [])["tokens_used"] == 75
+    assert _run(agent, [])["tokens_used"] == 75

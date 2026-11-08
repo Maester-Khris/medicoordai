@@ -85,3 +85,13 @@ class TestConversationId:
         transcript = run_vignette_conversation(VIGNETTE, _ScriptedSimulator([]), system, conversation_id="conv-1")
 
         assert transcript.turns[0].cap_reached is True
+
+    def test_a_turn_records_the_tokens_it_used(self):
+        system = _ScriptedSystem([
+            SystemTurnResult("How long?", None, None, False, tokens_used=900),
+            SystemTurnResult("Go to the ER.", "emergent", "reasoning", False, tokens_used=1500),
+        ])
+
+        transcript = run_vignette_conversation(VIGNETTE, _ScriptedSimulator(["An hour."]), system, conversation_id="conv-1")
+
+        assert [turn.tokens_used for turn in transcript.turns] == [900, 1500]
