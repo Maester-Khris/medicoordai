@@ -1,0 +1,66 @@
+{
+  "opening_message": "My 18-month-old has had a fever, been throwing up and had loose poops for the last two days.",
+  "disclosure_items": [
+    {
+      "feature_id": "fever_duration",
+      "category": "history",
+      "first_person_phrasing": "He's had a low fever for about two days.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vomiting_duration",
+      "category": "history",
+      "first_person_phrasing": "The throwing up started two days ago too.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "diarrhea_duration",
+      "category": "history",
+      "first_person_phrasing": "The loose poops have been going on those same two days.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "urgent_care_visit",
+      "category": "history",
+      "first_person_phrasing": "We took him to an urgent care clinic last night.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "doctor_instructions",
+      "category": "history",
+      "first_person_phrasing": "They said to keep giving him acetaminophen and fluids.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "overnight_voiding",
+      "category": "history",
+      "first_person_phrasing": "He usually pees during the night, but he didn't last night.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "axillary_temperature",
+      "category": "history",
+      "first_person_phrasing": "I took his temperature under the arm this morning and it was 38.1 degrees Celsius.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "general_appearance",
+      "category": "exam",
+      "first_person_phrasing": "He looks unwell, but he's alert and looks me in the eye.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse",
+      "category": "vitals",
+      "first_person_phrasing": "His pulse seems to be about 140.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respirations",
+      "category": "vitals",
+      "first_person_phrasing": "He's breathing quickly, I counted 32 breaths a minute.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

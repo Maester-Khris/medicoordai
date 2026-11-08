@@ -1,0 +1,36 @@
+{
+  "opening_message": "He just keeled over and I can't get him to answer.",
+  "disclosure_items": [
+    {
+      "feature_id": "vital_signs",
+      "category": "vitals",
+      "first_person_phrasing": "His pulse is 96 and a bit uneven.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "His blood pressure is 108 over 68.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respiratory_rate",
+      "category": "vitals",
+      "first_person_phrasing": "He's breathing on his own, 10 breaths a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "consciousness",
+      "category": "exam",
+      "first_person_phrasing": "He opens his eyes when someone shouts at him.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "cardiac_monitor",
+      "category": "exam",
+      "first_person_phrasing": "The heart monitor shows a normal rhythm with the odd extra beat.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

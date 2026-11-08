@@ -1,0 +1,36 @@
+{
+  "opening_message": "I'm really stiff since the car crash.",
+  "disclosure_items": [
+    {
+      "feature_id": "stiffness",
+      "category": "chief_complaint",
+      "first_person_phrasing": "I'm just stiff all over.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "They told me my blood pressure was 160 over 80.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "heart_rate",
+      "category": "vitals",
+      "first_person_phrasing": "My pulse was 95.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respiratory_rate",
+      "category": "vitals",
+      "first_person_phrasing": "I remember them saying I was breathing 18 times a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "o2_saturation",
+      "category": "vitals",
+      "first_person_phrasing": "My oxygen level was 94%.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

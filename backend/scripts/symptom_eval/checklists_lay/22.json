@@ -1,0 +1,42 @@
+{
+  "opening_message": "I've been throwing up for six hours.",
+  "disclosure_items": [
+    {
+      "feature_id": "emesis_appearance",
+      "category": "chief_complaint",
+      "first_person_phrasing": "What I'm throwing up looks like coffee grounds.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "duration_symptoms",
+      "category": "history",
+      "first_person_phrasing": "It began about six hours ago.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "medication_history",
+      "category": "history",
+      "first_person_phrasing": "I take several medications, including coumadin.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "confusion_level",
+      "category": "exam",
+      "first_person_phrasing": "I feel really muddled right now.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "skin_condition",
+      "category": "exam",
+      "first_person_phrasing": "My skin is dry and pale.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "diaphoresis",
+      "category": "exam",
+      "first_person_phrasing": "I'm soaked in sweat.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

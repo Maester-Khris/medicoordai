@@ -1,0 +1,48 @@
+{
+  "opening_message": "She's out cold after a car crash.",
+  "disclosure_items": [
+    {
+      "feature_id": "gcs",
+      "category": "vitals",
+      "first_person_phrasing": "She's barely reacting to anything. Her coma scale score is 6.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respirations",
+      "category": "vitals",
+      "first_person_phrasing": "She's breathing fast, about 28 breaths a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse",
+      "category": "vitals",
+      "first_person_phrasing": "Her heart is racing, around 120.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "Her blood pressure is really low, 76 over 48.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "skin",
+      "category": "exam",
+      "first_person_phrasing": "Her skin is pale, clammy and cold.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pelvis_injury",
+      "category": "exam",
+      "first_person_phrasing": "Her pelvis is unstable, it moves when it shouldn't.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "femur_fracture",
+      "category": "exam",
+      "first_person_phrasing": "The bone in her thigh is broken and sticking out through the skin.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

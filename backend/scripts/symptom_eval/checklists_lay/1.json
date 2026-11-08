@@ -1,0 +1,30 @@
+{
+  "opening_message": "He won't react to anything I do.",
+  "disclosure_items": [
+    {
+      "feature_id": "gcs_3",
+      "category": "exam",
+      "first_person_phrasing": "He's completely out: his eyes are shut and he isn't making a sound or moving at all.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse_64",
+      "category": "vitals",
+      "first_person_phrasing": "His pulse feels slow to me, about 64 beats a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respirations_6",
+      "category": "vitals",
+      "first_person_phrasing": "He's barely breathing, it's very shallow, only about 6 breaths a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "bp_106_60",
+      "category": "vitals",
+      "first_person_phrasing": "His blood pressure reading is 106 over 60.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

@@ -1,0 +1,48 @@
+{
+  "opening_message": "My left eye has been hurting since yesterday and I can't see clearly out of it.",
+  "disclosure_items": [
+    {
+      "feature_id": "pain_level",
+      "category": "chief_complaint",
+      "first_person_phrasing": "It hurts, maybe a 2 out of 10.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "visual_difficulty",
+      "category": "chief_complaint",
+      "first_person_phrasing": "My vision is blurry, I can't see clearly.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "halo_around_lights",
+      "category": "history",
+      "first_person_phrasing": "I see a glowing ring around lights.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vision_distance",
+      "category": "history",
+      "first_person_phrasing": "I can't tell how many fingers you're holding up unless they're within 3 feet.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "I don't know my blood pressure, but I know it's been running high.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse",
+      "category": "vitals",
+      "first_person_phrasing": "I never check my pulse.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respirations",
+      "category": "vitals",
+      "first_person_phrasing": "I haven't noticed how fast I'm breathing.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

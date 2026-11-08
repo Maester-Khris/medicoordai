@@ -30,3 +30,7 @@ def test_lay_checklists_match_originals():
 
         assert set(lay) - {"excluded_from_pairing"} == set(original), name
         assert _feature_shape(lay) == _feature_shape(original), name
+
+
+def test_every_original_has_a_lay_version():
+    assert _json_files(CHECKLISTS_LAY_DIR) == _json_files(CHECKLISTS_DIR)

@@ -1,0 +1,60 @@
+{
+  "opening_message": "My child has been throwing up and having really loose, watery poops for three days now.",
+  "disclosure_items": [
+    {
+      "feature_id": "vomiting_duration",
+      "category": "history",
+      "first_person_phrasing": "The throwing up began about three days ago.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "diarrhea_duration",
+      "category": "history",
+      "first_person_phrasing": "The loose poops started about three days ago as well.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "lethargy",
+      "category": "exam",
+      "first_person_phrasing": "Yes, my child is very drowsy and has almost no energy.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "cracked_lips",
+      "category": "exam",
+      "first_person_phrasing": "Yes, I noticed their lips are dry and cracked.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "sunken_eyes",
+      "category": "exam",
+      "first_person_phrasing": "Yes, their eyes look sunken in.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "tenting_skin",
+      "category": "exam",
+      "first_person_phrasing": "When I pinch the skin it stays up in a little tent instead of springing back.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "heart_rate",
+      "category": "vitals",
+      "first_person_phrasing": "I think the heartbeat is racing.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse_strength",
+      "category": "vitals",
+      "first_person_phrasing": "The pulse feels faint, really weak.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respiratory_rate",
+      "category": "vitals",
+      "first_person_phrasing": "I think the breathing is very quick and shallow.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

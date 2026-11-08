@@ -1,0 +1,84 @@
+{
+  "opening_message": "My stomach has been hurting.",
+  "disclosure_items": [
+    {
+      "feature_id": "pain_severity",
+      "category": "chief_complaint",
+      "first_person_phrasing": "About a 7 out of 10.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pain_character",
+      "category": "chief_complaint",
+      "first_person_phrasing": "It comes and goes in waves, like cramps.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "nausea_vomiting",
+      "category": "chief_complaint",
+      "first_person_phrasing": "I've felt sick to my stomach and I've thrown up.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "diarrhea",
+      "category": "chief_complaint",
+      "first_person_phrasing": "No diarrhea.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "alcohol_intake",
+      "category": "history",
+      "first_person_phrasing": "I had some wine with my meal.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "past_ulcer",
+      "category": "history",
+      "first_person_phrasing": "I've had a duodenal ulcer in the past.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "past_pancreatitis",
+      "category": "history",
+      "first_person_phrasing": "I've had pancreatitis before.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "past_migraines",
+      "category": "history",
+      "first_person_phrasing": "I get migraines too.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse_rate",
+      "category": "vitals",
+      "first_person_phrasing": "My pulse is 60.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respiratory_rate",
+      "category": "vitals",
+      "first_person_phrasing": "I'm breathing 18 times a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "My blood pressure is 113 over 65.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "abdominal_tenderness",
+      "category": "exam",
+      "first_person_phrasing": "It's sore to the touch in the upper right part of my belly.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "chest_exam",
+      "category": "exam",
+      "first_person_phrasing": "The doctor said my chest sounds clear.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

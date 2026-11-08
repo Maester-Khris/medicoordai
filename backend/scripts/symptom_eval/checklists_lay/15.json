@@ -1,0 +1,48 @@
+{
+  "opening_message": "I can't get any air!",
+  "disclosure_items": [
+    {
+      "feature_id": "asthma_history",
+      "category": "history",
+      "first_person_phrasing": "I have really bad asthma and I've had lots of attacks before.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "response_to_stimuli",
+      "category": "exam",
+      "first_person_phrasing": "I only react when something hurts.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse_rate",
+      "category": "vitals",
+      "first_person_phrasing": "I don't know my pulse, but my heart is racing.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respiratory_rate",
+      "category": "vitals",
+      "first_person_phrasing": "I'm breathing so fast.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "cyanosis",
+      "category": "exam",
+      "first_person_phrasing": "My lips feel numb and they might be turning blue.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "air_entry",
+      "category": "exam",
+      "first_person_phrasing": "I just can't pull enough air in.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "oxygen_saturation",
+      "category": "vitals",
+      "first_person_phrasing": "I can't tell my oxygen level, I just feel weak.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}
