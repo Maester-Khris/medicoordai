@@ -32,6 +32,10 @@ LLM_RETRIES = Counter(
     "llm_retries_total", "Retries of a provider call after a transient failure",
     ["provider"], registry=_registry,
 )
+LLM_BREAKER_TRANSITIONS = Counter(
+    "llm_breaker_transitions_total", "Circuit breaker state changes per provider",
+    ["provider", "to"], registry=_registry,
+)
 LLM_TOKENS = Counter(
     "llm_tokens_total", "Tokens reported by the provider (kind: prompt, completion)",
     ["provider", "kind"], registry=_registry,
