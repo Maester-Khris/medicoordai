@@ -1,0 +1,114 @@
+import dataclasses
+import os
+import sys
+
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+
+from scripts.symptom_eval.run_manifest import (
+    ManifestMismatch,
+    RunManifest,
+    hash_directory,
+    manifest_path,
+    sha256_text,
+    write_or_verify_manifest,
+)
+
+
+def _manifest(**overrides) -> RunManifest:
+    values = dict(
+        system_model="openai/gpt-oss-120b", system_temperature=0.2,
+        simulator_model="claude-haiku-4-5", simulator_temperature=0.3,
+        providers=("off", "static"), variant="original", repeats=2,
+        judges_enabled=False, bootstrap_seed=20261107,
+        system_prompt_sha256="a" * 64, simulator_prompt_sha256="b" * 64,
+        checklists_sha256="c" * 64, harness_git_commit="abc1234",
+    )
+    values.update(overrides)
+    return RunManifest(**values)
+
+
+def test_manifest_path_sits_beside_checkpoint():
+    assert manifest_path("/x/checkpoint.jsonl") == "/x/checkpoint.jsonl.manifest.json"
+
+
+def test_first_call_writes_manifest_file(tmp_path):
+    checkpoint = str(tmp_path / "checkpoint.jsonl")
+
+    write_or_verify_manifest(checkpoint, _manifest(), "2026-11-08T10:00:00Z")
+
+    assert os.path.exists(manifest_path(checkpoint))
+
+
+def test_same_config_resumes_even_with_new_providers_commit_and_start_time(tmp_path):
+    checkpoint = str(tmp_path / "checkpoint.jsonl")
+    write_or_verify_manifest(checkpoint, _manifest(), "2026-11-08T10:00:00Z")
+
+    write_or_verify_manifest(
+        checkpoint,
+        _manifest(providers=("off", "static", "v3"), harness_git_commit="def5678"),
+        "2026-11-09T10:00:00Z",
+    )
+
+
+def test_changed_prompt_hash_raises_naming_field(tmp_path):
+    checkpoint = str(tmp_path / "checkpoint.jsonl")
+    write_or_verify_manifest(checkpoint, _manifest(), "2026-11-08T10:00:00Z")
+
+    with pytest.raises(ManifestMismatch, match="system_prompt_sha256"):
+        write_or_verify_manifest(
+            checkpoint, _manifest(system_prompt_sha256="d" * 64), "2026-11-09T10:00:00Z"
+        )
+
+
+def test_changed_repeats_raises(tmp_path):
+    checkpoint = str(tmp_path / "checkpoint.jsonl")
+    write_or_verify_manifest(checkpoint, _manifest(), "2026-11-08T10:00:00Z")
+
+    with pytest.raises(ManifestMismatch, match="repeats"):
+        write_or_verify_manifest(checkpoint, _manifest(repeats=3), "2026-11-09T10:00:00Z")
+
+
+def test_every_non_exempt_field_is_checked(tmp_path):
+    exempt = {"providers", "harness_git_commit"}
+    base = _manifest()
+    changes = {
+        "system_model": "other", "system_temperature": 0.9, "simulator_model": "other",
+        "simulator_temperature": 0.9, "variant": "lay", "repeats": 9, "judges_enabled": True,
+        "bootstrap_seed": 1, "system_prompt_sha256": "z", "simulator_prompt_sha256": "z",
+        "checklists_sha256": "z",
+    }
+    assert set(changes) == {f.name for f in dataclasses.fields(base)} - exempt
+
+    for index, (name, value) in enumerate(changes.items()):
+        checkpoint = str(tmp_path / f"cp{index}.jsonl")
+        write_or_verify_manifest(checkpoint, base, "t")
+        with pytest.raises(ManifestMismatch, match=name):
+            write_or_verify_manifest(checkpoint, dataclasses.replace(base, **{name: value}), "t")
+
+
+def test_hash_directory_changes_when_a_file_changes(tmp_path):
+    (tmp_path / "1.json").write_text("{}")
+    before = hash_directory(str(tmp_path))
+
+    (tmp_path / "1.json").write_text('{"a": 1}')
+
+    assert hash_directory(str(tmp_path)) != before
+
+
+def test_hash_directory_ignores_creation_order_and_dotfiles(tmp_path):
+    first, second = tmp_path / "a", tmp_path / "b"
+    first.mkdir()
+    second.mkdir()
+    (first / "1.json").write_text("one")
+    (first / "2.json").write_text("two")
+    (second / "2.json").write_text("two")
+    (second / "1.json").write_text("one")
+    (second / ".gitkeep").write_text("")
+
+    assert hash_directory(str(first)) == hash_directory(str(second))
+
+
+def test_sha256_text_is_hex_digest():
+    assert sha256_text("a") == "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
