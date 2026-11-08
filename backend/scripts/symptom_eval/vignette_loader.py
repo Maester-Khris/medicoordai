@@ -20,6 +20,16 @@ RAW_VIGNETTES_PATH = os.path.join(
     "eval_vignettes_ontario_ctas.json",
 )
 CHECKLISTS_DIR = os.path.join(os.path.dirname(__file__), "checklists")
+CHECKLISTS_LAY_DIR = os.path.join(os.path.dirname(__file__), "checklists_lay")
+VARIANTS = ("original", "lay")
+
+
+def checklists_dir_for(variant: str) -> str:
+    if variant == "original":
+        return CHECKLISTS_DIR
+    if variant == "lay":
+        return CHECKLISTS_LAY_DIR
+    raise ValueError(f"unknown variant {variant!r}; expected one of {VARIANTS}")
 
 
 def load_raw_vignettes(path: str = RAW_VIGNETTES_PATH) -> list[dict]:
@@ -57,12 +67,16 @@ def build_vignette(raw: dict, checklist: dict) -> Vignette:
             CTAS_TO_APP_SEVERITY[departure["ctas_level"]] if departure else None
         ),
         source_pages=raw.get("source_pages", ""),
+        pairing_exclusion=checklist.get("excluded_from_pairing"),
     )
 
 
 def load_all_vignettes(
-    raw_path: str = RAW_VIGNETTES_PATH, checklists_dir: str = CHECKLISTS_DIR
+    raw_path: str = RAW_VIGNETTES_PATH,
+    checklists_dir: str | None = None,
+    variant: str = "original",
 ) -> list[Vignette]:
+    checklists_dir = checklists_dir or checklists_dir_for(variant)
     vignettes = []
     for raw in load_raw_vignettes(raw_path):
         checklist = load_checklist(str(raw["case_id"]), checklists_dir)

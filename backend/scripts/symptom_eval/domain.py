@@ -27,6 +27,7 @@ class Vignette:
     update_message: str | None = None
     updated_gold_severity: str | None = None
     source_pages: str = ""
+    pairing_exclusion: str | None = None  # reason a lay version can't support the gold label; None = pairable
 
 
 @dataclass
