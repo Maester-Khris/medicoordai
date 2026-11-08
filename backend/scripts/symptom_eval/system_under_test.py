@@ -13,9 +13,9 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 
 from graph.factory import get_graph_provider
-from llm.groq_client import GroqClient
+from llm.spend import InMemorySpendStore
 from llm.sync import run_sync
-from services.llm_agent import LLMAgent
+from services.llm_agent import LLMAgent, build_guarded_client
 from scripts.symptom_eval.graph_capture import CapturingGraphProvider
 
 
@@ -27,12 +27,19 @@ class SystemTurnResult:
     graph_context_matched: bool
     surfaced_red_flag_indicators: list[str] = field(default_factory=list)
     surfaced_followup_questions: list[str] = field(default_factory=list)
+    cap_reached: bool = False
 
 
 class SystemUnderTestPort(ABC):
     @abstractmethod
-    def respond(self, patient_message: str, history: list[dict]) -> SystemTurnResult:
+    def respond(self, patient_message: str, history: list[dict], conversation_id: str) -> SystemTurnResult:
         ...
+
+
+# The breaker only acts during a provider outage. In the eval an outage must fail the conversation
+# loudly (the checkpoint resume reruns it), not turn paid conversations into silent 'unclassified'
+# results. Retry and the spend cap change answers on a healthy provider, so they run (spec C11).
+EVAL_BREAKER_ENABLED = False
 
 
 class LiveLLMAgentAdapter(SystemUnderTestPort):
@@ -41,10 +48,14 @@ class LiveLLMAgentAdapter(SystemUnderTestPort):
         # Evaluation runs must not depend on a random pick or write counters to the shared Redis.
         os.environ["LOAD_AWARE_ROUTING"] = "off"
         self._capturing_provider = CapturingGraphProvider(get_graph_provider())
-        self._agent = LLMAgent(client=GroqClient(), graph_provider=self._capturing_provider)
+        self._agent = LLMAgent(
+            client=build_guarded_client("groq", breaker=EVAL_BREAKER_ENABLED),
+            graph_provider=self._capturing_provider,
+            spend_store=InMemorySpendStore(),
+        )
 
-    def respond(self, patient_message: str, history: list[dict]) -> SystemTurnResult:
-        result = run_sync(self._agent.respond(patient_message, history))
+    def respond(self, patient_message: str, history: list[dict], conversation_id: str) -> SystemTurnResult:
+        result = run_sync(self._agent.respond(patient_message, history, conversation_id=conversation_id))
         context = self._capturing_provider.last_context
 
         return SystemTurnResult(
@@ -58,4 +69,5 @@ class LiveLLMAgentAdapter(SystemUnderTestPort):
             surfaced_followup_questions=(
                 [rf.followup_question for rf in context.red_flags] if context else []
             ),
+            cap_reached=result.get("cap_reached", False),
         )

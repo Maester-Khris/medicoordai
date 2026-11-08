@@ -38,6 +38,7 @@ class ConversationTurn:
     graph_context_matched: bool
     surfaced_red_flag_indicators: list[str] = field(default_factory=list)
     surfaced_followup_questions: list[str] = field(default_factory=list)
+    cap_reached: bool = False
 
 
 @dataclass

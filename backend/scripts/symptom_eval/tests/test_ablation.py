@@ -20,7 +20,7 @@ class _FakeSystem:
     def __init__(self, severity):
         self._severity = severity
 
-    def respond(self, patient_message, history):
+    def respond(self, patient_message, history, conversation_id=None):
         return SystemTurnResult("classified", self._severity, "why", False)
 
 
@@ -33,7 +33,7 @@ class _CountingSystem:
         self._severity = severity
         self.calls: list[str] = []
 
-    def respond(self, patient_message, history):
+    def respond(self, patient_message, history, conversation_id=None):
         self.calls.append(patient_message)
         return SystemTurnResult("classified", self._severity, "why", False)
 
@@ -116,7 +116,7 @@ class TestCheckpointStore:
 
 
 class _MatchedSystem:
-    def respond(self, patient_message, history):
+    def respond(self, patient_message, history, conversation_id=None):
         return SystemTurnResult("classified", "emergent", "why", True)
 
 
@@ -164,6 +164,22 @@ class TestCheckpointKey:
         again = _CountingSystem("emergent")
         _run(path, again, repeats=2)
         assert again.calls == []
+
+    def test_each_repeat_of_each_case_is_its_own_conversation_and_the_cap_flag_reaches_the_checkpoint(self, tmp_path):
+        ids: list[str | None] = []
+
+        class _Recording:
+            def respond(self, patient_message, history, conversation_id=None):
+                ids.append(conversation_id)
+                return SystemTurnResult("classified", "urgent", "why", False, cap_reached=True)
+
+        checkpoint = CheckpointStore(str(tmp_path / "checkpoint.jsonl"))
+        run_leg("static", VIGNETTES[:1], lambda provider: _Recording(), _FakeSimulator(), None, None,
+                checkpoint=checkpoint, variant="lay", repeats=2)
+
+        assert ids == ["lay:static:1:0", "lay:static:1:1"]
+        entries = checkpoint.entries_for("lay", "static")
+        assert [e["transcript"][0]["cap_reached"] for e in entries] == [True, True]
 
     def test_graph_context_matched_roundtrips(self, tmp_path):
         path = str(tmp_path / "checkpoint.jsonl")
@@ -227,7 +243,7 @@ class TestTranscriptPersistence:
 
         assert entry["transcript"] == [{
             "turn_index": 0, "patient_message": "dizzy", "system_response": "classified",
-            "graph_context_matched": False,
+            "graph_context_matched": False, "cap_reached": False,
         }]
 
     def test_entry_without_transcript_still_loads(self, tmp_path):

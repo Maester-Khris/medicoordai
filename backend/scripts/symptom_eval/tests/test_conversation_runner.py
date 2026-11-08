@@ -17,8 +17,10 @@ class _ScriptedSystem:
     def __init__(self, results: list[SystemTurnResult]):
         self._results = results
         self.calls: list[tuple[str, list[dict]]] = []
+        self.conversation_ids: list[str | None] = []
 
-    def respond(self, patient_message, history):
+    def respond(self, patient_message, history, conversation_id=None):
+        self.conversation_ids.append(conversation_id)
         self.calls.append((patient_message, list(history)))
         return self._results[len(self.calls) - 1]
 
@@ -42,7 +44,7 @@ class TestRunVignetteConversation:
         ])
         simulator = _ScriptedSimulator(["An hour."])
 
-        transcript = run_vignette_conversation(VIGNETTE, simulator, system)
+        transcript = run_vignette_conversation(VIGNETTE, simulator, system, conversation_id="conv-1")
 
         assert transcript.final_severity == "emergent"
         assert len(transcript.turns) == 2
@@ -57,10 +59,29 @@ class TestRunVignetteConversation:
         ])
         simulator = _ScriptedSimulator(["An hour."])
 
-        run_vignette_conversation(VIGNETTE, simulator, system)
+        run_vignette_conversation(VIGNETTE, simulator, system, conversation_id="conv-1")
 
         second_call_history = system.calls[1][1]
         assert second_call_history == [
             {"role": "user", "content": "I feel dizzy."},
             {"role": "assistant", "content": "How long?"},
         ]
+
+
+class TestConversationId:
+    def test_every_turn_of_a_conversation_carries_the_same_id(self):
+        system = _ScriptedSystem([
+            SystemTurnResult("How long?", None, None, False),
+            SystemTurnResult("Go to the ER.", "emergent", "reasoning", False),
+        ])
+
+        run_vignette_conversation(VIGNETTE, _ScriptedSimulator(["An hour."]), system, conversation_id="conv-1")
+
+        assert system.conversation_ids == ["conv-1", "conv-1"]
+
+    def test_a_turn_records_whether_the_cap_was_reached(self):
+        system = _ScriptedSystem([SystemTurnResult("Go to the ER.", "emergent", "reasoning", False, cap_reached=True)])
+
+        transcript = run_vignette_conversation(VIGNETTE, _ScriptedSimulator([]), system, conversation_id="conv-1")
+
+        assert transcript.turns[0].cap_reached is True

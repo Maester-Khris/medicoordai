@@ -139,6 +139,16 @@ def capped_reply(severity: str, facility: dict | None) -> str:
     return f"Based on what you've told me, this looks {severity}.{urgency} {where} {CAPPED_NOTE}"
 
 
+def capped_reply_fingerprint() -> str:
+    """Every fixed string and template a capped turn can show, rendered. The eval manifest hashes it,
+    so changing any wording starts a new configuration instead of silently mixing two."""
+    sample_facility = {"name": "Sample Hospital", "address": "1 Sample St", "distanceKm": 1.0}
+    return "\n".join([
+        SAFETY_LINE, CAPPED_NOTE, CAPPED_NO_RESULT,
+        capped_reply("urgent", sample_facility), capped_reply("emergent", None),
+    ])
+
+
 @dataclass(frozen=True)
 class _TurnContext:
     """What one turn needs to know about its conversation's spend."""

@@ -29,11 +29,11 @@ class _FlakySystem:
         self._counter = counter
         self._die_after = die_after
 
-    def respond(self, patient_message, history):
+    def respond(self, patient_message, history, conversation_id=None):
         if self._die_after is not None and self._counter["calls"] >= self._die_after:
             raise _Interrupted()
         self._counter["calls"] += 1
-        return self._inner.respond(patient_message, history)
+        return self._inner.respond(patient_message, history, conversation_id)
 
 
 def _dependencies(counter, die_after=None):
@@ -99,7 +99,7 @@ def test_dry_run_never_builds_judges(tmp_path, monkeypatch, no_real_providers):
 
 
 def test_fake_system_is_deterministic_per_provider_and_opening():
-    first = FakeSystem("off").respond("I feel dizzy", [])
-    again = FakeSystem("off").respond("I feel dizzy", [])
+    first = FakeSystem("off").respond("I feel dizzy", [], "c1")
+    again = FakeSystem("off").respond("I feel dizzy", [], "c1")
 
     assert (first.severity, first.graph_context_matched) == (again.severity, again.graph_context_matched)

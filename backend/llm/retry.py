@@ -14,6 +14,10 @@ from metrics import LLM_RETRIES
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
 from .instrumented import classify_llm_error
 
+# Named so the eval run manifest can record the values that shape a retry.
+BASE_DELAY_SECONDS = 0.25
+MAX_DELAY_SECONDS = 1.0
+
 
 def is_retryable(exc: BaseException) -> bool:
     """True for transient errors (429, 5xx, ConnectionError); False for timeouts and client errors."""
@@ -38,8 +42,8 @@ class RetryingLLMClient(BaseLLMClient):
         inner: BaseLLMClient,
         provider: str,
         attempts: int,
-        base_delay: float = 0.25,
-        max_delay: float = 1.0,
+        base_delay: float = BASE_DELAY_SECONDS,
+        max_delay: float = MAX_DELAY_SECONDS,
         sleep: Callable[[float], Awaitable[Any]] = asyncio.sleep,
         jitter: Callable[[], float] = random.random,
     ) -> None:
