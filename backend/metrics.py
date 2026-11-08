@@ -36,6 +36,12 @@ LLM_BREAKER_TRANSITIONS = Counter(
     "llm_breaker_transitions_total", "Circuit breaker state changes per provider",
     ["provider", "to"], registry=_registry,
 )
+LLM_SPEND_STORE_ERRORS = Counter(
+    "llm_spend_store_errors_total", "Failed spend counter operations (the cap fails open)", registry=_registry
+)
+LLM_CAP_REACHED = Counter(
+    "llm_cap_reached_total", "Turns that started with the conversation token cap reached", registry=_registry
+)
 LLM_TOKENS = Counter(
     "llm_tokens_total", "Tokens reported by the provider (kind: prompt, completion)",
     ["provider", "kind"], registry=_registry,
