@@ -27,6 +27,7 @@ in-memory in the eval) read and written at one point in `LLMAgent`.
 - Commits: conventional, one line, no body, no co-author, no AI attribution; staged by name in one `git add` per task; **shown to the owner and approved before each commit**.
 - After code changes: `graphify update .`.
 - Do not touch `*.local.md`.
+- The worktree has no Doppler scope: use `doppler run --project medicoord --config dev_personal --` in place of bare `doppler run --`.
 
 ## Review Focus
 
@@ -167,7 +168,7 @@ Expected: all green (the step 1 suite). Any failure here is reported, not fixed 
 
 **Files:**
 - Modify: `backend/scripts/symptom_eval/system_under_test.py` (guarded client, `InMemorySpendStore`, `conversation_id`), `backend/scripts/symptom_eval/conversation_runner.py` (pass a conversation id), `backend/scripts/symptom_eval/run_manifest.py`, `backend/scripts/symptom_eval/cli.py` (`build_manifest`), `backend/scripts/symptom_eval/domain.py` and `ablation.py` (persist `cap_reached` per turn, mirroring `graph_context_matched`), `backend/scripts/symptom_eval/dry_run.py` (fake accepts the new argument)
-- Test: `backend/tests/scripts/symptom_eval/` (`test_run_manifest.py`, `test_system_under_test.py`, `test_conversation_runner.py`, `test_cli.py`, `test_ablation.py`, `test_dry_run.py` extended)
+- Test: `backend/scripts/symptom_eval/tests/` (`test_run_manifest.py`, `test_system_under_test.py`, `test_conversation_runner.py`, `test_cli.py`, `test_ablation.py`, `test_dry_run.py` extended)
 
 **Interfaces:**
 - `SystemUnderTestPort.respond(patient_message, history, conversation_id: str) -> SystemTurnResult`; `SystemTurnResult.cap_reached: bool`; the runner builds the id as `f"{variant}:{provider}:{case_id}:{repeat}"` (check how those four values reach the runner today and pass them; if the runner does not have them, add parameters, do not parse strings).
@@ -182,7 +183,7 @@ Expected: all green (the step 1 suite). Any failure here is reported, not fixed 
   - Dry run still passes with zero provider calls.
 - [ ] **Step 2:** Run; expected fail.
 - [ ] **Step 3: Implement (Claude).** Follow the step 1 pattern for the manifest. The adapter keeps pinning Groq regardless of ambient `LLM_PROVIDER`.
-- [ ] **Step 4:** `doppler run -- pytest tests/scripts -q` green, then the dry run command from the step 1 plan (`--dry-run`) completes; record its output.
+- [ ] **Step 4:** `doppler run -- pytest scripts -q` green, then `python -m scripts.symptom_eval.cli run-ablation --dry-run --variant lay --repeats 2 --no-judges --providers off,static` completes; record its output.
 - [ ] **Step 5:** Commit (after approval): `feat(eval): run the retry policy and token cap in the harness and pin them in the run manifest`
 
 ### Task 8: Docs and close-out (Claude)
