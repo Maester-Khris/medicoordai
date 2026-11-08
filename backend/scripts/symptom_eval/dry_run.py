@@ -11,6 +11,7 @@ from scripts.symptom_eval.domain import SEVERITY_RANK
 from scripts.symptom_eval.system_under_test import SystemTurnResult
 
 SEVERITIES = tuple(SEVERITY_RANK)
+DRY_RUN_MODEL = "dry-run-fake"  # recorded as the model in a dry run's manifest
 
 
 class FakeSystem:

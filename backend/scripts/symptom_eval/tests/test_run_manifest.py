@@ -9,8 +9,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 from scripts.symptom_eval.run_manifest import (
     ManifestMismatch,
     RunManifest,
+    UnmanifestedCheckpoint,
     hash_directory,
     manifest_path,
+    read_manifest,
     sha256_text,
     write_or_verify_manifest,
 )
@@ -19,6 +21,7 @@ from scripts.symptom_eval.run_manifest import (
 def _manifest(**overrides) -> RunManifest:
     values = dict(
         system_model="openai/gpt-oss-120b", system_temperature=0.2, system_response_temperature=0.3,
+        system_min_turns=3, system_context_window=10,
         simulator_model="claude-haiku-4-5", simulator_temperature=0.3,
         providers=("off", "static"), variant="original", repeats=2,
         judges_enabled=False, bootstrap_seed=20261107,
@@ -74,7 +77,7 @@ def test_every_non_exempt_field_is_checked(tmp_path):
     exempt = {"providers", "harness_git_commit"}
     base = _manifest()
     changes = {
-        "system_model": "other", "system_temperature": 0.9, "system_response_temperature": 0.9, "simulator_model": "other",
+        "system_model": "other", "system_temperature": 0.9, "system_response_temperature": 0.9, "system_min_turns": 9, "system_context_window": 9, "simulator_model": "other",
         "simulator_temperature": 0.9, "variant": "lay", "repeats": 9, "judges_enabled": True,
         "bootstrap_seed": 1, "system_prompt_sha256": "z", "simulator_prompt_sha256": "z",
         "checklists_sha256": "z",
@@ -112,3 +115,41 @@ def test_hash_directory_ignores_creation_order_and_dotfiles(tmp_path):
 
 def test_sha256_text_is_hex_digest():
     assert sha256_text("a") == "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+
+
+OLD_LINE = '{"provider": "off", "case_id": "1"}\n'
+
+
+def test_existing_checkpoint_without_manifest_is_refused(tmp_path):
+    checkpoint = tmp_path / "checkpoint.jsonl"
+    checkpoint.write_text(OLD_LINE)
+
+    with pytest.raises(UnmanifestedCheckpoint, match="adopt"):
+        write_or_verify_manifest(str(checkpoint), _manifest(), "t")
+
+    assert not os.path.exists(manifest_path(str(checkpoint)))
+
+
+def test_adopting_a_legacy_checkpoint_writes_the_manifest(tmp_path):
+    checkpoint = tmp_path / "checkpoint.jsonl"
+    checkpoint.write_text(OLD_LINE)
+
+    write_or_verify_manifest(str(checkpoint), _manifest(), "t", adopt_legacy=True)
+
+    assert os.path.exists(manifest_path(str(checkpoint)))
+
+
+def test_blank_checkpoint_file_needs_no_adoption(tmp_path):
+    checkpoint = tmp_path / "checkpoint.jsonl"
+    checkpoint.write_text("\n")
+
+    write_or_verify_manifest(str(checkpoint), _manifest(), "t")
+
+
+def test_read_manifest_is_none_when_absent_and_a_dict_when_present(tmp_path):
+    checkpoint = str(tmp_path / "checkpoint.jsonl")
+    assert read_manifest(checkpoint) is None
+
+    write_or_verify_manifest(checkpoint, _manifest(), "t")
+
+    assert read_manifest(checkpoint)["variant"] == "original"

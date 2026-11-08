@@ -27,7 +27,7 @@ from llm.prompts import build_system_prompt
 from scripts.symptom_eval.ablation import AblationLegResult, CheckpointStore, run_ablation
 from scripts.symptom_eval.checklist_extractor import OpenAIChecklistExtractor
 from scripts.symptom_eval.compare_legs import compare_legs, format_comparison
-from scripts.symptom_eval.dry_run import FakeSimulator, FakeSystem
+from scripts.symptom_eval.dry_run import DRY_RUN_MODEL, FakeSimulator, FakeSystem
 from scripts.symptom_eval.elicitation_coverage import DeepEvalFeaturePresenceJudge, FeaturePresenceJudgePort
 from scripts.symptom_eval.information_gain import DeepEvalRubricJudge, RubricJudgePort
 from scripts.symptom_eval.patient_simulator import (
@@ -36,7 +36,15 @@ from scripts.symptom_eval.patient_simulator import (
     AnthropicPatientSimulator,
     PatientSimulatorPort,
 )
-from scripts.symptom_eval.run_manifest import RunManifest, hash_directory, sha256_text, write_or_verify_manifest
+from scripts.symptom_eval.run_manifest import (
+    ManifestMismatch,
+    RunManifest,
+    UnmanifestedCheckpoint,
+    hash_directory,
+    read_manifest,
+    sha256_text,
+    write_or_verify_manifest,
+)
 from scripts.symptom_eval.system_under_test import LiveLLMAgentAdapter, SystemUnderTestPort
 from scripts.symptom_eval.vignette_loader import (
     CHECKLISTS_DIR,
@@ -45,7 +53,13 @@ from scripts.symptom_eval.vignette_loader import (
     load_all_vignettes,
     load_raw_vignettes,
 )
-from services.llm_agent import CLASSIFY_TEMPERATURE, RESPONSE_TEMPERATURE, triage_max_followups
+from services.llm_agent import (
+    CLASSIFY_TEMPERATURE,
+    RESPONSE_TEMPERATURE,
+    triage_context_window,
+    triage_max_followups,
+    triage_min_turns,
+)
 
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 BOOTSTRAP_SEED = 20261107
@@ -74,7 +88,7 @@ def live_dependencies() -> RunDependencies:
 def dry_run_dependencies() -> RunDependencies:
     return RunDependencies(
         system_factory=FakeSystem, simulator=FakeSimulator(),
-        system_model="dry-run-fake", simulator_model="dry-run-fake",
+        system_model=DRY_RUN_MODEL, simulator_model=DRY_RUN_MODEL,
     )
 
 
@@ -103,6 +117,8 @@ def build_manifest(
         system_model=system_model,
         system_temperature=CLASSIFY_TEMPERATURE,
         system_response_temperature=RESPONSE_TEMPERATURE,
+        system_min_turns=triage_min_turns(),
+        system_context_window=triage_context_window(),
         simulator_model=simulator_model,
         simulator_temperature=SIMULATOR_TEMPERATURE,
         providers=providers,
@@ -151,9 +167,12 @@ def run_ablation_command(
     results_dir: str | None = None,
     dependencies: RunDependencies | None = None,
     dry_run: bool = False,
+    adopt_legacy_checkpoint: bool = False,
 ) -> None:
     label = "DRY RUN " if dry_run else ""
     if dry_run:
+        if checkpoint_path and _is_under(checkpoint_path, RESULTS_DIR):
+            raise SystemExit(f"--dry-run must not write under {RESULTS_DIR}: its fake numbers would look real.")
         judges = False  # the judges are LLM calls; a dry run makes none
         results_dir = results_dir or tempfile.mkdtemp(prefix="eval_dry_run_")
         dependencies = dependencies or dry_run_dependencies()
@@ -181,6 +200,7 @@ def run_ablation_command(
             providers=providers, variant=variant, repeats=repeats, judges_enabled=judges, seed=seed,
         ),
         started_at=datetime.now(timezone.utc).isoformat(),
+        adopt_legacy=adopt_legacy_checkpoint,
     )
 
     checkpoint = CheckpointStore(checkpoint_path)
@@ -211,7 +231,32 @@ def run_ablation_command(
     print(f"{label}Full results written to {path}")
 
 
-def compare_legs_command(checkpoint_path: str, variant: str, leg_a: str, leg_b: str, seed: int) -> None:
+def _is_under(path: str, directory: str) -> bool:
+    return os.path.realpath(path).startswith(os.path.realpath(directory) + os.sep)
+
+
+def _provenance_lines(manifest: dict | None) -> list[str]:
+    if manifest is None:
+        return ["WARNING: no manifest beside this checkpoint, so the configuration behind these numbers is unknown."]
+    lines = []
+    if manifest["system_model"] == DRY_RUN_MODEL:
+        lines.append("DRY RUN: fake system and simulator. These numbers are not results.")
+    lines.append(
+        f"manifest: system={manifest['system_model']} simulator={manifest['simulator_model']} "
+        f"variant={manifest['variant']} repeats={manifest['repeats']} judges={manifest['judges_enabled']} "
+        f"commit={manifest['harness_git_commit'][:7]}"
+    )
+    return lines
+
+
+def compare_legs_command(
+    checkpoint_path: str, variant: str, leg_a: str, leg_b: str, seed: int | None = None
+) -> None:
+    manifest = read_manifest(checkpoint_path)
+    if seed is None:
+        seed = manifest["bootstrap_seed"] if manifest else BOOTSTRAP_SEED
+    for line in _provenance_lines(manifest):
+        print(line)
     excluded = frozenset(v.case_id for v in load_all_vignettes(variant=variant) if v.pairing_exclusion)
     comparison = compare_legs(CheckpointStore(checkpoint_path), variant, leg_a, leg_b, excluded, seed)
     print(format_comparison(comparison))
@@ -242,6 +287,9 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--dry-run", action="store_true",
                             help="Use fake system and simulator, write to a temp directory, make no provider "
                                  "calls and run no judges. Output is labelled DRY RUN and is not a result.")
+    run_parser.add_argument("--adopt-legacy-checkpoint", action="store_true",
+                            help="Continue a checkpoint that has results but no manifest, certifying it with "
+                                 "today's configuration. Off by default: its true configuration is unknown.")
     run_parser.add_argument("--seed", type=int, default=BOOTSTRAP_SEED, help="Bootstrap seed, recorded in the manifest.")
 
     compare_parser = subparsers.add_parser("compare-legs")
@@ -249,7 +297,8 @@ def build_parser() -> argparse.ArgumentParser:
     compare_parser.add_argument("--variant", choices=VARIANTS, default="original")
     compare_parser.add_argument("--a", type=str, required=True, dest="leg_a")
     compare_parser.add_argument("--b", type=str, required=True, dest="leg_b")
-    compare_parser.add_argument("--seed", type=int, default=BOOTSTRAP_SEED)
+    compare_parser.add_argument("--seed", type=int, default=None,
+                                help="Bootstrap seed (default: the one recorded in the checkpoint's manifest).")
     return parser
 
 
@@ -259,10 +308,14 @@ def main() -> None:
     if args.command == "extract-checklists":
         extract_checklists()
     elif args.command == "run-ablation":
-        run_ablation_command(
-            args.limit, args.checkpoint, tuple(p.strip() for p in args.providers.split(",")),
-            variant=args.variant, repeats=args.repeats, judges=not args.no_judges, seed=args.seed, dry_run=args.dry_run,
-        )
+        try:
+            run_ablation_command(
+                args.limit, args.checkpoint, tuple(p.strip() for p in args.providers.split(",")),
+                variant=args.variant, repeats=args.repeats, judges=not args.no_judges, seed=args.seed,
+                dry_run=args.dry_run, adopt_legacy_checkpoint=args.adopt_legacy_checkpoint,
+            )
+        except (ManifestMismatch, UnmanifestedCheckpoint) as error:
+            raise SystemExit(str(error)) from error
     elif args.command == "compare-legs":
         compare_legs_command(args.checkpoint, args.variant, args.leg_a, args.leg_b, args.seed)
 

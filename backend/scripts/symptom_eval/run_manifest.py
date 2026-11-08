@@ -21,11 +21,17 @@ class ManifestMismatch(Exception):
     pass
 
 
+class UnmanifestedCheckpoint(Exception):
+    """A checkpoint that already holds results but has no manifest: its configuration is unknown."""
+
+
 @dataclass(frozen=True)
 class RunManifest:
     system_model: str
     system_temperature: float
     system_response_temperature: float
+    system_min_turns: int
+    system_context_window: int
     simulator_model: str
     simulator_temperature: float
     providers: tuple[str, ...]
@@ -60,10 +66,34 @@ def manifest_path(checkpoint_path: str) -> str:
     return f"{checkpoint_path}.manifest.json"
 
 
-def write_or_verify_manifest(checkpoint_path: str, manifest: RunManifest, started_at: str) -> None:
+def read_manifest(checkpoint_path: str) -> dict | None:
+    path = manifest_path(checkpoint_path)
+    if not os.path.exists(path):
+        return None
+    with open(path) as f:
+        return json.load(f)
+
+
+def _recorded_lines(checkpoint_path: str) -> int:
+    if not os.path.exists(checkpoint_path):
+        return 0
+    with open(checkpoint_path) as f:
+        return sum(1 for line in f if line.strip())
+
+
+def write_or_verify_manifest(
+    checkpoint_path: str, manifest: RunManifest, started_at: str, adopt_legacy: bool = False
+) -> None:
     path = manifest_path(checkpoint_path)
     current = json.loads(json.dumps(asdict(manifest)))
     if not os.path.exists(path):
+        recorded = _recorded_lines(checkpoint_path)
+        if recorded and not adopt_legacy:
+            raise UnmanifestedCheckpoint(
+                f"{checkpoint_path} already holds {recorded} recorded lines but has no manifest, so the "
+                "configuration that produced them is unknown. Use a new --checkpoint path, or pass "
+                "--adopt-legacy-checkpoint to certify it with today's configuration."
+            )
         with open(path, "w") as f:
             json.dump({**current, "started_at": started_at}, f, indent=2)
         return
