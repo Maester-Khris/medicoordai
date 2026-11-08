@@ -25,6 +25,7 @@ class ManifestMismatch(Exception):
 class RunManifest:
     system_model: str
     system_temperature: float
+    system_response_temperature: float
     simulator_model: str
     simulator_temperature: float
     providers: tuple[str, ...]

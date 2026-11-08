@@ -66,6 +66,14 @@ def get_llm_client() -> BaseLLMClient:
     return FallbackLLMClient(clients)
 
 
+CLASSIFY_TEMPERATURE = 0.2
+RESPONSE_TEMPERATURE = 0.3
+
+
+def triage_max_followups() -> int:
+    return int(os.environ.get("TRIAGE_MAX_FOLLOWUPS", "4"))
+
+
 class LLMAgent:
     """
     Stateless triage agent facade.
@@ -86,11 +94,11 @@ class LLMAgent:
     ) -> None:
         self._client = client or get_llm_client()
         self._graph_provider = graph_provider or get_graph_provider()
-        self._max_followups = int(os.environ.get("TRIAGE_MAX_FOLLOWUPS", "4"))
+        self._max_followups = triage_max_followups()
         self._min_turns_before_triage = int(os.environ.get("TRIAGE_MIN_TURNS", "3"))
         self._context_window = int(os.environ.get("TRIAGE_CONTEXT_WINDOW", "10"))
-        self._temperature = 0.2
-        self._response_temperature = 0.3
+        self._temperature = CLASSIFY_TEMPERATURE
+        self._response_temperature = RESPONSE_TEMPERATURE
         self._stop_sequences = ["</response>"]
 
     async def respond(

@@ -18,7 +18,7 @@ from scripts.symptom_eval.run_manifest import (
 
 def _manifest(**overrides) -> RunManifest:
     values = dict(
-        system_model="openai/gpt-oss-120b", system_temperature=0.2,
+        system_model="openai/gpt-oss-120b", system_temperature=0.2, system_response_temperature=0.3,
         simulator_model="claude-haiku-4-5", simulator_temperature=0.3,
         providers=("off", "static"), variant="original", repeats=2,
         judges_enabled=False, bootstrap_seed=20261107,
@@ -74,7 +74,7 @@ def test_every_non_exempt_field_is_checked(tmp_path):
     exempt = {"providers", "harness_git_commit"}
     base = _manifest()
     changes = {
-        "system_model": "other", "system_temperature": 0.9, "simulator_model": "other",
+        "system_model": "other", "system_temperature": 0.9, "system_response_temperature": 0.9, "simulator_model": "other",
         "simulator_temperature": 0.9, "variant": "lay", "repeats": 9, "judges_enabled": True,
         "bootstrap_seed": 1, "system_prompt_sha256": "z", "simulator_prompt_sha256": "z",
         "checklists_sha256": "z",
