@@ -132,3 +132,7 @@ backend/script.demo.local.sh
 webapp/test-results/
 .agents/skills/
 .claude/skills/
+
+# embedding model experiment: cached embeddings/targets and results, regenerate via the scripts
+backend/scripts/embedding_eval/cache/
+backend/scripts/embedding_eval/results/
