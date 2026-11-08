@@ -28,6 +28,10 @@ LLM_CALLS = Counter(
     "llm_calls_total", "LLM provider calls by outcome (ok, rate_limited, timeout, error)",
     ["provider", "outcome"], registry=_registry,
 )
+LLM_RETRIES = Counter(
+    "llm_retries_total", "Retries of a provider call after a transient failure",
+    ["provider"], registry=_registry,
+)
 LLM_TOKENS = Counter(
     "llm_tokens_total", "Tokens reported by the provider (kind: prompt, completion)",
     ["provider", "kind"], registry=_registry,
