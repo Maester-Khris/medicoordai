@@ -818,12 +818,14 @@ Starts as W1 of the late-December plan (`rx-next/interview-prep/product-thinker-
 ### Scope, in order
 
 **1. Freeze the harness (no spend)**
-- [ ] Paired comparison (McNemar and paired bootstrap), repeats, intervals.
-- [ ] `graph_context_matched` persisted for every turn in the checkpoint.
-- [ ] A flag to switch the judges off.
-- [ ] A run manifest pinning model, provider, temperature and prompt hash.
-- [ ] Lay-language versions of the 27 checklists: meaning kept, wording changed, each line checked clinically; cases whose lay version can no longer support the gold label are marked and left out of the paired comparison. Frozen before v3 is designed, so it is not written in v3's vocabulary.
-- [ ] Dry run of the whole harness against the Sprint 22 provider mock.
+- [x] Paired comparison (McNemar and paired bootstrap), repeats, intervals. `compare-legs` command; unclassified conversations reported beside the rates.
+- [x] `graph_context_matched` persisted for every turn in the checkpoint (and full transcripts).
+- [x] A flag to switch the judges off (`--no-judges`; scores stored as `null`).
+- [x] A run manifest pinning model, temperatures, prompt hashes, checklist hash and the triage env settings, enforced on resume. A checkpoint with results but no manifest is refused unless `--adopt-legacy-checkpoint` is passed.
+- [x] Lay-language versions of the 27 checklists (frozen 2026-11-08, clinically reviewed, none excluded from pairing): meaning kept, wording changed, each line checked clinically; cases whose lay version can no longer support the gold label are marked and left out of the paired comparison. Frozen before v3 is designed, so it is not written in v3's vocabulary.
+- [x] Dry run of the whole harness, zero provider calls. Uses in-process fakes, not the Sprint 22 mock: whether `GroqClient` can reach the mock via `GROQ_BASE_URL` was not checked.
+
+**Step 1 closed 2026-11-08.** Spec and plan: `docs/superpowers/specs/2026-11-07-eval-harness-freeze-design.md`, `docs/superpowers/plans/2026-11-07-eval-harness-freeze.md`. Deferred from the whole-branch review: non-object or incomplete checkpoint lines fail without a line number; partial repeats pair unequal counts silently; a manifest left by a run that died before its first line blocks a rerun with different flags; the manifest does not record a dirty working tree; transcripts omit `final_reasoning` and surfaced red flags. Not defined yet: comparing the original and lay sets on the same leg (needed for the wording-effect claim).
 
 **2. Changes that alter what the system answers (no spend), landed before the paid run**
 - [ ] Per-conversation spend cap.
