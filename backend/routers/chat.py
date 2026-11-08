@@ -16,7 +16,7 @@ from services.chat import (
     generate_session_title, create_session, add_message,
     get_past_conversations, get_older_messages, get_recent_messages,
 )
-from services.llm_agent import get_agent
+from services.llm_agent import SAFETY_LINE, get_agent
 from services.geoapify_shadow import should_sample, log_routing_comparison
 
 
@@ -162,6 +162,7 @@ async def _run_turn(
             lat=body.lat,
             lng=body.lng,
             user_profile=user_profile,
+            conversation_id=session_id,
         )
     except Exception as exc:
         if getattr(exc, "status_code", None) == 429:  # provider quota: Groq and Anthropic both expose status_code
@@ -171,10 +172,7 @@ async def _run_turn(
         sentry_sdk.capture_exception(exc)
         logger.error("llm_agent_failed", extra={"request_id": request_id, "error": str(exc)})
         result = {
-            "response": (
-                "I'm having trouble processing your request right now. "
-                "If this is an emergency, please call 911."
-            ),
+            "response": f"I'm having trouble processing your request right now. {SAFETY_LINE}",
             "severity": None,
             "reasoning": None,
             "recommended_facility": None,

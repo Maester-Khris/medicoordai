@@ -2,7 +2,13 @@ import json
 import os
 import logging
 from dataclasses import dataclass
-from config import llm_conversation_token_cap, llm_provider_chain
+from config import (
+    llm_breaker_cooldown_seconds,
+    llm_breaker_failures,
+    llm_conversation_token_cap,
+    llm_provider_chain,
+    llm_retry_attempts,
+)
 from graph.base import GraphContextProvider
 from graph.factory import get_graph_provider
 from llm.base import BaseLLMClient, LLMMessage, LLMResponse
@@ -34,24 +40,44 @@ def _build_provider_client(provider: str, max_retries: int | None) -> BaseLLMCli
     return GroqClient(max_retries=max_retries)
 
 
+def build_guarded_client(provider: str, *, breaker: bool) -> BaseLLMClient:
+    """One provider behind the whole guard stack, outermost first:
+    Instrumented -> CircuitBreaker (optional) -> Retrying -> the provider client.
+
+    The SDK's own retries are off (max_retries=0) so llm.retry is the only retry policy: a 400 is
+    never retried and the eval sees the same behaviour as production. The breaker sits outside the
+    retries, so one exhausted retry sequence counts as one failure and an open breaker skips them.
+    The eval builds its client here too (breaker=False, see scripts/symptom_eval/system_under_test.py).
+    """
+    from llm.breaker import CircuitBreakerLLMClient
+    from llm.instrumented import InstrumentedLLMClient
+    from llm.retry import RetryingLLMClient
+
+    client: BaseLLMClient = RetryingLLMClient(
+        _build_provider_client(provider, 0), provider=provider, attempts=llm_retry_attempts(),
+    )
+    if breaker:
+        client = CircuitBreakerLLMClient(
+            client, provider=provider, failure_threshold=llm_breaker_failures(),
+            cooldown_seconds=llm_breaker_cooldown_seconds(),
+        )
+    return InstrumentedLLMClient(client, provider)
+
+
 def get_llm_client() -> BaseLLMClient:
     """
-    Factory. Every provider client comes back wrapped in InstrumentedLLMClient.
+    Factory. Every provider comes back behind build_guarded_client (retry, breaker, metrics).
 
-    LLM_PROVIDER_CHAIN unset: one client chosen by LLM_PROVIDER (groq by default), with the SDK's
-    own retries, exactly as before.
+    LLM_PROVIDER_CHAIN unset: one client chosen by LLM_PROVIDER (groq by default).
     LLM_PROVIDER_CHAIN="groq,openai,anthropic": those providers in that order behind
-    FallbackLLMClient, each with SDK retries off (the next provider is the retry). A name that is
-    unknown, or whose key is missing, is skipped with a warning.
+    FallbackLLMClient. A name that is unknown, or whose key is missing, is skipped with a warning.
     """
-    from llm.instrumented import InstrumentedLLMClient
-
     chain = llm_provider_chain()
     if not chain:
         provider = os.environ.get("LLM_PROVIDER", "groq").lower()
         if provider not in KNOWN_PROVIDERS:
             provider = "groq"
-        return InstrumentedLLMClient(_build_provider_client(provider, None), provider)
+        return build_guarded_client(provider, breaker=True)
 
     from llm.fallback import FallbackLLMClient
 
@@ -61,7 +87,7 @@ def get_llm_client() -> BaseLLMClient:
             logger.warning("llm_provider_skipped", extra={"provider": provider, "reason": "unknown provider"})
             continue
         try:
-            clients.append(InstrumentedLLMClient(_build_provider_client(provider, 0), provider))
+            clients.append(build_guarded_client(provider, breaker=True))
         except RuntimeError as exc:  # a missing key or model
             logger.warning("llm_provider_skipped", extra={"provider": provider, "reason": str(exc)})
     if not clients:
