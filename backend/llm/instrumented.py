@@ -15,7 +15,13 @@ def _class_names(exc: BaseException) -> set[str]:
 
 
 def classify_llm_error(exc: BaseException) -> str:
-    """rate_limited, timeout or error: the outcome label for a failed provider call."""
+    """rate_limited, timeout, circuit_open or error: the outcome label for a failed provider call.
+
+    circuit_open is our own breaker refusing the call without reaching the provider, so it is kept
+    apart from real provider errors (and from their latency). Matched by class name: breaker.py
+    imports this module, so this module cannot import it."""
+    if "ProviderCircuitOpen" in _class_names(exc):
+        return "circuit_open"
     if getattr(exc, "status_code", None) == 429:
         return "rate_limited"
     if isinstance(exc, TimeoutError) or any("Timeout" in name for name in _class_names(exc)):

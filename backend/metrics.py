@@ -25,7 +25,7 @@ LLM_CALL_DURATION = Histogram(
     ["provider", "outcome"], buckets=LLM_BUCKETS, registry=_registry,
 )
 LLM_CALLS = Counter(
-    "llm_calls_total", "LLM provider calls by outcome (ok, rate_limited, timeout, error)",
+    "llm_calls_total", "LLM provider calls by outcome (ok, rate_limited, timeout, circuit_open, error)",
     ["provider", "outcome"], registry=_registry,
 )
 LLM_RETRIES = Counter(
