@@ -1,11 +1,14 @@
 import json
 import os
 import logging
-from config import llm_provider_chain
+from dataclasses import dataclass
+from config import llm_conversation_token_cap, llm_provider_chain
 from graph.base import GraphContextProvider
 from graph.factory import get_graph_provider
-from llm.base import BaseLLMClient, LLMMessage
+from llm.base import BaseLLMClient, LLMMessage, LLMResponse
+from llm.spend import SpendStore, conversation_cap_reached
 from llm.tools import ALL_TOOLS, TRIAGE_RESPONSE
+from metrics import LLM_CAP_REACHED
 from llm.prompts import build_system_prompt, build_medical_context_block, build_graph_context_block
 from services import facility_load
 from services.proximity import find_nearest_facilities
@@ -82,6 +85,55 @@ def triage_context_window() -> int:
     return int(os.environ.get("TRIAGE_CONTEXT_WINDOW", "10"))
 
 
+# Fixed wording, not model output: the eval must be reproducible, so the run manifest records the
+# hash of these strings. Edit them freely, but a changed hash starts a new eval configuration.
+SAFETY_LINE = "If this is an emergency, call 911. For other health help, call 211."
+CAPPED_NOTE = (
+    "I'm wrapping up here to keep this conversation short, so this is based on what you've shared "
+    "so far. If your symptoms change or get worse, call 911."
+)
+CAPPED_NO_RESULT = f"I couldn't finish assessing this. {SAFETY_LINE}"
+
+
+def capped_reply(severity: str, facility: dict | None) -> str:
+    """The patient-facing text once a conversation has spent its token allowance.
+
+    No model call: the cap exists to stop spend, so the grounded reply that normally costs a
+    second call is a template. Everything it says comes from the classification and the facility
+    the backend already chose.
+    """
+    if facility:
+        where = (
+            f"The nearest appropriate facility is {facility['name']} at {facility['address']}, "
+            f"about {facility['distanceKm']} km away."
+        )
+    else:
+        where = "I can't point to a facility from here, so please call 211 or search online for nearby care."
+    urgency = " Please call 911 now." if severity == "emergent" else ""
+    return f"Based on what you've told me, this looks {severity}.{urgency} {where} {CAPPED_NOTE}"
+
+
+@dataclass(frozen=True)
+class _TurnContext:
+    """What one turn needs to know about its conversation's spend."""
+
+    conversation_id: str | None
+    capped: bool
+
+
+def _followup(text: str, ctx: _TurnContext) -> dict:
+    """A turn that asks for more information. Past the cap there is nothing left to ask with."""
+    return {
+        "response": CAPPED_NO_RESULT if ctx.capped else text,
+        "severity": None,
+        "reasoning": None,
+        "recommended_facility": None,
+        "nearby_facilities": [],
+        "turn_type": "followup",
+        "cap_reached": ctx.capped,
+    }
+
+
 class LLMAgent:
     """
     Stateless triage agent facade.
@@ -99,9 +151,11 @@ class LLMAgent:
         self,
         client: BaseLLMClient | None = None,
         graph_provider: GraphContextProvider | None = None,
+        spend_store: SpendStore | None = None,
     ) -> None:
         self._client = client or get_llm_client()
         self._graph_provider = graph_provider or get_graph_provider()
+        self._spend_store = spend_store  # None: no cap (callers that have no conversation to count)
         self._max_followups = triage_max_followups()
         self._min_turns_before_triage = triage_min_turns()
         self._context_window = triage_context_window()
@@ -116,6 +170,7 @@ class LLMAgent:
         lat: float | None = None,
         lng: float | None = None,
         user_profile: dict | None = None,
+        conversation_id: str | None = None,
     ) -> dict:
         """
         Main entry point. Returns:
@@ -126,19 +181,45 @@ class LLMAgent:
             "recommended_facility": dict | None,
             "nearby_facilities": list[dict],
             "turn_type": "followup" | "triage",
+            "cap_reached": bool,
         }
+
+        With a `conversation_id` (and a spend store) every model call's tokens are counted against
+        that conversation. Once the total reaches LLM_CONVERSATION_TOKEN_CAP the turn is forced to
+        classify and answers from a template: the guest still gets a result, with no further spend.
         """
         messages = await run_in_threadpool(
             self._build_messages, user_message, history, user_profile=user_profile
         )
         user_turns = sum(1 for m in history if m.get("role") == "user")
-        force_classify = user_turns >= self._max_followups
+        ctx = await self._turn_context(conversation_id)
+        force_classify = user_turns >= self._max_followups or ctx.capped
 
         return await self._run(
             messages, lat, lng,
             force=force_classify,
             user_turns=user_turns,
+            ctx=ctx,
         )
+
+    async def _turn_context(self, conversation_id: str | None) -> _TurnContext:
+        if conversation_id is None or self._spend_store is None:
+            return _TurnContext(conversation_id=None, capped=False)
+        spent = await self._spend_store.total(conversation_id)
+        capped = conversation_cap_reached(spent, llm_conversation_token_cap())
+        if capped:
+            LLM_CAP_REACHED.inc()
+            logger.warning("conversation_cap_reached", extra={"spent_tokens": spent})
+        return _TurnContext(conversation_id=conversation_id, capped=capped)
+
+    async def _chat(self, ctx: _TurnContext, **call: object) -> LLMResponse:
+        """The one place a model call is made and its tokens are counted."""
+        resp = await self._client.chat(**call)
+        if ctx.conversation_id is not None and self._spend_store is not None:
+            usage = resp.usage or {}
+            tokens = (usage.get("prompt_tokens") or 0) + (usage.get("completion_tokens") or 0)
+            await self._spend_store.add(ctx.conversation_id, tokens)
+        return resp
 
     def _build_messages(
         self, user_message: str, history: list[dict],
@@ -188,10 +269,12 @@ class LLMAgent:
         lng: float | None,
         force: bool,
         user_turns: int = 0,
+        ctx: _TurnContext = _TurnContext(conversation_id=None, capped=False),
     ) -> dict:
         force_tool = TRIAGE_RESPONSE.name if force else None
 
-        resp = await self._client.chat(
+        resp = await self._chat(
+            ctx,
             messages=messages,
             tools=ALL_TOOLS,
             temperature=self._temperature,
@@ -220,35 +303,14 @@ class LLMAgent:
                                 "severity": args.get("severity"),
                             },
                         )
-                        return {
-                            "response": resp.content or "Could you tell me more about your symptoms?",
-                            "severity": None,
-                            "reasoning": None,
-                            "recommended_facility": None,
-                            "nearby_facilities": [],
-                            "turn_type": "followup",
-                        }
+                        return _followup(resp.content or "Could you tell me more about your symptoms?", ctx)
 
-                    return await self._handle_triage(tool_call, messages, lat, lng, user_turns)
+                    return await self._handle_triage(tool_call, messages, lat, lng, user_turns, ctx)
             logger.warning("unexpected_tool_call")
-            return {
-                "response": "I need a bit more information. Can you describe your symptoms?",
-                "severity": None,
-                "reasoning": None,
-                "recommended_facility": None,
-                "nearby_facilities": [],
-                "turn_type": "followup",
-            }
+            return _followup("I need a bit more information. Can you describe your symptoms?", ctx)
 
         # No tool call — conversational follow-up response
-        return {
-            "response": resp.content or "Could you tell me more about your symptoms?",
-            "severity": None,
-            "reasoning": None,
-            "recommended_facility": None,
-            "nearby_facilities": [],
-            "turn_type": "followup",
-        }
+        return _followup(resp.content or "Could you tell me more about your symptoms?", ctx)
 
     async def _handle_triage(
         self,
@@ -257,6 +319,7 @@ class LLMAgent:
         lat: float | None,
         lng: float | None,
         user_turns: int = 0,
+        ctx: _TurnContext = _TurnContext(conversation_id=None, capped=False),
     ) -> dict:
         args = json.loads(tool_call["arguments"])
         severity = args["severity"]
@@ -292,12 +355,16 @@ class LLMAgent:
                 nearby_facilities = ranked[1:]
                 facility_load.record(recommended_facility, severity, lat, lng)
 
-        response_text = await self._generate_grounded_response(
-            messages=messages,
-            severity=severity,
-            reasoning=reasoning,
-            facility=recommended_facility,
-        )
+        if ctx.capped:
+            response_text = capped_reply(severity, recommended_facility)
+        else:
+            response_text = await self._generate_grounded_response(
+                messages=messages,
+                severity=severity,
+                reasoning=reasoning,
+                facility=recommended_facility,
+                ctx=ctx,
+            )
 
         grounding = check_facility_groundedness(response_text, recommended_facility)
         logger.info(
@@ -317,6 +384,7 @@ class LLMAgent:
             "recommended_facility": recommended_facility,
             "nearby_facilities": nearby_facilities,
             "turn_type": "triage",
+            "cap_reached": ctx.capped,
         }
 
     async def _generate_grounded_response(
@@ -325,6 +393,7 @@ class LLMAgent:
         severity: str,
         reasoning: str,
         facility: dict | None,
+        ctx: _TurnContext,
     ) -> str:
         if facility:
             facility_fact = (
@@ -353,7 +422,8 @@ class LLMAgent:
             ),
         )
 
-        resp = await self._client.chat(
+        resp = await self._chat(
+            ctx,
             messages=messages + [grounding],
             tools=None,
             temperature=self._response_temperature,
@@ -373,5 +443,8 @@ def get_agent() -> LLMAgent:
     """
     global _agent
     if _agent is None:
-        _agent = LLMAgent()
+        from llm.spend import RedisSpendStore
+        from services.wait_times import redis_client  # imported here: it needs UPSTASH_REDIS_URL at import
+
+        _agent = LLMAgent(spend_store=RedisSpendStore(redis_client))
     return _agent
