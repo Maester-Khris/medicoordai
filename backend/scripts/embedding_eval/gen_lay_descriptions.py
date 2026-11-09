@@ -11,6 +11,7 @@ the anchor is in the labeler's top 3. Phrases that fail stay in the file marked 
 import collections
 import json
 import random
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 from graph.snomed_neo4j.anchor_mapping import ANCHOR_MAPPINGS
@@ -37,13 +38,28 @@ def clean_phrases(raw: list[str], known: set[str]) -> list[str]:
     return kept
 
 
-def phrases_for(idx: int, fsn: str, aliases: list[str]) -> list[str]:
+def anchors_without_confirmed(candidates: list[dict], minimum: int = 1) -> list[int]:
+    """Anchor indexes that have fewer than `minimum` labeler-confirmed phrases (sorted)."""
+    confirmed = collections.Counter({r["idx"]: 0 for r in candidates})
+    confirmed.update(r["idx"] for r in candidates if r["agree_top3"])
+    return sorted(i for i, n in confirmed.items() if n < minimum)
+
+
+def merge_candidates(existing: list[dict], regenerated: list[dict]) -> list[dict]:
+    """Existing rows always survive untouched; regenerated rows are appended unless (idx, phrase) is already there."""
+    seen = {(r["idx"], r["phrase"]) for r in existing}
+    return existing + [r for r in regenerated if (r["idx"], r["phrase"]) not in seen]
+
+
+def phrases_for(idx: int, fsn: str, aliases: list[str], detailed: bool = False) -> list[str]:
+    cues = ("Each phrase should carry a defining fact (the cause or how it happened, the body part, who it affects, when) "
+            "so it cannot be confused with similar problems. ") if detailed else ""
     reply = g.json_chat(
         "You write everyday-language wordings for medical complaint categories, for a triage evaluation dataset.",
         f"Complaint category: {g.name_of(idx)}\nClinical term: {fsn}\nWordings we already have (do not repeat): {aliases or 'none'}\n\n"
         f"Write {PHRASES_PER_ANCHOR} different short phrases ({MIN_WORDS} to {MAX_WORDS} words each) that a layperson, parent or bystander might use "
         "to refer to this problem or its main symptom. Mix sensation words, what it looks like, how a child would say it, and informal wording. "
-        "No medical jargon, no diagnosis names, no brand names. " 'Return JSON: {"phrases": ["...", "..."]}',
+        f"No medical jargon, no diagnosis names, no brand names. {cues}" 'Return JSON: {"phrases": ["...", "..."]}',
         temperature=0.8, max_tokens=400)
     return clean_phrases(reply["phrases"], {a.lower() for a in aliases})
 
@@ -55,10 +71,38 @@ def generate_all(mappings: dict) -> dict[int, list[str]]:
         return dict(zip(mappings, phrases))
 
 
+def label_rows(items: list[tuple[int, str]], mappings: dict) -> list[dict]:
+    random.Random(13).shuffle(items)  # consecutive similar phrases get labeled as a block otherwise
+    catalog = "\n".join(f"{i}: {g.name_of(i)}" for i in range(len(g.NAMES)) if i not in g.SKIP)
+    with ThreadPoolExecutor(6) as pool:
+        batches = pool.map(lambda s: g.label_batch(items[s:s + LABEL_BATCH], catalog), range(0, len(items), LABEL_BATCH))
+        labeled = [row for batch in batches for row in batch]
+    return [{"idx": r["idx"], "anchor_concept_id": mappings[r["idx"]].anchor_concept_id, "anchor": r["expected_complaint"],
+             "phrase": r["message"], "source": g.MODEL, "labeler_top3": r["labeler_top3"],
+             "agree_top1": r["agree_top1"], "agree_top3": r["agree_top3"]} for r in labeled]
+
+
+def run_weak(mappings: dict) -> None:
+    """Regenerate (cue-preserving prompt) only for anchors with no confirmed phrase; existing rows are kept."""
+    path = g.RESULTS / "lay_description_candidates.json"
+    existing = json.loads(path.read_text())
+    weak = anchors_without_confirmed(existing)
+    wordings = known_wordings()
+    known = {r["phrase"] for r in existing}
+    items = [(i, p) for i in weak for p in phrases_for(i, mappings[i].fsn, wordings.get(mappings[i].ctas_alias, []), detailed=True)
+             if p not in known]
+    merged = merge_candidates(existing, label_rows(items, mappings))
+    path.write_text(json.dumps(merged, indent=1))
+    left = anchors_without_confirmed(merged)
+    print(f"weak anchors {len(weak)} -> {len(left)} still without a confirmed phrase; +{len(merged) - len(existing)} rows; est ${g.cost_usd():.4f}")
+
+
 def main() -> None:
     g.HARD_STOP_USD = 0.12
     mappings = {i: m for i, m in enumerate(ANCHOR_MAPPINGS) if i not in g.SKIP}
     g.RESULTS.mkdir(exist_ok=True)
+    if "--weak" in sys.argv:
+        return run_weak(mappings)
     if PHRASES_FILE.exists():
         generated = {int(k): v for k, v in json.loads(PHRASES_FILE.read_text()).items()}
     else:
