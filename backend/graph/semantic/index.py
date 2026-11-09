@@ -44,6 +44,36 @@ class StaleIndexError(Exception):
     """Raised when an index is missing, corrupt, or stale."""
 
 
+def read_manifest(index_dir: Path) -> IndexManifest:
+    """Read and parse manifest.json from index_dir.
+
+    Raises StaleIndexError when the directory or file is missing, the JSON is
+    unreadable or corrupt, or any required field is absent or of the wrong type.
+    """
+    index_path = Path(index_dir)
+    if not index_path.is_dir():
+        raise StaleIndexError(f"Index directory missing: {index_path}")
+
+    manifest_path = index_path / "manifest.json"
+    if not manifest_path.is_file():
+        raise StaleIndexError(f"Missing manifest file: {manifest_path}")
+
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise StaleIndexError(f"Cannot read manifest: {exc}") from exc
+
+    if not isinstance(data, dict):
+        raise StaleIndexError("Manifest is not a JSON object")
+
+    # Validate that all required fields are present and constructible.
+    try:
+        return IndexManifest(**data)
+    except (TypeError, KeyError, ValueError) as exc:
+        raise StaleIndexError(f"Manifest has unknown or missing fields: {exc}") from exc
+
+
 def rows_digest(rows: Sequence[IndexRow]) -> str:
     """Compute sha256 hex digest of canonical JSON of rows in order."""
     data = [dataclasses.asdict(r) for r in rows]

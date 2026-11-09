@@ -16,21 +16,36 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import TYPE_CHECKING
+import threading
+import time
+from typing import TYPE_CHECKING, Callable
 
 from graph.semantic.abstention import anchor_scores, decide
+from graph.semantic.build import ModelCard, OnnxEmbedder, load_model_card
 from graph.semantic.candidates import CandidateResult, SemanticCandidateSource
+from graph.semantic.index import SemanticIndex, StaleIndexError, read_manifest
 from graph.semantic.settings import SemanticSettings, load_settings
 from graph.snomed_neo4j.provider import Neo4jSnomedProvider
 
 if TYPE_CHECKING:
-    pass
+    from graph.semantic.embedder import Embedder
 
 logger = logging.getLogger(__name__)
 
 # Long exact lexical matches are unambiguous; short ones are weak evidence.
 # Read once at import so the constant is stable across requests.
 LEXICAL_PRECEDENCE_MIN_LEN: int = int(os.environ.get("LEXICAL_PRECEDENCE_MIN_LEN", "12"))
+
+
+def _default_embedder_factory(settings: SemanticSettings, card: ModelCard) -> "Embedder":
+    """Build an OnnxEmbedder from settings and model card."""
+    return OnnxEmbedder(
+        settings.model_dir,
+        settings,
+        card.pooling,
+        card.prefix,
+        card.max_len,
+    )
 
 
 class Neo4jSemanticProvider(Neo4jSnomedProvider):
@@ -55,6 +70,10 @@ class Neo4jSemanticProvider(Neo4jSnomedProvider):
         self,
         source: SemanticCandidateSource | None = None,
         settings: SemanticSettings | None = None,
+        *,
+        autoload: bool = False,
+        embedder_factory: Callable[[SemanticSettings, ModelCard], "Embedder"] | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         super().__init__()  # reads NEO4J_* env vars, opens driver
 
@@ -79,6 +98,42 @@ class Neo4jSemanticProvider(Neo4jSnomedProvider):
             0,
         )
 
+        # Embedder factory — defaults to building OnnxEmbedder.
+        self._embedder_factory: Callable[[SemanticSettings, ModelCard], "Embedder"] = (
+            embedder_factory if embedder_factory is not None else _default_embedder_factory
+        )
+
+        # Embedder instance (set by initialise()).
+        self._embedder: "Embedder | None" = None
+
+        # Last successfully loaded manifest (used to detect changes).
+        self._loaded_manifest: object = None  # IndexManifest | None
+
+        # Timestamp of the last reload compatibility check (injected clock).
+        self._last_reload_check: float | None = None
+
+        # How many seconds between reload checks (env-configurable, never logged).
+        self._reload_s: float = float(os.environ.get("SEMANTIC_RELOAD_S", "60"))
+
+        # Lock that serialises reload attempts; acquire(blocking=False) so
+        # a health poll never blocks a concurrent reload thread.
+        self._reload_lock: threading.Lock = threading.Lock()
+
+        # Keep the model card after initialise() for compatibility checks.
+        self._card: ModelCard | None = None
+
+        # Injected clock for reload rate-limiting.
+        self._clock: Callable[[], float] = clock
+
+        # If autoload is requested and we have settings but no source, start a
+        # daemon thread to run initialise() without blocking the constructor.
+        if autoload and source is None and settings is not None:
+            # Mark as warming before the thread starts so callers see a
+            # consistent state immediately.
+            self._semantic = (None, "warming", "", 0)
+            t = threading.Thread(target=self.initialise, name="semantic-init", daemon=True)
+            t.start()
+
     def attach_semantic(
         self,
         source: SemanticCandidateSource | None,
@@ -102,6 +157,138 @@ class Neo4jSemanticProvider(Neo4jSnomedProvider):
         """
         _, state, model, rows = self._semantic
         return {"state": state, "model": model, "rows": rows}
+
+    def initialise(self) -> None:
+        """Load the embedder and perform an initial index reload.
+
+        Public, synchronous, NEVER raises.  Leaves the provider lexical-only
+        (state "disabled") on any failure.  On success without an index the
+        state is "building"; once an index is loaded the state becomes "ready".
+        """
+        if self._settings is None:
+            logger.warning("semantic_init_skipped: no settings")
+            self._semantic = (None, "disabled", "", 0)
+            return
+
+        try:
+            card = load_model_card(self._settings.model_dir)
+            self._card = card
+            embedder = self._embedder_factory(self._settings, card)
+            embedder.warm_up()
+            self._embedder = embedder
+
+            # No index attached yet — announce building state.
+            source, _, _, _ = self._semantic
+            if source is None:
+                self.attach_semantic(None, "building", card.model_id, 0)
+
+            # Try to load an existing index immediately.
+            self.maybe_reload(force=True)
+        except Exception:
+            logger.exception("semantic_init_failed")
+            # Leave the provider lexical-only; wipe any warming/building state.
+            self._semantic = (None, "disabled", "", 0)
+
+    def maybe_reload(self, force: bool = False) -> bool:
+        """Check whether a newer compatible index is available and load it.
+
+        NEVER raises.  Returns True when a new index was swapped in.
+
+        Why only cheap checks here: the staleness of the index against the
+        graph is handled when the index is built/ensured; here only manifest
+        compatibility and shape integrity are checked so a health poll stays
+        fast.
+        """
+        try:
+            embedder = self._embedder
+            # Cannot reload without a warmed embedder.
+            if embedder is None or not getattr(embedder, "ready", False):
+                return False
+
+            if self._settings is None:
+                return False
+
+            now = self._clock()
+
+            # Rate-limit checks unless forced.
+            if not force:
+                if (
+                    self._last_reload_check is not None
+                    and (now - self._last_reload_check) < self._reload_s
+                ):
+                    return False
+
+            # Record the check timestamp before we do any real work so that a
+            # long load doesn't create an artificially short gap to the next
+            # check.
+            self._last_reload_check = now
+
+            # Non-blocking lock — if another thread is already reloading, skip.
+            if not self._reload_lock.acquire(blocking=False):
+                return False
+
+            try:
+                return self._do_reload(embedder)
+            finally:
+                self._reload_lock.release()
+        except Exception:
+            logger.exception("maybe_reload_failed")
+            return False
+
+    def _do_reload(self, embedder: "Embedder") -> bool:
+        """Inner reload logic executed under the reload lock."""
+        try:
+            manifest = read_manifest(self._settings.index_dir)
+        except StaleIndexError:
+            # Index directory absent or corrupt — keep whatever we have now.
+            return False
+
+        # Nothing changed since last load.
+        if manifest == self._loaded_manifest:
+            return False
+
+        # Cheap compatibility check: the index must have been built for this
+        # exact model configuration.  Any mismatch means the on-disk index is
+        # for a different model/settings combination.
+        # Logged at warning WITHOUT values to avoid leaking env-sourced data.
+        card = self._card
+        if card is None:
+            return False
+
+        compatible = (
+            manifest.model_id == card.model_id
+            and manifest.pooling == card.pooling
+            and manifest.prefix == card.prefix
+            and manifest.model_sha256 == card.model_sha256
+            and manifest.dim == getattr(embedder, "dim", None)
+            and manifest.lay_rule == self._settings.lay_rule
+        )
+        if not compatible:
+            logger.warning("semantic_reload_skipped: index built for different model/settings")
+            return False
+
+        # Load and validate shape/row counts.
+        try:
+            index = SemanticIndex.load(self._settings.index_dir, manifest)
+        except StaleIndexError:
+            # Keep the old index.
+            return False
+
+        # Swap atomically: remember the old source so we can close it after.
+        old_source, _, _, _ = self._semantic
+        new_source = SemanticCandidateSource(embedder, index, self._settings)
+        self.attach_semantic(new_source, "ready", card.model_id, manifest.rows)
+        self._loaded_manifest = manifest
+
+        # Close the old source after the swap so no request thread holds a
+        # reference to it after this point.
+        if old_source is not None:
+            try:
+                old_source.close()
+            except Exception:
+                pass
+
+        return True
 
     def _gather_candidates(self, user_message: str, all_text: str) -> dict[str, float]:
         """Merge lexical and semantic candidates into a single specificity dict.

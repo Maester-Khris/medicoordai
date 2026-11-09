@@ -69,3 +69,31 @@ def test_health_says_when_a_provider_is_stubbed(monkeypatch):
     assert "stubbed" not in client.get("/health").json()
     monkeypatch.setenv("GEOAPIFY_BASE_URL", "http://mock:9000")
     assert client.get("/health").json()["stubbed"] is True
+
+
+def test_health_pings_neo4j_for_the_semantic_provider_value():
+    fake_provider = MagicMock()
+    fake_provider.semantic_status.return_value = {"state": "ready", "model": "biolord", "rows": 3}
+    with patch.dict(os.environ, {"GRAPH_RAG_PROVIDER": "neo4j_semantic"}), \
+         patch("main.get_graph_provider", return_value=fake_provider):
+        body = client.get("/health").json()
+    fake_provider.ping.assert_called_once()
+    fake_provider.maybe_reload.assert_called_once()  # a health poll is what notices a freshly built index
+    assert body["neo4j"] == "ok" and body["semantic"] == {"state": "ready", "model": "biolord", "rows": 3}
+
+
+def test_health_reports_semantic_state_and_never_fails_when_status_raises():
+    fake_provider = MagicMock()
+    fake_provider.semantic_status.side_effect = RuntimeError("boom")
+    with patch.dict(os.environ, {"GRAPH_RAG_PROVIDER": "neo4j_semantic"}), \
+         patch("main.get_graph_provider", return_value=fake_provider):
+        resp = client.get("/health")
+    assert resp.status_code == 200 and resp.json()["semantic"] == {"state": "error"}
+
+
+def test_health_omits_semantic_for_the_plain_neo4j_provider():
+    fake_provider = MagicMock()
+    with patch.dict(os.environ, {"GRAPH_RAG_PROVIDER": "neo4j"}), \
+         patch("main.get_graph_provider", return_value=fake_provider):
+        body = client.get("/health").json()
+    assert "semantic" not in body and body["neo4j"] == "ok"

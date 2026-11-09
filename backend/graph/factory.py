@@ -30,7 +30,7 @@ def _build_provider(provider_name: str) -> GraphContextProvider:
         return Neo4jSnomedProvider()
     if provider_name == "neo4j_semantic":
         from graph.snomed_neo4j.semantic_provider import Neo4jSemanticProvider
-        return Neo4jSemanticProvider()
+        return Neo4jSemanticProvider(autoload=True)
     return NullGraphProvider()
 
 

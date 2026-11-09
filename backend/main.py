@@ -126,13 +126,25 @@ def health() -> dict:
     # Doubles as a keep-alive ping for AuraDB's free-tier 72h auto-pause
     # window (graph/snomed_neo4j/provider.py) — meant to be polled by an
     # external cronjob, not just a status check.
-    if os.environ.get("GRAPH_RAG_PROVIDER", "off").lower() == "neo4j":
+    provider_name = os.environ.get("GRAPH_RAG_PROVIDER", "off").lower()
+    if provider_name in ("neo4j", "neo4j_semantic"):
+        provider = None
         try:
-            get_graph_provider().ping()
+            provider = get_graph_provider()
+            provider.ping()
             result["neo4j"] = "ok"
         except Exception as exc:
             result["neo4j"] = "unreachable"
             logger.warning("neo4j_health_ping_failed", extra={"error_type": type(exc).__name__})
+        if provider_name == "neo4j_semantic" and provider is not None:
+            # A health poll is also what notices an index built after startup (the build runs
+            # detached from the API), so the reload check rides on it; it is rate limited inside.
+            try:
+                provider.maybe_reload()
+                result["semantic"] = provider.semantic_status()
+            except Exception as exc:
+                result["semantic"] = {"state": "error"}
+                logger.warning("semantic_health_failed", extra={"error_type": type(exc).__name__})
     if stubbed_providers():
         result["stubbed"] = True
     return result
