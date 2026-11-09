@@ -24,9 +24,11 @@ fix, 2026-08): an indicator like "Shock" recurs across many complaints/anchors,
 but each anchor now gets its OWN RedFlag node for it, so a cluster edge on one
 anchor's node can never leak into an unrelated anchor, and each anchor keeps
 its own ASKS->FollowupQuestion edge instead of racing other anchors for a
-shared node's arbitrarily-ordered edges. FollowupQuestion stays keyed by
-question text alone -- deliberately shared, since the same literal question
-text is fine to reuse verbatim across complaints.
+shared node's arbitrarily-ordered edges. FollowupQuestion is now keyed by
+(anchor_id, text) too (graph v3): a question node shared across anchors would
+make every anchor's traversal reach questions meant for other complaints, and
+makes per-anchor review and deletion impossible. The same wording on two
+anchors is therefore two nodes.
 
 Known limitation (not fixed here, flagged per this repo's convention): Phase 1
 (load_rf2.py) loads a keyword-seeded Clinical Finding subset, bounded to stay under
@@ -191,7 +193,7 @@ def seed(
             # idempotency instead (standard Neo4j practice, same idiom
             # load_rf2.py already uses for SnomedConcept/Description).
             session.run(
-                "CREATE CONSTRAINT IF NOT EXISTS FOR (q:FollowupQuestion) REQUIRE q.text IS UNIQUE"
+                "CREATE CONSTRAINT IF NOT EXISTS FOR (q:FollowupQuestion) REQUIRE (q.anchor_id, q.text) IS UNIQUE"
             )
 
             total_batches = max(1, -(-len(rows) // BATCH_SIZE))  # ceil div
@@ -201,7 +203,7 @@ def seed(
                     "MATCH (anchor:SnomedConcept {id: row.anchor_id}) "
                     "MERGE (anchor)-[:HAS_RED_FLAG]->(rf:RedFlag {anchor_id: row.anchor_id, indicator: row.indicator}) "
                     "SET rf.ctas_level = row.ctas_level, rf.app_severity = row.app_severity "
-                    "MERGE (q:FollowupQuestion {text: row.followup_question}) "
+                    "MERGE (q:FollowupQuestion {anchor_id: row.anchor_id, text: row.followup_question}) "
                     "MERGE (rf)-[:ASKS]->(q)",
                     rows=batch,
                 )
