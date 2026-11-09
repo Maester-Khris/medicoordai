@@ -54,6 +54,16 @@ GRAPH_LOOKUP_DURATION = Histogram(
     "graph_lookup_duration_seconds", "One symptom graph context lookup",
     ["provider", "outcome"], buckets=GRAPH_BUCKETS, registry=_registry,
 )
+SEMANTIC_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5)
+SEMANTIC_OUTCOMES = Counter(
+    "graph_semantic_outcomes_total",
+    "Semantic candidate lookups by outcome (ok, empty, timeout, breaker_open, not_ready, error, queue_full)",
+    ["outcome"], registry=_registry,
+)
+SEMANTIC_EMBED_DURATION = Histogram(
+    "graph_semantic_embed_duration_seconds", "One message embedding plus index search",
+    buckets=SEMANTIC_BUCKETS, registry=_registry,
+)
 POOL_SIZE = Gauge("demo_db_pool_size", "Connections open in the demo database pool", registry=_registry)
 POOL_IN_USE = Gauge("demo_db_pool_in_use", "Connections currently checked out", registry=_registry)
 POOL_WAITING = Gauge("demo_db_pool_waiting", "Callers waiting for a free connection", registry=_registry)
