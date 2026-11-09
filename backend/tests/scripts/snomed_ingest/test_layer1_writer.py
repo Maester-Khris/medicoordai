@@ -9,6 +9,7 @@ from scripts.snomed_ingest.layer1_writer import (
     write_descriptions,
     write_is_a,
     write_lay_descriptions,
+    write_primary_anchors,
 )
 
 
@@ -74,3 +75,13 @@ def test_lay_writer_batches_at_1000():
     s = FakeSession()
     write_lay_descriptions(s, [LayPhrase("1", f"phrase number {i}", "m", "confirmed") for i in range(2500)])
     assert [len(p["rows"]) for _, p in s.calls] == [1000, 1000, 500]
+
+
+def test_primary_anchor_writer_stores_anchor_and_depth_on_the_concept_in_batches():
+    s = FakeSession()
+    rows = [{"id": str(i), "anchor_id": "a", "depth": 1} for i in range(1500)]
+    write_primary_anchors(s, rows)
+    assert [len(p["rows"]) for _, p in s.calls] == [1000, 500]
+    cypher = s.calls[0][0]
+    assert "MATCH (c:SnomedConcept {id: row.id})" in cypher
+    assert "c.primary_anchor_id = row.anchor_id" in cypher and "c.anchor_depth = row.depth" in cypher

@@ -107,3 +107,19 @@ def write_lay_descriptions(session: Session, phrases: Sequence[LayPhrase]) -> No
             "MERGE (c)-[:HAS_DESCRIPTION]->(d)",
             rows=batch,
         )
+
+
+def write_primary_anchors(session, rows: Iterable[dict]) -> None:
+    """Store each loaded concept's primary anchor and its distance from it.
+
+    The semantic index needs "which complaint does this concept belong to" at build time, and the graph is
+    the single source for that: the assignment is computed once (nearest anchor, ties to the earlier one) when
+    the graph is built, so the index builder never has to repeat the traversal or know the per-anchor depths.
+    """
+    for batch in _batched(rows, BATCH_SIZE):
+        session.run(
+            "UNWIND $rows AS row "
+            "MATCH (c:SnomedConcept {id: row.id}) "
+            "SET c.primary_anchor_id = row.anchor_id, c.anchor_depth = row.depth",
+            rows=batch,
+        )

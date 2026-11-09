@@ -51,6 +51,7 @@ from scripts.snomed_ingest.layer1_writer import (
     write_descriptions,
     write_is_a,
     write_lay_descriptions,
+    write_primary_anchors,
 )
 from scripts.snomed_ingest.rf2_reader import (
     read_concepts,
@@ -231,6 +232,14 @@ def build(
         write_concepts(session, assigned_concept_rows)
         write_descriptions(session, description_rows)
         write_is_a(session, is_a_rows)
+        write_primary_anchors(
+            session,
+            [
+                {"id": row["id"], "anchor_id": assignment.concept_anchor[row["id"]],
+                 "depth": assignment.concept_depth[row["id"]]}
+                for row in assigned_concept_rows
+            ],
+        )
         # Step 6: Lay descriptions
         write_lay_descriptions(session, built_lay_phrases)
 

@@ -78,7 +78,7 @@ class FakeSession:
 
 
 def _kind(cypher: str) -> str:
-    for needle, kind in (("DETACH DELETE", "wipe"), ("DROP CONSTRAINT", "wipe"), ("SHOW CONSTRAINTS", "wipe"),
+    for needle, kind in (("primary_anchor_id", "primary"), ("DETACH DELETE", "wipe"), ("DROP CONSTRAINT", "wipe"), ("SHOW CONSTRAINTS", "wipe"),
                          ("CREATE CONSTRAINT", "constraint"), ('d.kind = "lay"', "lay"),
                          ("HAS_DESCRIPTION", "descriptions"), ("MERGE (child)-[:IS_A]", "is_a"),
                          ("MERGE (c:SnomedConcept {id: row.id})", "concepts")):
@@ -185,3 +185,11 @@ def test_anchors_limit_builds_only_that_many_anchors(rf2, lay_file, tmp_path):
     assert seen == [[A1]]
     ids = set(_written_ids(log, "concepts"))
     assert ids == {A1, CHILD}
+
+
+def test_primary_anchor_and_depth_are_stored_on_every_loaded_concept(rf2, lay_file, tmp_path):
+    _, log, _, _ = _run(rf2, lay_file, tmp_path)
+    rows = {r["id"]: r for e in log if e[0] == "cypher" and _kind(e[1]) == "primary" for r in e[2]["rows"]}
+    assert rows == {A1: {"id": A1, "anchor_id": A1, "depth": 0}, A2: {"id": A2, "anchor_id": A2, "depth": 0},
+                    CHILD: {"id": CHILD, "anchor_id": A1, "depth": 1},
+                    OTHER: {"id": OTHER, "anchor_id": A2, "depth": 1}}  # the grandchild is beyond depth 1
