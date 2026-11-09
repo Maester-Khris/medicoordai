@@ -17,9 +17,11 @@ from scripts.symptom_eval.run_manifest import (
     manifest_path,
     sha256_text,
 )
+from llm.retry import BASE_DELAY_SECONDS
 from scripts.symptom_eval.system_under_test import SystemTurnResult
 from services.llm_agent import (
     CLASSIFY_TEMPERATURE,
+    capped_reply_fingerprint,
     RESPONSE_TEMPERATURE,
     triage_context_window,
     triage_max_followups,
@@ -39,7 +41,7 @@ class _ManifestWatchingSystem:
         self._checkpoint_path = checkpoint_path
         self.manifest_existed_at_first_call = None
 
-    def respond(self, patient_message, history):
+    def respond(self, patient_message, history, conversation_id=None):
         if self.manifest_existed_at_first_call is None:
             self.manifest_existed_at_first_call = os.path.exists(manifest_path(self._checkpoint_path))
         return SystemTurnResult("classified", "emergent", "why", False)
@@ -134,6 +136,25 @@ def test_manifest_records_live_prompt_and_temperature_values():
     assert manifest.bootstrap_seed == 5 and manifest.judges_enabled is False
     assert (manifest.system_min_turns, manifest.system_context_window) == (
         triage_min_turns(), triage_context_window())
+
+
+def test_manifest_records_the_guard_settings_the_agent_will_use(monkeypatch):
+    monkeypatch.setenv("LLM_CONVERSATION_TOKEN_CAP", "1234")
+    monkeypatch.setenv("LLM_RETRY_ATTEMPTS", "3")
+    monkeypatch.setenv("LLM_BREAKER_FAILURES", "7")
+    monkeypatch.setenv("LLM_BREAKER_COOLDOWN_SECONDS", "45")
+
+    manifest = cli.build_manifest(
+        system_model="m1", simulator_model="m2", providers=("off",), variant="original",
+        repeats=1, judges_enabled=False, seed=5,
+    )
+
+    assert manifest.conversation_token_cap == 1234
+    assert manifest.retry_max_attempts == 3
+    assert (manifest.breaker_failure_threshold, manifest.breaker_cooldown_seconds) == (7, 45)
+    assert manifest.retry_base_delay_seconds == BASE_DELAY_SECONDS
+    assert manifest.breaker_enabled is False  # the eval runs without the breaker (spec C11)
+    assert manifest.capped_reply_sha256 == sha256_text(capped_reply_fingerprint())
 
 
 def test_parser_reads_new_flags():

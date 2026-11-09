@@ -27,6 +27,9 @@ def _manifest(**overrides) -> RunManifest:
         judges_enabled=False, bootstrap_seed=20261107,
         system_prompt_sha256="a" * 64, simulator_prompt_sha256="b" * 64,
         checklists_sha256="c" * 64, harness_git_commit="abc1234",
+        retry_max_attempts=2, retry_base_delay_seconds=0.25, conversation_token_cap=30000,
+        breaker_enabled=False, breaker_failure_threshold=5, breaker_cooldown_seconds=30.0,
+        capped_reply_sha256="e" * 64,
     )
     values.update(overrides)
     return RunManifest(**values)
@@ -81,6 +84,9 @@ def test_every_non_exempt_field_is_checked(tmp_path):
         "simulator_temperature": 0.9, "variant": "lay", "repeats": 9, "judges_enabled": True,
         "bootstrap_seed": 1, "system_prompt_sha256": "z", "simulator_prompt_sha256": "z",
         "checklists_sha256": "z",
+        "retry_max_attempts": 9, "retry_base_delay_seconds": 9.0, "conversation_token_cap": 9,
+        "breaker_enabled": True, "breaker_failure_threshold": 9, "breaker_cooldown_seconds": 9.0,
+        "capped_reply_sha256": "z",
     }
     assert set(changes) == {f.name for f in dataclasses.fields(base)} - exempt
 
@@ -153,3 +159,33 @@ def test_read_manifest_is_none_when_absent_and_a_dict_when_present(tmp_path):
     write_or_verify_manifest(checkpoint, _manifest(), "t")
 
     assert read_manifest(checkpoint)["variant"] == "original"
+
+
+@pytest.mark.parametrize("field,changed", [
+    ("retry_max_attempts", 3),
+    ("retry_base_delay_seconds", 0.5),
+    ("conversation_token_cap", 12345),
+    ("breaker_enabled", True),
+    ("breaker_failure_threshold", 9),
+    ("breaker_cooldown_seconds", 60.0),
+    ("capped_reply_sha256", "f" * 64),
+])
+def test_a_changed_guard_setting_is_refused_on_resume(tmp_path, field, changed):
+    checkpoint = str(tmp_path / "checkpoint.jsonl")
+    write_or_verify_manifest(checkpoint, _manifest(), "2026-11-08T10:00:00Z")
+
+    with pytest.raises(ManifestMismatch, match=field):
+        write_or_verify_manifest(checkpoint, _manifest(**{field: changed}), "2026-11-09T10:00:00Z")
+
+
+def test_a_manifest_written_before_the_guard_settings_existed_is_refused(tmp_path):
+    checkpoint = str(tmp_path / "checkpoint.jsonl")
+    write_or_verify_manifest(checkpoint, _manifest(), "2026-11-08T10:00:00Z")
+    path = manifest_path(checkpoint)
+    import json
+    stored = json.load(open(path))
+    del stored["conversation_token_cap"]
+    json.dump(stored, open(path, "w"))
+
+    with pytest.raises(ManifestMismatch, match="conversation_token_cap"):
+        write_or_verify_manifest(checkpoint, _manifest(), "2026-11-09T10:00:00Z")

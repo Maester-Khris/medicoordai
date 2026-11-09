@@ -25,9 +25,9 @@ MATCHED = GraphContext(
 class TestLiveLLMAgentAdapter:
     @patch("scripts.symptom_eval.system_under_test.get_graph_provider")
     @patch("scripts.symptom_eval.system_under_test.LLMAgent")
-    @patch("scripts.symptom_eval.system_under_test.GroqClient")
+    @patch("scripts.symptom_eval.system_under_test.build_guarded_client")
     def test_respond_captures_graph_context_and_result_fields(
-        self, mock_groq_cls, mock_agent_cls, mock_get_provider
+        self, mock_build_client, mock_agent_cls, mock_get_provider
     ):
         mock_get_provider.return_value = _StubProvider(MATCHED)
         mock_agent = MagicMock()
@@ -41,14 +41,14 @@ class TestLiveLLMAgentAdapter:
             return {
                 "response": "Please go to the ER.", "severity": "emergent",
                 "reasoning": "chest pain with shock signs", "recommended_facility": None,
-                "nearby_facilities": [], "turn_type": "triage",
+                "nearby_facilities": [], "turn_type": "triage", "cap_reached": False,
             }
 
         mock_agent.respond = AsyncMock(side_effect=_respond_side_effect)
         mock_agent_cls.return_value = mock_agent
 
         adapter = LiveLLMAgentAdapter(graph_rag_provider="static")
-        result = adapter.respond("I have chest pain", [])
+        result = adapter.respond("I have chest pain", [], conversation_id="original:off:1:0")
 
         assert result.response_text == "Please go to the ER."
         assert result.severity == "emergent"
@@ -56,3 +56,28 @@ class TestLiveLLMAgentAdapter:
         assert result.surfaced_red_flag_indicators == ["Shock"]
         assert result.surfaced_followup_questions == ["Are you feeling faint?"]
         assert os.environ["GRAPH_RAG_PROVIDER"] == "static"
+
+    @patch("scripts.symptom_eval.system_under_test.get_graph_provider")
+    @patch("scripts.symptom_eval.system_under_test.LLMAgent")
+    @patch("scripts.symptom_eval.system_under_test.build_guarded_client")
+    def test_the_system_runs_the_guard_stack_without_the_breaker_and_counts_spend_in_memory(
+        self, mock_build_client, mock_agent_cls, mock_get_provider
+    ):
+        from llm.spend import InMemorySpendStore
+
+        mock_get_provider.return_value = _StubProvider(MATCHED)
+        mock_agent = MagicMock()
+        mock_agent.respond = AsyncMock(return_value={
+            "response": "Wrapping up.", "severity": "urgent", "reasoning": "r",
+            "recommended_facility": None, "nearby_facilities": [], "turn_type": "triage", "cap_reached": True, "tokens_used": 321,
+        })
+        mock_agent_cls.return_value = mock_agent
+
+        adapter = LiveLLMAgentAdapter(graph_rag_provider="off")
+        result = adapter.respond("it hurts", [], conversation_id="lay:static:7:1")
+
+        mock_build_client.assert_called_once_with("groq", breaker=False)
+        assert isinstance(mock_agent_cls.call_args.kwargs["spend_store"], InMemorySpendStore)
+        assert mock_agent.respond.call_args.kwargs["conversation_id"] == "lay:static:7:1"
+        assert result.cap_reached is True
+        assert result.tokens_used == 321

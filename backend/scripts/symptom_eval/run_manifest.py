@@ -43,6 +43,13 @@ class RunManifest:
     simulator_prompt_sha256: str
     checklists_sha256: str
     harness_git_commit: str
+    retry_max_attempts: int
+    retry_base_delay_seconds: float
+    conversation_token_cap: int
+    breaker_enabled: bool
+    breaker_failure_threshold: int
+    breaker_cooldown_seconds: float
+    capped_reply_sha256: str
 
 
 def sha256_text(text: str) -> str:

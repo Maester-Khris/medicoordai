@@ -22,8 +22,15 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Callable
 
+from config import (
+    llm_breaker_cooldown_seconds,
+    llm_breaker_failures,
+    llm_conversation_token_cap,
+    llm_retry_attempts,
+)
 from llm.groq_client import GroqClient
 from llm.prompts import build_system_prompt
+from llm.retry import BASE_DELAY_SECONDS
 from scripts.symptom_eval.ablation import AblationLegResult, CheckpointStore, run_ablation
 from scripts.symptom_eval.checklist_extractor import OpenAIChecklistExtractor
 from scripts.symptom_eval.compare_legs import compare_legs, format_comparison
@@ -45,7 +52,7 @@ from scripts.symptom_eval.run_manifest import (
     sha256_text,
     write_or_verify_manifest,
 )
-from scripts.symptom_eval.system_under_test import LiveLLMAgentAdapter, SystemUnderTestPort
+from scripts.symptom_eval.system_under_test import EVAL_BREAKER_ENABLED, LiveLLMAgentAdapter, SystemUnderTestPort
 from scripts.symptom_eval.vignette_loader import (
     CHECKLISTS_DIR,
     VARIANTS,
@@ -56,6 +63,7 @@ from scripts.symptom_eval.vignette_loader import (
 from services.llm_agent import (
     CLASSIFY_TEMPERATURE,
     RESPONSE_TEMPERATURE,
+    capped_reply_fingerprint,
     triage_context_window,
     triage_max_followups,
     triage_min_turns,
@@ -130,6 +138,13 @@ def build_manifest(
         simulator_prompt_sha256=sha256_text(SIMULATOR_SYSTEM_PROMPT),
         checklists_sha256=hash_directory(checklists_dir_for(variant)),
         harness_git_commit=_git_commit(),
+        retry_max_attempts=llm_retry_attempts(),
+        retry_base_delay_seconds=BASE_DELAY_SECONDS,
+        conversation_token_cap=llm_conversation_token_cap(),
+        breaker_enabled=EVAL_BREAKER_ENABLED,
+        breaker_failure_threshold=llm_breaker_failures(),
+        breaker_cooldown_seconds=llm_breaker_cooldown_seconds(),
+        capped_reply_sha256=sha256_text(capped_reply_fingerprint()),
     )
 
 

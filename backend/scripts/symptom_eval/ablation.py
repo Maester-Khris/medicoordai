@@ -150,7 +150,10 @@ def run_leg(
             if checkpoint is not None and checkpoint.has(variant, provider, vignette.case_id, repeat):
                 continue
 
-            transcript = run_vignette_conversation(vignette, simulator, system)
+            transcript = run_vignette_conversation(
+                vignette, simulator, system,
+                conversation_id=f"{variant}:{provider}:{vignette.case_id}:{repeat}",
+            )
             row = confusion_matrix.score_vignette(vignette, transcript)
             coverage = (
                 elicitation_coverage.score_vignette(vignette, transcript, feature_judge)
@@ -174,6 +177,8 @@ def run_leg(
                             "patient_message": turn.patient_message,
                             "system_response": turn.system_response,
                             "graph_context_matched": turn.graph_context_matched,
+                            "cap_reached": turn.cap_reached,
+                            "tokens_used": turn.tokens_used,
                         }
                         for turn in transcript.turns
                     ],

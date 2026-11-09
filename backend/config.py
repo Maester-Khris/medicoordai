@@ -70,6 +70,22 @@ def llm_provider_chain() -> list[str]:
     return [name.strip().lower() for name in raw.split(",") if name.strip()]
 
 
+def llm_retry_attempts() -> int:
+    return env_int("LLM_RETRY_ATTEMPTS", 2, minimum=1, maximum=5)
+
+
+def llm_breaker_failures() -> int:
+    return env_int("LLM_BREAKER_FAILURES", 5, minimum=1)
+
+
+def llm_breaker_cooldown_seconds() -> int:
+    return env_int("LLM_BREAKER_COOLDOWN_SECONDS", 30, minimum=1)
+
+
+def llm_conversation_token_cap() -> int:
+    return env_int("LLM_CONVERSATION_TOKEN_CAP", 30000, minimum=1)
+
+
 def load_aware_routing() -> bool:
     """
     Whether facility load counters influence candidate scoring and routing.
