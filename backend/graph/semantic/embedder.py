@@ -74,7 +74,10 @@ class OnnxEmbedder:
         model_dir = Path(model_dir)
 
         if session is None:
-            model_path = str(model_dir / "model.int8.onnx")
+            # The int8 file is preferred; an fp32 "model.onnx" is the supported fallback for models
+            # (BioLORD) that lose too much accuracy when quantized.
+            int8_path = model_dir / "model.int8.onnx"
+            model_path = str(int8_path if int8_path.exists() else model_dir / "model.onnx")
             session = ort.InferenceSession(
                 model_path,
                 sess_options=build_session_options(settings.threads),
