@@ -29,6 +29,22 @@ Hit rate of the gold anchor, best target-set setting per model. Substring matchi
   limit depth in the graph rebuild. Averaging the top-3 targets per anchor helps slightly.
 - Laptop latencies are relative only. The Railway 1 vCPU will be slower; ONNX int8 should be faster. Measure before deciding.
 
+## Generated lay descriptions (2026-11-08)
+`gen_lay_descriptions.py` wrote 1,487 short everyday phrases (9-10 per anchor, gpt-4o-mini, about $0.06) and a blind labeler confirmed
+716 (48%) as fitting their anchor (36% at top 1): short phrases are ambiguous on their own. Effect of adding them to the targets, hit@1 / hit@5,
+author-written set (not seen by the generator) and generated set:
+
+| Setting | BioLORD | bge-small | Substring lookup (hit) |
+|---|---|---|---|
+| SNOMED anchor descriptions only | 65 / 92 % (author), 47 / 83 % (generated) | 45 / 78 %, 37 / 65 % | 4 %, 5 % |
+| + lay phrases (labeler-confirmed) | 66 / 91 %, 52 / 83 % | 56 / 81 %, 43 / 75 % | 9 %, 9 % |
+| + all lay phrases | 63 / 92 %, 45 / 84 % | 57 / 81 %, 44 / 80 % | 11 %, 12 % |
+
+- **BioLORD barely needs them** (neutral to slightly negative on top of aliases and names). **bge-small gains clearly**, which narrows its gap to BioLORD.
+- The substring lookup roughly doubles with lay phrases but stays at about 10-17 % (verbatim matching is the ceiling).
+- The earlier "+ aliases and names" lift was partly an artefact: those strings paraphrase the anchor wording the author-written queries were derived from.
+- The generated set is not independent of the phrase generator (same model); the author set is the leak-free check, and shows the smaller gain.
+
 ## Layout
 - `build_targets.py` - 19,054 target strings per anchor from the SNOMED CA edition (needs `/databank` RF2 files, override with `SNOMED_CA_TERMINOLOGY_DIR`).
 - `embed_eval.py` - embed targets and queries with one model and score; `lexical` is the substring baseline.
