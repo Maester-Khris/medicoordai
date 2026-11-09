@@ -50,6 +50,8 @@ class RunManifest:
     breaker_failure_threshold: int
     breaker_cooldown_seconds: float
     capped_reply_sha256: str
+    graph_index_manifest_sha256: str  # "" when no semantic leg: the index a neo4j_semantic leg ran against
+    semantic_model_id: str
 
 
 def sha256_text(text: str) -> str:

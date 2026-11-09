@@ -251,3 +251,38 @@ def test_main_turns_a_provenance_error_into_a_clean_exit(tmp_path, monkeypatch):
 
     with pytest.raises(SystemExit, match="no manifest"):
         cli.main()
+
+
+def test_manifest_has_empty_semantic_fields_without_a_semantic_leg(monkeypatch):
+    monkeypatch.setenv("SEMANTIC_INDEX_DIR", "/should/not/be/read")
+    manifest = cli.build_manifest(
+        system_model="m1", simulator_model="m2", providers=("off", "static"), variant="original",
+        repeats=1, judges_enabled=False, seed=5,
+    )
+    assert (manifest.graph_index_manifest_sha256, manifest.semantic_model_id) == ("", "")
+
+
+def test_build_manifest_reads_the_index_manifest_hash(monkeypatch, tmp_path):
+    import hashlib, json
+    index_dir = tmp_path / "idx"
+    index_dir.mkdir()
+    body = json.dumps({"model_id": "biolord", "rows": 3}).encode()
+    (index_dir / "manifest.json").write_bytes(body)
+    monkeypatch.setenv("SEMANTIC_INDEX_DIR", str(index_dir))
+    manifest = cli.build_manifest(
+        system_model="m1", simulator_model="m2", providers=("off", "neo4j_semantic"), variant="original",
+        repeats=1, judges_enabled=False, seed=5,
+    )
+    assert manifest.graph_index_manifest_sha256 == hashlib.sha256(body).hexdigest()
+    assert manifest.semantic_model_id == "biolord"
+
+
+def test_a_semantic_leg_without_a_readable_index_fails_before_any_spend(monkeypatch, tmp_path):
+    monkeypatch.delenv("SEMANTIC_INDEX_DIR", raising=False)
+    kwargs = dict(system_model="m1", simulator_model="m2", providers=("off", "neo4j_semantic"), variant="original",
+                  repeats=1, judges_enabled=False, seed=5)
+    with pytest.raises(ValueError, match="SEMANTIC_INDEX_DIR"):
+        cli.build_manifest(**kwargs)
+    monkeypatch.setenv("SEMANTIC_INDEX_DIR", str(tmp_path / "missing"))
+    with pytest.raises(ValueError, match="manifest"):
+        cli.build_manifest(**kwargs)

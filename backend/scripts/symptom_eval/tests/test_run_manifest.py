@@ -29,7 +29,7 @@ def _manifest(**overrides) -> RunManifest:
         checklists_sha256="c" * 64, harness_git_commit="abc1234",
         retry_max_attempts=2, retry_base_delay_seconds=0.25, conversation_token_cap=30000,
         breaker_enabled=False, breaker_failure_threshold=5, breaker_cooldown_seconds=30.0,
-        capped_reply_sha256="e" * 64,
+        capped_reply_sha256="e" * 64, graph_index_manifest_sha256="", semantic_model_id="",
     )
     values.update(overrides)
     return RunManifest(**values)
@@ -86,7 +86,7 @@ def test_every_non_exempt_field_is_checked(tmp_path):
         "checklists_sha256": "z",
         "retry_max_attempts": 9, "retry_base_delay_seconds": 9.0, "conversation_token_cap": 9,
         "breaker_enabled": True, "breaker_failure_threshold": 9, "breaker_cooldown_seconds": 9.0,
-        "capped_reply_sha256": "z",
+        "capped_reply_sha256": "z", "graph_index_manifest_sha256": "z", "semantic_model_id": "other-model",
     }
     assert set(changes) == {f.name for f in dataclasses.fields(base)} - exempt
 
@@ -189,3 +189,13 @@ def test_a_manifest_written_before_the_guard_settings_existed_is_refused(tmp_pat
 
     with pytest.raises(ManifestMismatch, match="conversation_token_cap"):
         write_or_verify_manifest(checkpoint, _manifest(), "2026-11-09T10:00:00Z")
+
+
+def test_manifest_mismatch_when_the_index_changes_between_resumes(tmp_path):
+    checkpoint = str(tmp_path / "cp.jsonl")
+    base = _manifest(providers=("off", "neo4j_semantic"), graph_index_manifest_sha256="a" * 64, semantic_model_id="biolord")
+    write_or_verify_manifest(checkpoint, base, "t")
+    with pytest.raises(ManifestMismatch, match="graph_index_manifest_sha256"):
+        write_or_verify_manifest(checkpoint, dataclasses.replace(base, graph_index_manifest_sha256="b" * 64), "t")
+    with pytest.raises(ManifestMismatch, match="semantic_model_id"):
+        write_or_verify_manifest(checkpoint, dataclasses.replace(base, semantic_model_id="bge_small"), "t")

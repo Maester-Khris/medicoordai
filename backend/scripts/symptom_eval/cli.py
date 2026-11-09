@@ -14,6 +14,7 @@ Invocation:
         --checkpoint results/checkpoint.jsonl --variant lay --a off --b static
 """
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -117,10 +118,31 @@ def _git_commit() -> str:
     return result.stdout.strip()
 
 
+def semantic_index_fields(providers: tuple[str, ...]) -> tuple[str, str]:
+    """(sha256 of the semantic index manifest file, its model id), or ("", "") with no neo4j_semantic leg.
+
+    A semantic leg's results depend on the index it searched, so the run must say which one; a missing or
+    unreadable index fails here, before the first paid call, instead of after hours of conversations."""
+    if "neo4j_semantic" not in providers:
+        return "", ""
+    index_dir = os.environ.get("SEMANTIC_INDEX_DIR")
+    if not index_dir:
+        raise ValueError("a neo4j_semantic leg needs SEMANTIC_INDEX_DIR to record which index it ran against")
+    path = os.path.join(index_dir, "manifest.json")
+    try:
+        with open(path, "rb") as f:
+            raw = f.read()
+        model_id = json.loads(raw)["model_id"]
+    except (OSError, ValueError, KeyError) as error:
+        raise ValueError(f"cannot read the semantic index manifest at {path}: {type(error).__name__}") from error
+    return hashlib.sha256(raw).hexdigest(), str(model_id)
+
+
 def build_manifest(
     *, system_model: str, simulator_model: str, providers: tuple[str, ...], variant: str,
     repeats: int, judges_enabled: bool, seed: int,
 ) -> RunManifest:
+    index_sha256, semantic_model_id = semantic_index_fields(providers)
     return RunManifest(
         system_model=system_model,
         system_temperature=CLASSIFY_TEMPERATURE,
@@ -145,6 +167,8 @@ def build_manifest(
         breaker_failure_threshold=llm_breaker_failures(),
         breaker_cooldown_seconds=llm_breaker_cooldown_seconds(),
         capped_reply_sha256=sha256_text(capped_reply_fingerprint()),
+        graph_index_manifest_sha256=index_sha256,
+        semantic_model_id=semantic_model_id,
     )
 
 
