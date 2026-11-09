@@ -90,8 +90,17 @@ class Neo4jSnomedProvider(GraphContextProvider):
         from the triage request path."""
         self._client.ping()
 
+    def _gather_candidates(self, user_message: str, all_text: str) -> dict[str, float]:
+        """Run the concept lookup query against `all_text` and return a
+        specificity dict ``{concept_id: matched_length}`` for every hit.
+        This is the seam that Neo4jSemanticProvider overrides to merge in
+        semantic candidates before the traversal step."""
+        lookup_query, lookup_params = build_concept_lookup_query()
+        concept_rows = self._client.run_query(lookup_query, {**lookup_params, "text": all_text})
+        return {row["concept_id"]: row["matched_length"] for row in concept_rows}
+
     def _resolve_surviving_mappings(
-        self, all_text: str
+        self, all_text: str, user_message: str | None = None
     ) -> list[tuple]:
         """Shared by _lookup() and debug_all_matches(): every
         ANCHOR_MAPPINGS entry with surviving (non-corrupted) red-flag
@@ -103,16 +112,14 @@ class Neo4jSnomedProvider(GraphContextProvider):
         plans/2026-08-05-v1-v2-retrieval-eval-fairness.md Task 2;
         previously this picked the first anchor in list order regardless
         of specificity)."""
-        lookup_query, lookup_params = build_concept_lookup_query()
-        lookup_params = {**lookup_params, "text": all_text}
-        concept_rows = self._client.run_query(lookup_query, lookup_params)
-        if not concept_rows:
+        candidates = self._gather_candidates(
+            user_message if user_message is not None else all_text, all_text
+        )
+        if not candidates:
             return []
 
-        candidate_ids = [row["concept_id"] for row in concept_rows]
-        candidate_specificity = {
-            row["concept_id"]: row["matched_length"] for row in concept_rows
-        }
+        candidate_ids = list(candidates)
+        candidate_specificity = candidates
         rows_by_anchor = self._traverse_all_anchors(candidate_ids)
         self._log_cross_symptom_clusters(rows_by_anchor)
 
@@ -128,7 +135,7 @@ class Neo4jSnomedProvider(GraphContextProvider):
 
     def _lookup(self, user_message: str, recent_messages: list[str]) -> GraphContext:
         all_text = " ".join([user_message, *recent_messages]).strip()
-        surviving = self._resolve_surviving_mappings(all_text)
+        surviving = self._resolve_surviving_mappings(all_text, user_message=user_message)
         if not surviving:
             return GraphContext(matched=False)
 
