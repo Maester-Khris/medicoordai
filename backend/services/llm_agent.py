@@ -14,6 +14,8 @@ from graph.factory import get_graph_provider
 from llm.base import BaseLLMClient, LLMMessage, LLMResponse
 from llm.spend import SpendStore, conversation_cap_reached
 from llm.tools import ALL_TOOLS, TRIAGE_RESPONSE
+
+VALID_SEVERITIES = frozenset(TRIAGE_RESPONSE.parameters["severity"]["enum"])  # routine | moderate | urgent | emergent
 from metrics import LLM_CAP_REACHED
 from llm.prompts import build_system_prompt, build_medical_context_block, build_graph_context_block
 from services import facility_load
@@ -334,6 +336,12 @@ class LLMAgent:
                 if tool_call["name"] == TRIAGE_RESPONSE.name:
 
                     args = json.loads(tool_call["arguments"])
+                    if args.get("severity") not in VALID_SEVERITIES:
+                        # The model's output is untrusted: the tool enum is only a hint to it. Fail toward
+                        # the safe side so a synonym or injected value never delays care or drops the 911 line.
+                        logger.warning("triage_invalid_severity", extra={"user_turns": user_turns})
+                        args["severity"] = "emergent"
+                        tool_call = {**tool_call, "arguments": json.dumps(args)}
                     is_emergency = args.get("severity") == "emergent"
                     below_min_turns = user_turns < self._min_turns_before_triage
 
@@ -410,6 +418,11 @@ class LLMAgent:
                 facility=recommended_facility,
                 ctx=ctx,
             )
+
+        if severity == "emergent" and "911" not in response_text:
+            # The model decides whether to say 911 (measured: it left it out in 5 of 10 emergent replies,
+            # and with no location sent the guest to 211). For an emergency the number is not optional.
+            response_text = response_text.rstrip() + " Please call 911 now."
 
         grounding = check_facility_groundedness(response_text, recommended_facility)
         logger.info(

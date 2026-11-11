@@ -1,0 +1,1 @@
+severity= emergent | facility= Test General Hospital | Based on what you described, this looks emergent. The nearest appropriate facility is Test General Hospital. Please go there for assessment.

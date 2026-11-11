@@ -1,0 +1,2 @@
+no-location: It sounds like you are experiencing an **emergent** situation. Please seek immediate emergency care—call 211 right away or look online for the nearest emergency department. Do not wait. Please call 911 now.
+anaphylaxis: Your symptoms are classified as **emergent**. Please go right away to **Test General Hospital** at 1 Test Ave, Toronto for immediate care. Please call 911 now.
