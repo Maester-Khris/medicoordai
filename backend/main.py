@@ -16,6 +16,7 @@ from services.proximity import find_facilities_within
 from db import supabase_rpc
 from models import MemoryProfileResponse, NearbyFacilityResult
 from middleware.auth import AuthMiddleware, get_current_user, require_internal
+from middleware.security_headers import SecurityHeadersMiddleware
 from cache import get_cached_facilities, set_cached_facilities
 from graph.factory import close_graph_provider, get_graph_provider
 from observability import init_observability, verify_metrics_token, RequestIDMiddleware, _registry
@@ -75,6 +76,7 @@ app.add_middleware(
 )
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)  # outermost: also covers CORS preflights and errors
 
 init_observability(app)
 app.include_router(chat_router)
