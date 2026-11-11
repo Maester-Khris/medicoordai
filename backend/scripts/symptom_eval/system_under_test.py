@@ -1,11 +1,12 @@
 """
 SystemUnderTestPort + LiveLLMAgentAdapter — wraps the real LLMAgent
 in-process (design §2: same business behavior as the HTTP path, no
-server/auth/cache needed). Always constructs a GroqClient directly (not
+server/auth/cache needed). Builds its client directly (not
 get_llm_client(), which would respect an ambient LLM_PROVIDER override) so
-the system-under-test model is fixed to Groq — the production default
+the system-under-test model is Groq — the production default
 (backend/services/llm_agent.py:20) — regardless of environment, per the
-model-role assignment in design §5. Wraps the real GraphContextProvider in
+model-role assignment in design §5, unless the run opts in with
+EVAL_SYSTEM_PROVIDER=openai (see eval_system_provider). Wraps the real GraphContextProvider in
 CapturingGraphProvider (Task 2) so each call's GraphContext is observable.
 """
 import os
@@ -43,6 +44,26 @@ class SystemUnderTestPort(ABC):
 EVAL_BREAKER_ENABLED = False
 
 
+def eval_system_provider() -> str:
+    """Groq (the production host) unless the run opts in with EVAL_SYSTEM_PROVIDER=openai, which
+    reaches any OpenAI-compatible host through OPENAI_BASE_URL (for example Ollama Cloud, when the
+    Groq free tier's daily limit is too slow). Anything else is refused, never silently Groq."""
+    provider = os.environ.get("EVAL_SYSTEM_PROVIDER", "groq").strip().lower()
+    if provider not in ("groq", "openai"):
+        raise ValueError(f"EVAL_SYSTEM_PROVIDER must be groq or openai, got {provider!r}")
+    return provider
+
+
+def eval_system_model_label() -> str:
+    """What the run manifest records as the system model. Groq keeps the bare model name so older
+    manifests still match; an OpenAI-compatible run also names its host, because the same weights
+    served elsewhere can answer differently."""
+    if eval_system_provider() == "groq":
+        return os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+    host = os.environ.get("OPENAI_BASE_URL") or "api.openai.com"
+    return f"{os.environ['OPENAI_MODEL']} via {host}"
+
+
 class LiveLLMAgentAdapter(SystemUnderTestPort):
     def __init__(self, graph_rag_provider: str = "off"):
         os.environ["GRAPH_RAG_PROVIDER"] = graph_rag_provider
@@ -50,7 +71,7 @@ class LiveLLMAgentAdapter(SystemUnderTestPort):
         os.environ["LOAD_AWARE_ROUTING"] = "off"
         self._capturing_provider = CapturingGraphProvider(get_graph_provider())
         self._agent = LLMAgent(
-            client=build_guarded_client("groq", breaker=EVAL_BREAKER_ENABLED),
+            client=build_guarded_client(eval_system_provider(), breaker=EVAL_BREAKER_ENABLED),
             graph_provider=self._capturing_provider,
             spend_store=InMemorySpendStore(),
         )

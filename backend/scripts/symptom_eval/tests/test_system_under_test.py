@@ -81,3 +81,49 @@ class TestLiveLLMAgentAdapter:
         assert mock_agent.respond.call_args.kwargs["conversation_id"] == "lay:static:7:1"
         assert result.cap_reached is True
         assert result.tokens_used == 321
+
+
+class TestEvalSystemProvider:
+    """The system under test is Groq unless the run opts in with EVAL_SYSTEM_PROVIDER=openai
+    (any OpenAI-compatible host, for example Ollama Cloud, through OPENAI_BASE_URL)."""
+
+    @patch("scripts.symptom_eval.system_under_test.get_graph_provider")
+    @patch("scripts.symptom_eval.system_under_test.LLMAgent")
+    @patch("scripts.symptom_eval.system_under_test.build_guarded_client")
+    def test_the_provider_defaults_to_groq_and_can_be_switched_to_openai(
+        self, mock_build_client, mock_agent_cls, mock_get_provider, monkeypatch
+    ):
+        monkeypatch.delenv("EVAL_SYSTEM_PROVIDER", raising=False)
+        LiveLLMAgentAdapter(graph_rag_provider="off")
+        mock_build_client.assert_called_with("groq", breaker=False)
+
+        monkeypatch.setenv("EVAL_SYSTEM_PROVIDER", "openai")
+        LiveLLMAgentAdapter(graph_rag_provider="off")
+        mock_build_client.assert_called_with("openai", breaker=False)
+
+    def test_an_unknown_provider_is_refused_instead_of_falling_back_to_groq(self, monkeypatch):
+        import pytest
+        from scripts.symptom_eval.system_under_test import eval_system_provider
+
+        monkeypatch.setenv("EVAL_SYSTEM_PROVIDER", "anthropic")
+        with pytest.raises(ValueError, match="EVAL_SYSTEM_PROVIDER"):
+            eval_system_provider()
+
+    def test_the_manifest_label_names_the_model_and_the_host_for_openai_compatible_runs(self, monkeypatch):
+        from scripts.symptom_eval.system_under_test import eval_system_model_label
+
+        monkeypatch.setenv("EVAL_SYSTEM_PROVIDER", "openai")
+        monkeypatch.setenv("OPENAI_MODEL", "gpt-oss:120b-cloud")
+        monkeypatch.setenv("OPENAI_BASE_URL", "http://localhost:11434/v1")
+        assert eval_system_model_label() == "gpt-oss:120b-cloud via http://localhost:11434/v1"
+
+        monkeypatch.delenv("OPENAI_BASE_URL")
+        assert eval_system_model_label() == "gpt-oss:120b-cloud via api.openai.com"
+
+    def test_the_groq_label_stays_the_bare_model_name_so_older_manifests_still_match(self, monkeypatch):
+        from scripts.symptom_eval.system_under_test import eval_system_model_label
+
+        monkeypatch.delenv("EVAL_SYSTEM_PROVIDER", raising=False)
+        monkeypatch.setenv("GROQ_API_KEY", "test")
+        monkeypatch.setenv("GROQ_MODEL", "openai/gpt-oss-120b")
+        assert eval_system_model_label() == "openai/gpt-oss-120b"

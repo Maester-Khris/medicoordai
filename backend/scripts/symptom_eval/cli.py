@@ -29,7 +29,6 @@ from config import (
     llm_conversation_token_cap,
     llm_retry_attempts,
 )
-from llm.groq_client import GroqClient
 from llm.prompts import build_system_prompt
 from llm.retry import BASE_DELAY_SECONDS
 from scripts.symptom_eval.ablation import AblationLegResult, CheckpointStore, run_ablation
@@ -53,7 +52,9 @@ from scripts.symptom_eval.run_manifest import (
     sha256_text,
     write_or_verify_manifest,
 )
-from scripts.symptom_eval.system_under_test import EVAL_BREAKER_ENABLED, LiveLLMAgentAdapter, SystemUnderTestPort
+from scripts.symptom_eval.system_under_test import (
+    EVAL_BREAKER_ENABLED, LiveLLMAgentAdapter, SystemUnderTestPort, eval_system_model_label,
+)
 from scripts.symptom_eval.vignette_loader import (
     CHECKLISTS_DIR,
     VARIANTS,
@@ -89,7 +90,7 @@ def live_dependencies() -> RunDependencies:
     return RunDependencies(
         system_factory=lambda provider: LiveLLMAgentAdapter(graph_rag_provider=provider),
         simulator=simulator,
-        system_model=GroqClient().model_name,
+        system_model=eval_system_model_label(),
         simulator_model=simulator.model_name,
     )
 
