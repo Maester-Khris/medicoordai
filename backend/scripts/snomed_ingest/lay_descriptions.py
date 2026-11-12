@@ -102,5 +102,5 @@ def select_for_index(phrases: Sequence[LayPhrase], rule: str) -> list[LayPhrase]
 
 
 def lay_description_id(anchor_id: str, text: str) -> str:
-    digest = hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
+    digest = hashlib.sha1(text.encode("utf-8"), usedforsecurity=False).hexdigest()[:12]
     return f"lay:{anchor_id}:{digest}"

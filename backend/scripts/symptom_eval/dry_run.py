@@ -20,7 +20,7 @@ class FakeSystem:
 
     def respond(self, patient_message: str, history: list[dict], conversation_id: str) -> SystemTurnResult:
         opening = history[0]["content"] if history else patient_message
-        digest = int(hashlib.sha1(f"{self._provider}|{opening}".encode()).hexdigest(), 16)
+        digest = int(hashlib.sha1(f"{self._provider}|{opening}".encode(), usedforsecurity=False).hexdigest(), 16)
         return SystemTurnResult(
             response_text="DRY RUN classification",
             severity=SEVERITIES[digest % len(SEVERITIES)],
