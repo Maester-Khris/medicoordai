@@ -406,10 +406,32 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-body-md text-[#85A4B1] max-w-lg leading-relaxed">
-              Describe your symptoms. We'll find the nearest clinic, urgent care, or ER that can help — with real wait times and directions.
+              Describe your symptoms. We'll find the nearest clinic, urgent care, or ER that can help, with real wait times and directions.
             </p>
 
-            {/* Unified Omni-Input Box Workspace */}
+            {/* Entry to the app, where visitors try the chat and the map. */}
+            <div className="flex flex-wrap items-center gap-3 mt-2">
+              <button
+                onClick={() => navigate('/app')}
+                className="inline-flex items-center gap-2 h-12 px-6 text-label-md font-semibold text-[#061219] rounded-xl bg-[#48F6C1] hover:bg-[#3ce0ad] shadow-sm transition-all duration-250 cursor-pointer active:scale-95"
+              >
+                Try it free
+                <ArrowRight className="w-4 h-4" weight="bold" />
+              </button>
+              <button
+                onClick={() => navigate('/app')}
+                className="inline-flex items-center gap-2 h-12 px-5 text-label-md font-medium text-[#E2F1F5] rounded-xl border border-[#1C4659]/65 bg-[#0A1D27]/60 hover:bg-[#0A1D27]/90 hover:border-[#48F6C1]/40 hover:text-[#48F6C1] transition-all duration-250 cursor-pointer active:scale-95"
+              >
+                <MapPin className="w-4 h-4" />
+                Go to the map
+              </button>
+            </div>
+
+            {/* Hidden until the LLM text-to-map navigation lands: the omni-input, its command menu, the
+                sample-query chips and the parse preview. Delete `false &&` to restore. It is not a
+                block comment because the block holds JSX comments of its own, and tsconfig's
+                noUnusedLocals would flag the state and handlers only this block uses. */}
+            {false && (
             <div className="relative w-full max-w-lg mt-2">
               <form onSubmit={handleFormSubmit} className="relative z-20">
                 <div className="flex items-center w-full h-14 pl-4 pr-2.5 rounded-xl border border-[#1C4659]/65 bg-[#0A1D27]/90 backdrop-blur-xl shadow-lg focus-within:border-[#48F6C1] focus-within:ring-2 focus-within:ring-[#48F6C1]/10 transition-all duration-300">
@@ -569,6 +591,7 @@ export default function LandingPage() {
                 )}
               </AnimatePresence>
             </div>
+            )}
           </div>
 
           {/* Right Column: Hero Animation Loop Canvas (Increased Height & Seamless Blending) */}
