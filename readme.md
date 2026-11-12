@@ -124,6 +124,32 @@ Next: an async database pool and a 2-worker box, re-measured with the same ladde
 
 ---
 
+## Triage Evidence (interim, Sprint 23)
+
+Interim numbers, rewritten at the end of Sprint 23. Method: 27 clinician-reviewed vignettes in two wordings (original, and lay-language), 3 repeats each, scored in code against the gold severity, with a simulated patient (`claude-haiku-4-5`). The system under test was `gpt-oss-120b` on Ollama Cloud, not the production host (Groq). Each graph leg runs the same conversations, so legs are compared in pairs. Details: [CHANGELOG.md](CHANGELOG.md) (Sprint 23).
+
+**End to end** (81 conversations per leg and set; under-triage = a more severe case classified lower)
+
+| Set | Leg | Under-triage | Accuracy |
+|---|---|---|---|
+| lay | no graph (`off`) | 22.2% | 69.1% |
+| lay | static lookup | 27.2% | 64.2% |
+| lay | v3 (semantic) | 29.6% | 64.2% |
+| original | no graph (`off`) | 23.5% | 69.1% |
+| original | static lookup | 25.9% | 66.7% |
+| original | v3 (semantic) | 28.4% | 65.4% |
+
+**Retrieval** (does the graph find the right complaint?): the v3 semantic index (BioLORD) puts the right anchor in its top 5 for 83 to 93% of messages across four query sets (150 to 365 messages each). The v2 graph matched 7 of 20 messages on top-1, and neither v2 nor the static lookup matched any of 10 lay-language messages.
+
+**What this says so far**
+- Semantic retrieval fixed the lay-language matching problem, but better matching has not made the triage answer safer.
+- No leg beats the no-graph baseline. v3 is 7.4 points worse on the lay set (95% interval [-14.8, -1.2] on the paired bootstrap, but p = 0.25 on the exact McNemar test), so this is no evidence that v3 helps, not proof that it harms.
+- The no-graph baseline is stable across hosts and months (22.2% on Groq in August, 22.2% and 23.5% here).
+- Not yet known: whether the host changes the picture (a Groq check is pending), and why v3 gets some vignettes wrong (the retrieved anchors and red flags are not recorded in the checkpoint).
+- Production keeps the no-graph path as the default until v3 beats it beyond the paired interval.
+
+---
+
 ## Tech Stack
 
 **Current (hackathon build)**
