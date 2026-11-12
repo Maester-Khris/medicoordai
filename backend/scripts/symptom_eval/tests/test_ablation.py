@@ -245,7 +245,29 @@ class TestTranscriptPersistence:
         assert entry["transcript"] == [{
             "turn_index": 0, "patient_message": "dizzy", "system_response": "classified",
             "graph_context_matched": False, "cap_reached": False, "tokens_used": 0,
+            "complaint_name": None, "surfaced_red_flag_indicators": [], "surfaced_followup_questions": [],
         }]
+
+    def test_the_matched_complaint_the_red_flags_and_the_final_reasoning_reach_the_checkpoint(self, tmp_path):
+        class _Surfacing:
+            def respond(self, patient_message, history, conversation_id=None):
+                return SystemTurnResult(
+                    "classified", "emergent", "crushing chest pain with shock signs", True,
+                    surfaced_red_flag_indicators=["Shock"],
+                    surfaced_followup_questions=["Are you feeling faint?"],
+                    complaint_name="Chest pain (cardiac features)",
+                )
+
+        path = str(tmp_path / "checkpoint.jsonl")
+        _run(path, _Surfacing())
+
+        entry = CheckpointStore(path).entries_for("original", "off")[0]
+        turn = entry["transcript"][0]
+
+        assert turn["complaint_name"] == "Chest pain (cardiac features)"
+        assert turn["surfaced_red_flag_indicators"] == ["Shock"]
+        assert turn["surfaced_followup_questions"] == ["Are you feeling faint?"]
+        assert entry["final_reasoning"] == "crushing chest pain with shock signs"
 
     def test_entry_without_transcript_still_loads(self, tmp_path):
         path = tmp_path / "checkpoint.jsonl"

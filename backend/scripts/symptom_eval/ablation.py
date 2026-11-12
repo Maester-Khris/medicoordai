@@ -94,6 +94,7 @@ class CheckpointStore:
         gain: InformationGainResult | None,
         graph_context_matched: list[bool],
         transcript: list[dict] | None = None,
+        final_reasoning: str | None = None,
     ) -> None:
         entry = {
             "variant": variant,
@@ -107,6 +108,7 @@ class CheckpointStore:
         }
         if transcript is not None:
             entry["transcript"] = transcript
+            entry["final_reasoning"] = final_reasoning
         with open(self._path, "a") as f:
             f.write(json.dumps(entry) + "\n")
         self._record(entry)
@@ -179,9 +181,13 @@ def run_leg(
                             "graph_context_matched": turn.graph_context_matched,
                             "cap_reached": turn.cap_reached,
                             "tokens_used": turn.tokens_used,
+                            "complaint_name": turn.complaint_name,
+                            "surfaced_red_flag_indicators": turn.surfaced_red_flag_indicators,
+                            "surfaced_followup_questions": turn.surfaced_followup_questions,
                         }
                         for turn in transcript.turns
                     ],
+                    final_reasoning=transcript.final_reasoning,
                 )
 
     return AblationLegResult(

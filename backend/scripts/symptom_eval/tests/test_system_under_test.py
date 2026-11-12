@@ -55,6 +55,7 @@ class TestLiveLLMAgentAdapter:
         assert result.graph_context_matched is True
         assert result.surfaced_red_flag_indicators == ["Shock"]
         assert result.surfaced_followup_questions == ["Are you feeling faint?"]
+        assert result.complaint_name == "Chest pain (cardiac features)"
         assert os.environ["GRAPH_RAG_PROVIDER"] == "static"
 
     @patch("scripts.symptom_eval.system_under_test.get_graph_provider")

@@ -40,6 +40,7 @@ class ConversationTurn:
     surfaced_followup_questions: list[str] = field(default_factory=list)
     cap_reached: bool = False
     tokens_used: int = 0
+    complaint_name: str | None = None
 
 
 @dataclass

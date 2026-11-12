@@ -36,6 +36,7 @@ def run_vignette_conversation(
                 surfaced_followup_questions=result.surfaced_followup_questions,
                 cap_reached=result.cap_reached,
                 tokens_used=result.tokens_used,
+                complaint_name=result.complaint_name,
             )
         )
         history.append({"role": "user", "content": patient_message})

@@ -30,6 +30,7 @@ class SystemTurnResult:
     surfaced_followup_questions: list[str] = field(default_factory=list)
     cap_reached: bool = False
     tokens_used: int = 0
+    complaint_name: str | None = None
 
 
 class SystemUnderTestPort(ABC):
@@ -93,4 +94,5 @@ class LiveLLMAgentAdapter(SystemUnderTestPort):
             ),
             cap_reached=result.get("cap_reached", False),
             tokens_used=result.get("tokens_used", 0),
+            complaint_name=context.complaint_name if context and context.matched else None,
         )

@@ -37,6 +37,24 @@ class _ScriptedSimulator:
 
 
 class TestRunVignetteConversation:
+    def test_each_turn_keeps_the_matched_complaint_and_the_surfaced_red_flags(self):
+        system = _ScriptedSystem([
+            SystemTurnResult(
+                "Any fainting?", None, None, True,
+                surfaced_red_flag_indicators=["Shock"], surfaced_followup_questions=["Are you feeling faint?"],
+                complaint_name="Chest pain (cardiac features)",
+            ),
+            SystemTurnResult("Go to the ER.", "emergent", "reasoning", False),
+        ])
+
+        transcript = run_vignette_conversation(
+            VIGNETTE, _ScriptedSimulator(["Yes."]), system, conversation_id="conv-1"
+        )
+
+        assert transcript.turns[0].complaint_name == "Chest pain (cardiac features)"
+        assert transcript.turns[0].surfaced_red_flag_indicators == ["Shock"]
+        assert transcript.turns[1].complaint_name is None
+
     def test_stops_at_first_triage_result(self):
         system = _ScriptedSystem([
             SystemTurnResult("How long?", None, None, False),
