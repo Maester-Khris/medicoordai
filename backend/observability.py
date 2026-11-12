@@ -1,4 +1,5 @@
 import logging
+import hmac
 import os
 import uuid
 
@@ -72,7 +73,7 @@ def verify_metrics_token(authorization: str = Header(default="")) -> None:
     if not token:
         # Fail closed: without a configured token the endpoint would be open to anyone.
         raise HTTPException(status_code=503, detail="Metrics token not configured")
-    if authorization != f"Bearer {token}":
+    if not hmac.compare_digest(authorization.encode(), f"Bearer {token}".encode()):
         raise HTTPException(status_code=403, detail="Forbidden")
 
 

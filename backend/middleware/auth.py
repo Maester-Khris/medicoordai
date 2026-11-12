@@ -29,6 +29,11 @@ def _is_internal(header_value: str) -> bool:
     return bool(expected) and hmac.compare_digest(header_value.encode(), expected.encode())
 
 
+def is_internal_request(request: Request) -> bool:
+    """True when the caller sent the internal token (operators, load tests, the deploy's own checks)."""
+    return _is_internal(request.headers.get("X-Internal", ""))
+
+
 def require_internal(request: Request) -> None:
     """403 unless the caller sent the internal token. Closed when no token is configured."""
     if not _is_internal(request.headers.get("X-Internal", "")):

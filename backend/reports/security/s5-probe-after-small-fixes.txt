@@ -1,0 +1,4 @@
+PASS /health exposes only status  [fields: ['status']]
+PASS /docs not exposed  [404]
+PASS /openapi.json not exposed  [404]
+30/30 pass
