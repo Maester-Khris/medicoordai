@@ -1,0 +1,2 @@
+mild cough       -> severity routine after 4 turns
+sprained ankle   -> severity routine after 4 turns
