@@ -1,3 +1,5 @@
+import hashlib
+import logging
 import os
 from pathlib import Path
 from typing import Any, Optional, Protocol, runtime_checkable
@@ -7,6 +9,30 @@ import onnxruntime as ort
 from tokenizers import Tokenizer
 
 from graph.semantic.settings import SemanticSettings
+
+logger = logging.getLogger(__name__)
+
+
+class ModelIntegrityError(RuntimeError):
+    """The model file on disk is not the one that was pinned."""
+
+
+def verify_model_file(path: Path, expected_sha256: str | None) -> None:
+    """Refuse a model file whose sha256 differs from the pinned value.
+
+    The pin comes from the environment (SEMANTIC_MODEL_SHA256), not from a file next to the model:
+    anyone who can replace the model on the volume could replace a sidecar file too.
+    Unpinned: load and warn, so existing deploys keep working until the pin is set.
+    """
+    if not expected_sha256:
+        logger.warning("semantic_model_hash_unpinned")
+        return
+    digest = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            digest.update(chunk)
+    if digest.hexdigest() != expected_sha256.lower():
+        raise ModelIntegrityError(f"{Path(path).name} does not match the pinned sha256")
 
 
 @runtime_checkable
@@ -78,6 +104,7 @@ class OnnxEmbedder:
             # (BioLORD) that lose too much accuracy when quantized.
             int8_path = model_dir / "model.int8.onnx"
             model_path = str(int8_path if int8_path.exists() else model_dir / "model.onnx")
+            verify_model_file(Path(model_path), settings.model_sha256)
             session = ort.InferenceSession(
                 model_path,
                 sess_options=build_session_options(settings.threads),

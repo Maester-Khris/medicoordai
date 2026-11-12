@@ -31,7 +31,7 @@ import re
 import pytest
 from dataclasses import dataclass
 
-from llm.prompts import build_medical_context_block, build_graph_context_block
+from llm.prompts import build_medical_context_block, build_graph_context_block, clean_reference_text
 from graph.base import GraphContext, RedFlagMatch
 
 
@@ -155,15 +155,20 @@ class TestGraphContextBlockInjectionContainment:
     def test_complaint_name_payload_wrapped_in_fence(self, payload):
         ctx = _make_graph_context(complaint=payload)
         block = build_graph_context_block(ctx)
+        # Graph text is cleaned before it enters the fence (tags and line breaks removed), so a payload
+        # cannot close the fence or open a section; what is left must sit inside it.
+        cleaned = clean_reference_text(payload)
         open_pos = block.find("<possible_complaint>")
         close_pos = block.find("</possible_complaint>")
-        payload_pos = block.find(payload)
+        payload_pos = block.find(cleaned)
         assert open_pos != -1, "possible_complaint open tag missing"
         assert close_pos != -1, "possible_complaint close tag missing"
         assert payload_pos != -1, "Payload not in block"
         assert open_pos < payload_pos < close_pos, (
             "Complaint name payload escaped the possible_complaint fence"
         )
+        assert block.count("<possible_complaint>") == 1 and block.count("</possible_complaint>") == 1
+        assert block.count("</red_flags_to_screen_for>") == 1
 
     @pytest.mark.parametrize("payload", INJECTION_PAYLOADS)
     def test_reference_framing_present_in_graph_block(self, payload):

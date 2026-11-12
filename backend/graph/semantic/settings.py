@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
@@ -15,6 +16,7 @@ class SemanticSettings:
     top_n: int = 20
     breaker_failures: int = 5
     breaker_cooldown_s: float = 30.0
+    model_sha256: str | None = None  # pin of the model file actually loaded; None = unpinned (warns)
 
     def __post_init__(self) -> None:
         if not isinstance(self.model_dir, Path):
@@ -90,6 +92,10 @@ def load_settings(env: Mapping[str, str]) -> SemanticSettings:
     if breaker_cooldown_s <= 0:
         raise ValueError("SEMANTIC_BREAKER_COOLDOWN_S must be > 0")
 
+    raw_sha = env.get("SEMANTIC_MODEL_SHA256", "").strip().lower()
+    if raw_sha and not re.fullmatch(r"[0-9a-f]{64}", raw_sha):
+        raise ValueError("SEMANTIC_MODEL_SHA256 must be 64 hex characters (sha256 of the model file)")
+
     return SemanticSettings(
         model_dir=model_dir,
         index_dir=index_dir,
@@ -101,4 +107,5 @@ def load_settings(env: Mapping[str, str]) -> SemanticSettings:
         top_n=top_n,
         breaker_failures=breaker_failures,
         breaker_cooldown_s=breaker_cooldown_s,
+        model_sha256=raw_sha or None,
     )
