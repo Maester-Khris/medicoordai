@@ -9,7 +9,7 @@ Toronto Tech Week 2025 Hackathon → SaaS rebuild in progress
 
 MediCoord AI is a health coordination platform designed to reduce the friction between a patient experiencing symptoms and the right care provider reaching them in time.
 
-A user describes how they feel in natural language. The system classifies their symptom severity, locates them, identifies the most appropriate nearby facility, and routes them there — all surfaced in a single conversational interface backed by a live city map.
+A user describes how they feel in natural language. The system classifies their symptom severity, locates them, identifies the most appropriate nearby facility, and routes them there, all surfaced in a single conversational interface backed by a live city map.
 
 The system is designed for city-scale deployment: any Toronto resident with a browser can open it, describe their symptoms, and receive a real routing recommendation without needing to know which hospital handles what, how far away anything is, or what their condition actually warrants.
 
@@ -19,11 +19,11 @@ The system is designed for city-scale deployment: any Toronto resident with a br
 
 This project was originally built for **Toronto Tech Week 2025** as a hackathon submission under a 48-hour constraint. The goal was to demonstrate AI-driven triage and coordination at a city scale using Toronto's actual healthcare facility layout.
 
-The hackathon build shipped a working frontend simulation — a React map interface that generates synthetic patients, routes them to providers using the Geoapify Route Matrix API, and visualizes queue state per hospital. It also included a GCP Cloud Function with Gemini 2.5 Flash for symptom extraction and a fine-tuned Vertex AI classifier for severity prediction.
+The hackathon build shipped a working frontend simulation, a React map interface that generates synthetic patients, routes them to providers using the Geoapify Route Matrix API, and visualizes queue state per hospital. It also included a GCP Cloud Function with Gemini 2.5 Flash for symptom extraction and a fine-tuned Vertex AI classifier for severity prediction.
 
 **What worked at submission:** the frontend simulation, the Geoapify routing integration, the priority queue scheduling algorithm, the Gemini symptom extraction call.
 
-**What didn't:** the fine-tuned Vertex AI endpoint was never successfully wired into the cloud function after 8 attempted endpoint URL formats — the deployed version silently substitutes random classification for real model inference. The frontend and backend never communicated. The severity schemas between the two layers were incompatible.
+**What didn't:** the fine-tuned Vertex AI endpoint was never successfully wired into the cloud function after 8 attempted endpoint URL formats, the deployed version silently substitutes random classification for real model inference. The frontend and backend never communicated. The severity schemas between the two layers were incompatible.
 
 The codebase is a collection of parallel exploration tracks that were not consolidated before the demo. It reads like a hackathon, because it was one.
 
@@ -34,20 +34,20 @@ The codebase is a collection of parallel exploration tracks that were not consol
 | Layer | Status |
 |---|---|
 | React SPA (3 tabs: Smart Routing, In-house Scheduling, Predictive Analysis) | Working as standalone simulation |
-| Geoapify Route Matrix integration | Working (API key hardcoded — not safe to deploy) |
+| Geoapify Route Matrix integration | Working (API key hardcoded: not safe to deploy) |
 | Priority queue triage algorithm | Working |
 | Gemini 2.5 Flash symptom extraction (Cloud Function) | Working given valid GCP credentials |
-| Fine-tuned Vertex AI severity classifier | Broken — never successfully called; random fallback deployed |
-| Frontend ↔ Backend integration | None — fully isolated subsystems |
-| Severity schema consistency | Broken — two incompatible 4-class schemas across layers |
-| Environment / secrets management | None — keys hardcoded in client-side source |
+| Fine-tuned Vertex AI severity classifier | Broken: never successfully called; random fallback deployed |
+| Frontend ↔ Backend integration | None: fully isolated subsystems |
+| Severity schema consistency | Broken: two incompatible 4-class schemas across layers |
+| Environment / secrets management | None: keys hardcoded in client-side source |
 | CI/CD, Docker, infrastructure config | None |
 
 See [`CHANGELOG.md`](./CHANGELOG.md) for the full known-issues inventory from the hackathon release.
 
 ---
 
-## New Direction — v2.0
+## New Direction: v2.0
 
 The rebuild moves from a simulation demo to an integrated AI-powered product with a real user session flow.
 
@@ -57,15 +57,15 @@ The home page presents a split interface: a conversational chat panel on the lef
 
 The user flow:
 
-1. User types how they feel in the chat panel — free text, no structured form
+1. User types how they feel in the chat panel, free text, no structured form
 2. The AI agent runs a parallelized tool workflow:
-   - **Tool 1a** — Claude (Anthropic API) parses the input and returns structured severity classification (`routine / moderate / urgent / emergent`) with reasoning
-   - **Tool 1b** — Browser Geolocation API captures the user's position (with explicit consent prompt)
+   - **Tool 1a**: Claude (Anthropic API) parses the input and returns structured severity classification (`routine / moderate / urgent / emergent`) with reasoning
+   - **Tool 1b**: Browser Geolocation API captures the user's position (with explicit consent prompt)
 3. On both results returning, a second tool call fires:
-   - **Tool 2** — Geoapify RouteMatrix computes travel times from the user to all nearby facilities; the system selects the most appropriate facility given severity class
+   - **Tool 2**: Geoapify RouteMatrix computes travel times from the user to all nearby facilities; the system selects the most appropriate facility given severity class
 4. The map updates in real time: user pin appears, route polyline draws, destination facility highlights
-5. The chat responds with a plain-language explanation of the recommendation and why — not just a name and address
-6. Optionally: a user-initiated contact alert panel appears for high-severity classifications (user taps to send — never autonomous)
+5. The chat responds with a plain-language explanation of the recommendation and why, not just a name and address
+6. Optionally: a user-initiated contact alert panel appears for high-severity classifications (user taps to send, never autonomous)
 
 The tool-calling pipeline is made visible in the chat UI with a live progress trace during the parallel step, so the AI engineering is legible to both end users and technical evaluators.
 
@@ -87,7 +87,7 @@ Backend API
 │   ├── Tool 1a: Anthropic API → severity classification (structured output)
 │   ├── Tool 1b: Geolocation payload from client
 │   └── Tool 2: Geoapify RouteMatrix → nearest appropriate facility
-└── (Optional) POST /alert — user-initiated contact notification
+└── (Optional) POST /alert: user-initiated contact notification
 
 Infrastructure
 ├── Environment variables for all API keys (no hardcoded secrets)
@@ -98,10 +98,10 @@ Infrastructure
 
 ### What Changes from the Hackathon Build
 
-- The Vertex AI fine-tuned classifier is retired. Claude handles severity classification natively via structured tool output — more reliable, no endpoint management, better accuracy than a 238-sample fine-tune
+- The Vertex AI fine-tuned classifier is retired. Claude handles severity classification natively via structured tool output, more reliable, no endpoint management, better accuracy than a 238-sample fine-tune
 - The simulation engine is not the product anymore. The map responds to this user's real session, not synthetic patients
 - Frontend and backend are connected through a real API contract with a shared severity schema
-- The Dialogflow CX dependency is dropped — the agentic workflow is implemented directly via the Anthropic API tool-calling interface
+- The Dialogflow CX dependency is dropped, the agentic workflow is implemented directly via the Anthropic API tool-calling interface
 
 ---
 
@@ -124,29 +124,55 @@ Next: an async database pool and a 2-worker box, re-measured with the same ladde
 
 ---
 
-## Triage Evidence (interim, Sprint 23)
+## Symptom Understanding
 
-Interim numbers, rewritten at the end of Sprint 23. Method: 27 clinician-reviewed vignettes in two wordings (original, and lay-language), 3 repeats each, scored in code against the gold severity, with a simulated patient (`claude-haiku-4-5`). The system under test was `gpt-oss-120b` on Ollama Cloud, not the production host (Groq). Each graph leg runs the same conversations, so legs are compared in pairs. Details: [CHANGELOG.md](CHANGELOG.md) (Sprint 23).
+**Why this is measured.** The aim is a graph path that is clinically as good as the no-graph baseline (`off`), where the LLM alone decides. Relying on the LLM alone sends every user's symptom text to the model host, with no data processing agreement yet. Matching `off` on safety and on the questions asked is the condition for moving part of that work off the model. Not met today.
 
-**End to end** (81 conversations per leg and set; under-triage = a more severe case classified lower)
+Method: 27 clinician-reviewed vignettes, 3 repeats, simulated patient (`claude-haiku-4-5`), scored in code against gold severity. Sprint 23 system under test: `gpt-oss-120b` on Ollama Cloud (August: Groq). Details: [CHANGELOG.md](CHANGELOG.md).
 
-| Set | Leg | Under-triage | Accuracy |
+### 1. Retrieval
+
+Does the graph find the right complaint? Gold anchor in the top 5 (top 1 in brackets). `off` retrieves nothing.
+
+| Leg | August 2026 | Now (Sprint 23) |
+|---|---|---|
+| static lookup | 100% on 20 messages (top 1); 0 of 10 lay messages | not re-run |
+| v2 graph | 35% on 20 messages (top 1); 0 of 10 lay messages | not re-run |
+| v3 (BioLORD) | did not exist | 83 to 93% across four sets of 104 to 365 messages (top 1: 38 to 71%) |
+| v3 (bge-small) | did not exist | 69 to 81% on the same four sets (top 1: 36 to 56%) |
+
+The static 100% is a vocabulary artifact: its test messages were written from its own vocabulary. Substring matching scored 4% on the 150 author-written messages. v3 fixed lay-language matching; only its top 5 is reliable. BioLORD is the accuracy pick; bge-small is the likelier production pick on CPU, since in the ONNX bench it embeds a message in about 3 ms against 19 to 31 ms, uses about 115 MB of memory against about 600 MB, and its model file is 34 MB against 418 MB, but it misses the 75% hit@5 screen on all four sets, so it needs a retrieval-quality fix before it can ship.
+
+### 2. Triage
+
+Under-triage = a more severe case classified lower (lower is better). Accuracy in brackets. 81 conversations per leg.
+
+| Leg | August (original wording, 1 run) | Now, original wording | Now, lay wording |
 |---|---|---|---|
-| lay | no graph (`off`) | 22.2% | 69.1% |
-| lay | static lookup | 27.2% | 64.2% |
-| lay | v3 (semantic) | 29.6% | 64.2% |
-| original | no graph (`off`) | 23.5% | 69.1% |
-| original | static lookup | 25.9% | 66.7% |
-| original | v3 (semantic) | 28.4% | 65.4% |
+| `off` | 22.2% (63.0%) | 23.5% (69.1%) | 22.2% (69.1%) |
+| static | 37.0% (51.9%) | 25.9% (66.7%) | 27.2% (64.2%) |
+| v2 | 22.2% (66.7%) | removed | removed |
+| v3 | n/a | 28.4% (65.4%) | 29.6% (64.2%) |
 
-**Retrieval** (does the graph find the right complaint?): the v3 semantic index (BioLORD) puts the right anchor in its top 5 for 83 to 93% of messages across four query sets (150 to 365 messages each). The v2 graph matched 7 of 20 messages on top-1, and neither v2 nor the static lookup matched any of 10 lay-language messages.
+v3 is 7.4 points worse than `off` on the lay set (paired 95% interval [-14.8, -1.2], exact McNemar p = 0.25): no evidence it helps, not proof it harms. Re-running the lay set moved `off` by 5 points, so smaller gaps are noise.
 
-**What this says so far**
-- Semantic retrieval fixed the lay-language matching problem, but better matching has not made the triage answer safer.
-- No leg beats the no-graph baseline. v3 is 7.4 points worse on the lay set (95% interval [-14.8, -1.2] on the paired bootstrap, but p = 0.25 on the exact McNemar test), so this is no evidence that v3 helps, not proof that it harms.
-- The no-graph baseline is stable across hosts and months (22.2% on Groq in August, 22.2% and 23.5% here).
-- Not yet known: whether the host changes the picture (a Groq check is pending), and why v3 gets some vignettes wrong (the retrieved anchors and red flags are not recorded in the checkpoint).
-- Production keeps the no-graph path as the default until v3 beats it beyond the paired interval.
+### 3. Elicitation coverage
+
+The goal: check whether the graph improves understanding (asking for the facts a clinician needs) even if overall triage does not improve. Share of checklist facts the patient voiced after the system's questions. Lay set, 81 conversations per leg, judge `gpt-4o-mini`. August: not measured.
+
+| Leg | Patient-answerable facts (primary) | All facts |
+|---|---|---|
+| `off` | 35.5% | 24.0% |
+| static | 33.9% | 23.9% |
+| v3 | 32.6% | 24.2% |
+
+v3 minus `off`: -2.9 points (95% interval [-11.7, +3.1]). All comparisons include zero: the graph does not elicit more needed facts. The second-judge check failed (misconfigured), so judge reliability is unproven; one run only.
+
+### Reading
+
+- Better matching did not make triage safer or the chat's questions better.
+- Production keeps the no-graph path as default until v3 beats it beyond the paired interval.
+- Open: whether the host matters (no Groq check was run), and why v3 misses some vignettes. Early reading: generic red flags plus patient "no" answers get used as reassurance, lowering severity (not yet quantified).
 
 ---
 
@@ -163,7 +189,7 @@ Interim numbers, rewritten at the end of Sprint 23. Method: 27 clinician-reviewe
 **Target (v2.0)**
 - React 18 + Vite + TypeScript + Tailwind CSS
 - React Leaflet / Leaflet
-- Anthropic API (Claude) — agentic tool-calling, severity classification, chat
+- Anthropic API (Claude): agentic tool-calling, severity classification, chat
 - Geoapify Route Matrix API
 - Backend API layer (Node/Python TBD)
 - Secure environment variable management
