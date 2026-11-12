@@ -176,6 +176,21 @@ v3 minus `off`: -2.9 points (95% interval [-11.7, +3.1]). All comparisons includ
 
 ---
 
+## Security
+
+Sprint 23 review (2026-11-09 to 2026-11-12), run locally with free tools; the AI part used the production model (Groq `gpt-oss-120b`). Full report: [docs/security/2026-11-12-security-review.md](docs/security/2026-11-12-security-review.md).
+
+| Area | Result |
+|---|---|
+| Secrets, dependencies, static analysis, ZAP scans | no secret in the tree; known advisories fixed or listed; 0 findings in app code; ZAP 0 FAIL |
+| Guest isolation | 30 of 30 checks; no guest can read or change another guest's data |
+| Red team (72 attacks, real model) | none lowered the severity or leaked the prompt; every emergent reply carried 911; 6 flagged, none High |
+| Agent power | the model has one tool that returns a classification; it cannot fetch, send or run anything |
+
+Three High findings were found and fixed with tests: a junk `Bearer` header could stall the API, the model's severity was not validated, and emergent replies could lack a 911 line. Open: typed personal details reach the model provider unredacted, and a reply can be replaced by attacker text (the severity and 911 line still hold). Limits: one run of a sample, not a proof; the semantic path and live graph were not tested.
+
+---
+
 ## Tech Stack
 
 **Current (hackathon build)**

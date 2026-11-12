@@ -837,24 +837,24 @@ Starts as W1 of the late-December plan (`rx-next/interview-prep/product-thinker-
 **Mini pilot 2026-11-08** (lay set, first 5 vignettes, `off` and `static`, 1 repeat, judges off; Groq `openai/gpt-oss-120b` on the free tier, paced at one turn per 25 s; patient simulated by the local Claude Code CLI, recorded as `claude-cli:claude-haiku-4-5`): 10 conversations, all completed, no failed turn, cap never reached (8 of 10 ended on turn 1, the longest took 4). Plumbing check only, 5 cases per leg: do not quote the accuracy. Tokens were estimated at about 2.5k per conversation (max 5.5k) from text length, about 5 times less than the 13.5k assumed in the step 2 plan, so the full run is nearer 2M Groq tokens than 11M (about 80 conversations a day on the free tier). The checkpoint now records `tokens_used` per turn, so step 5 reports measured numbers. The free Groq tier (8,000 tokens a minute) needs pacing; the pilot driver was throwaway and is not committed. **Still to do by the owner:** the Anthropic API keys in Doppler `dev_personal` and `eval` return 401 and must be replaced (the simulator ran on the local CLI instead); `dev_personal` `ANTHROPIC_MODEL` holds a retired model (`claude-3-5-haiku-20241022`, should be `claude-haiku-4-5`) and `eval` `GROQ_MODEL` holds a shut-down one (`llama-3.3-70b-versatile`, should be `openai/gpt-oss-120b`).
 
 **3. Graph v3 design (no spend)**
-- [ ] Clustering redone.
-- [ ] A semantic (embedding) step in the live retrieval path; without it v3 is substring matching again.
-- [ ] Hosting decided (AuraDB Free paused and deleted the last graph and caps at 200,000 nodes).
+- [ ] ~~Clustering redone.~~ Deferred to the next v3 improvement effort (the RedFlagCluster pilot clause stays as is; it only logs).
+- [x] A semantic (embedding) step in the live retrieval path; without it v3 is substring matching again.
+- [x] Hosting decided (AuraDB Free paused and deleted the last graph and caps at 200,000 nodes).
 
 **4. Graph v3 build and retrieval screen (no LLM spend apart from one-time embeddings)**
-- [ ] Track A on the main and lay sets after each rebuild.
-- [ ] Gate: v3 clearly beats 0/10 on the lay set. If not, stop before step 5 and record why.
+- [x] Track A on the main and lay sets after each rebuild.
+- [x] Gate: v3 clearly beats 0/10 on the lay set. If not, stop before step 5 and record why.
 
 **5. Paid pilot**
-- [ ] 5 vignettes, 1 repeat, all legs, judges off. Measures tokens per conversation, which sizes step 6.
+- [x] 5 vignettes, 1 repeat, all legs, judges off. Measures tokens per conversation, which sizes step 6.
 
 **6. Full paid run**
-- [ ] `off`, `static` and `v3`, each on the original and lay sets, paired, with repeats (count set from the pilot).
-- [ ] The live fallback (`LLM_PROVIDER_CHAIN=groq,anthropic`) scored on `off` only.
+- [x] `off`, `static` and `v3`, each on the original and lay sets, paired, with repeats (count set from the pilot).
+- [ ] ~~The live fallback (`LLM_PROVIDER_CHAIN=groq,anthropic`) scored on `off` only.~~ Not run this sprint.
 
 **7. After the numbers**
-- [ ] README rewrite: remove the stale May audit state, add the measured numbers and honest limits.
-- [ ] Eval gate in CI on a PR label, threshold taken from the measured interval. Not free: under-triage needs live conversations.
+- [x] README: measured numbers, limits and a security section added (Symptom Understanding, Security). The stale May audit sections are still to rewrite.
+- [ ] ~~Eval gate in CI on a PR label.~~ Not done; moves with the result (v3 does not beat `off`, so there is no threshold to protect yet).
 
 **8. Security review (final step, in progress 2026-11-09)** on branch `chore/security-review` (cut from `feat/eval-hardening`, not pushed). Same method as the LedgerLens review; report to be written to `docs/security/2026-11-<day>-security-review.md`, raw output in `backend/reports/security/`. Fix rule: Critical and High fixed inside the timebox, Medium and Low recorded with a plan. Run locally: a throwaway Postgres 18 with the real migrations and the restricted `medicoord_app` role, a throwaway Redis, the provider mock, a throwaway Python env outside pydev. `medicoordai-staging` on Railway was not used: it shares production's Postgres, Redis, Supabase service-role key, Groq and Anthropic keys.
 - [x] **S1 secrets** (gitleaks 8.30.1, redacted): working tree 0; history (649 commits, run on a mirror clone because the worktree `.git` pointer gives an empty scan) 1 hit: a Foursquare-format key in an untracked-files commit at `refs/stash`, a local stash, on no branch and not pushed. The tracked script reads it from the environment. Owner: key no longer used; the stash is still to be dropped.
@@ -873,6 +873,17 @@ Starts as W1 of the late-December plan (`rx-next/interview-prep/product-thinker-
 - [ ] **Medium, open (ours):** `medicoordai-staging` is not isolated from production (shared database, Redis, Supabase service-role key, model keys, metrics token, Sentry DSN). Plan: its own database and keys before it is used again.
 - [x] **Small fixes, 2026-11-12:** unknown `GRAPH_RAG_PROVIDER` now logs `graph_provider_unknown` (it still falls back to `off`); the metrics bearer token is compared with `hmac.compare_digest`; `requests` in `workers/requirements.txt` 2.32.3 to 2.34.* (pip-audit on that file: 12 dependencies, 0 vulnerabilities; worker tests 60 pass); SHA1 uses in two offline scripts marked `usedforsecurity=False` (digests unchanged). **Not done on purpose:** unpinned Hugging Face downloads in the embedding scripts (a pin needs the revision that produced the recorded embeddings and exports, which `export.json` does not store).
 - Known and deferred, not counted as new: anon-writable Supabase tables (fixed at the Postgres move); `/facilities/nearby` broken.
+
+### Results and close-out (2026-11-12)
+
+- **Host:** the paid run used `gpt-oss-120b` on Ollama Cloud (Groq's free tier would have taken 6 to 10 days); the system host is set by `EVAL_SYSTEM_PROVIDER` (`groq` default, `openai` for an OpenAI-compatible host). No Groq check was run.
+- **Retrieval (hit@5, top 1 in brackets):** v3 with BioLORD 92.7% (70.7%), 87.7% (54.5%), 82.7% (37.5%) and 84.4% (49.3%) on four query sets; v3 with bge-small 69 to 81%, faster and smaller on CPU but below the 75% screen.
+- **Triage, lay set (81 conversations per leg):** under-triage `off` 22.2%, static 27.2%, v3 29.6%; accuracy 69.1%, 64.2%, 64.2%. A replay of the lay set with matched complaints and red flags recorded gave 27.2%, 30.9% and 32.1% (`off` moved 5 points between identical runs). Paired v3 minus `off`: -7.4 points on the lay set, interval [-14.8, -1.2], exact McNemar p = 0.25.
+- **Elicitation coverage (lay replay, judge `gpt-4o-mini`):** patient-answerable facts `off` 35.5%, static 33.9%, v3 32.6%; v3 minus `off` -2.9 points [-11.7, +3.1]. The graph does not elicit more needed facts. The second-judge agreement check was misconfigured (`gpt-4.1-mini` under the 0 to 10 metric scored every positive 0.1), so judge reliability is unproven. About $0.70 spent.
+- **Line in the sand:** v3 does not beat `off` beyond the paired interval, so `off` stays the production default and the negative result is published (README, Symptom Understanding).
+- **Tooling:** `rescore` (elicitation coverage on saved conversations) was built but is not committed.
+- **Deferred, on purpose:** the conversation token cap value (measured mean about 5.2k tokens, max about 11k, the 30k cap never reached) goes to the agentic-update sprint; RedFlagCluster review goes to the next v3 improvement effort; Task 16 (Railway ops, one-hour load test) dropped since `off` stays the default; the judge validity fix, information gain, absence-as-reassurance counting and the red-flag content audit are dropped; the security branch was cherry-picked here instead of being pushed separately.
+- **Security:** step 8 above; report `docs/security/2026-11-12-security-review.md`. The 3 High fixes reach production only after this branch is merged and deployed. Owner actions: drop the stash holding the old key, set `SEMANTIC_MODEL_SHA256` before turning the semantic path on.
 
 ### Line in the sand
 
