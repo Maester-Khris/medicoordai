@@ -22,9 +22,8 @@ with a different scope requires manually wiping first (MATCH (n) DETACH DELETE n
 or equivalent) if a clean, exactly-matching graph is required.
 """
 import argparse
-from itertools import islice
 from pathlib import Path
-from typing import Iterable, Iterator, TypeVar
+from typing import Iterable
 from neo4j import GraphDatabase
 
 from scripts.snomed_ingest.constants import (
@@ -37,29 +36,18 @@ from scripts.snomed_ingest.rf2_reader import (
 from scripts.snomed_ingest.complaint_seeds import (
     load_complaint_keywords, find_seed_concept_ids,
 )
+from scripts.snomed_ingest.layer1_writer import (
+    write_concepts,
+    write_constraints,
+    write_descriptions,
+    write_is_a,
+)
 from graph.snomed_neo4j.anchor_mapping import ANCHOR_MAPPINGS
 
 # Resolved relative to this file rather than cwd, so it's correct regardless of the
 # invocation directory (invoked as `python -m scripts.snomed_ingest.load_rf2` from
 # backend/, per the module docstring, but not assumed here).
 DEFAULT_COMPLAINTS_PATH = Path(__file__).resolve().parents[2] / "triage/resources/symptom_triage_data.json"
-
-# Batch size for UNWIND-based writes. Approved deviation from the plan's literal
-# one-row-per-session.run() code: the Clinical Finding subset is ~129k concepts /
-# ~490k descriptions / ~264k IS_A relationships, so unbatched writes are ~1.37M
-# individual network round-trips to Neo4j Aura — a multi-hour, fragile operation.
-# Batching with UNWIND preserves identical MERGE semantics (including the
-# order-dependent last-FSN-wins behavior on c.fsn) while cutting round-trips by
-# ~3 orders of magnitude.
-BATCH_SIZE = 1000
-
-T = TypeVar("T")
-
-
-def _batched(iterable: Iterable[T], size: int) -> Iterator[list[T]]:
-    it = iter(iterable)
-    while batch := list(islice(it, size)):
-        yield batch
 
 
 def concept_ids_in_subset(
@@ -157,31 +145,14 @@ def load(
 
     driver = GraphDatabase.driver(neo4j_uri, auth=neo4j_auth)
     with driver.session() as session:
-        # Approved deviation from the plan's literal code (same category as UNWIND
-        # batching above): without a uniqueness constraint, every MERGE on {id: ...}
-        # does a full label scan, which degrades toward O(n) per row as the graph
-        # grows — observed directly (68,121/129,425 concepts in ~22 min before this
-        # was added). Standard Neo4j bulk-load practice; additive only, no semantic
-        # change; safe to run every invocation via IF NOT EXISTS.
-        session.run(
-            "CREATE CONSTRAINT IF NOT EXISTS FOR (c:SnomedConcept) REQUIRE c.id IS UNIQUE"
-        )
-        session.run(
-            "CREATE CONSTRAINT IF NOT EXISTS FOR (d:Description) REQUIRE d.id IS UNIQUE"
-        )
+        write_constraints(session)
 
         concept_rows = (
             {"id": c.id, "source_release": source_release, "effective_time": c.effective_time}
             for c in read_concepts(concept_file)
             if c.id in subset_ids and c.active
         )
-        for batch in _batched(concept_rows, BATCH_SIZE):
-            session.run(
-                "UNWIND $rows AS row "
-                "MERGE (c:SnomedConcept {id: row.id}) "
-                "SET c.source_release = row.source_release, c.effective_time = row.effective_time",
-                rows=batch,
-            )
+        write_concepts(session, concept_rows)
 
         # `descriptions` was already read fully into memory above for seed matching;
         # reuse it here instead of re-reading the file a second time. Loads both
@@ -196,19 +167,7 @@ def load(
             for d in descriptions
             if d.concept_id in subset_ids and d.active
         )
-        for batch in _batched(description_rows, BATCH_SIZE):
-            session.run(
-                "UNWIND $rows AS row "
-                "MATCH (c:SnomedConcept {id: row.concept_id}) "
-                "MERGE (d:Description {id: row.id}) "
-                "SET d.term = row.term, d.language_code = row.language_code, "
-                "    d.is_fsn = row.is_fsn, d.source_release = row.source_release, "
-                "    d.effective_time = row.effective_time "
-                "MERGE (c)-[:HAS_DESCRIPTION]->(d) "
-                "WITH c, row "
-                "FOREACH (_ IN CASE WHEN row.is_fsn THEN [1] ELSE [] END | SET c.fsn = row.term)",
-                rows=batch,
-            )
+        write_descriptions(session, description_rows)
 
         is_a_rows = (
             {"source_id": rel.source_id, "destination_id": rel.destination_id}
@@ -216,14 +175,7 @@ def load(
             if (rel.type_id == IS_A_TYPE_ID and rel.active
                 and rel.source_id in subset_ids and rel.destination_id in subset_ids)
         )
-        for batch in _batched(is_a_rows, BATCH_SIZE):
-            session.run(
-                "UNWIND $rows AS row "
-                "MATCH (child:SnomedConcept {id: row.source_id}) "
-                "MATCH (parent:SnomedConcept {id: row.destination_id}) "
-                "MERGE (child)-[:IS_A]->(parent)",
-                rows=batch,
-            )
+        write_is_a(session, is_a_rows)
     driver.close()
 
 

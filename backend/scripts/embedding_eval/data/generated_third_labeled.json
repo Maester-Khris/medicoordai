@@ -1,0 +1,3602 @@
+[
+ {
+  "idx": 17,
+  "expected_complaint": "Ear injury",
+  "message": "My daughter fell and now her ear is red, swollen, and leaking fluid. She says it hurts when I move it and she hears ringing.",
+  "labeler_top3": [
+   17,
+   12,
+   15
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 131,
+  "expected_complaint": "Lumps, bumps, calluses",
+  "message": "I\u2019ve got a hard bump on my hand, it\u2019s stiff and kinda hurts when I press it, the skin around looks a bit red and rough.",
+  "labeler_top3": [
+   131,
+   129,
+   123
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 12,
+  "expected_complaint": "Earache",
+  "message": "head hurts near ear when yawning, touching it makes it worse, kinda throbbing",
+  "labeler_top3": [
+   71,
+   12,
+   15
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 6,
+  "expected_complaint": "General weakness Gener",
+  "message": "I've been feeling really sluggish lately, like I can barely lift a grocery bag or walk up stairs without needing to sit down and rest.",
+  "labeler_top3": [
+   6,
+   151,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 102,
+  "expected_complaint": "Lower extremity injury",
+  "message": "I twisted my leg yesterday and now I can\u2019t put weight on it, my knee hurts a lot when I try to walk or stand up.",
+  "labeler_top3": [
+   102,
+   103,
+   100
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 146,
+  "expected_complaint": "Fever",
+  "message": "My partner has been suddenly warm, skin feels hot to the touch, they\u2019re sweating and shaking a bit, heart pounding fast, looks exhausted and shaky \u2013 should we worry?",
+  "labeler_top3": [
+   62,
+   117,
+   5
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 15,
+  "expected_complaint": "Tinnitus",
+  "message": "I've been hearing a constant high\u2011pitched ringing in my ears that gets louder at night and makes it hard to focus.",
+  "labeler_top3": [
+   15,
+   14,
+   12
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 17,
+  "expected_complaint": "Ear injury",
+  "message": "My ear hurts a lot, it's swollen and bruised, and I can hear less than before. It hurts when I touch it.",
+  "labeler_top3": [
+   17,
+   12,
+   14
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 133,
+  "expected_complaint": "Cyanosis",
+  "message": "I notice my skin looking a bit bluish around my mouth and fingers, and I get short of breath fast. It scares me.",
+  "labeler_top3": [
+   133,
+   114,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 6,
+  "expected_complaint": "General weakness Gener",
+  "message": "i feel super slow, cant even carry light stuff, need to sit all the time",
+  "labeler_top3": [
+   6,
+   151,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 111,
+  "expected_complaint": "Floppy child",
+  "message": "baby's so floppy cant feed, not rolling lol",
+  "labeler_top3": [
+   111,
+   104,
+   105
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 47,
+  "expected_complaint": "Hiccoughs",
+  "message": "got the hiccups nonstop lol why does this happen??",
+  "labeler_top3": [
+   47,
+   39,
+   38
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 50,
+  "expected_complaint": "Oral / Esophageal Foreign Body",
+  "message": "stuck thing in throat, hurts, cant swallow lol",
+  "labeler_top3": [
+   23,
+   50,
+   20
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 79,
+  "expected_complaint": "Foreign body, vagina",
+  "message": "i think i got something stuck down there, it hurts and itches lol",
+  "labeler_top3": [
+   53,
+   86,
+   79
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 92,
+  "expected_complaint": "Photophobia",
+  "message": "I get a lot of pain when I'm in bright rooms, I keep squinting and sometimes my eyes get red and watery, so I stay in dim light.",
+  "labeler_top3": [
+   92,
+   90,
+   89
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 53,
+  "expected_complaint": "Genital discharge / lesion",
+  "message": "got weird goo and a spot down there, it burns lol",
+  "labeler_top3": [
+   53,
+   60,
+   86
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 128,
+  "expected_complaint": "Rash",
+  "message": "hey i got red spots that itch n burn lol",
+  "labeler_top3": [
+   128,
+   127,
+   129
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 40,
+  "expected_complaint": "Foreign body in rectum",
+  "message": "I\u2019ve got a sore feeling down low, like something\u2019s pressing, and it hurts when I sit or try to use the toilet, can\u2019t push stool out well.",
+  "labeler_top3": [
+   38,
+   36,
+   43
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 73,
+  "expected_complaint": "Gait disturbance / Ataxia",
+  "message": "I've been tripping a lot when I walk, feeling like my legs wobble and I can't keep a steady pace.",
+  "labeler_top3": [
+   73,
+   6,
+   70
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 14,
+  "expected_complaint": "Loss of hearing",
+  "message": "I don't hear stuff well, so I keep asking people to talk again and I make the TV very loud; it's hard for me.",
+  "labeler_top3": [
+   14,
+   15,
+   12
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 125,
+  "expected_complaint": "Burn",
+  "message": "My arm looks red and blistered, it hurts like fire and it\u2019s swelling a lot. What should I do?",
+  "labeler_top3": [
+   129,
+   125,
+   123
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 39,
+  "expected_complaint": "Diarrhea",
+  "message": "i gotta run to the loo, watery poop, cramps, feel weak lol",
+  "labeler_top3": [
+   39,
+   36,
+   6
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 61,
+  "expected_complaint": "Depression / Suicidal / Deliberate self harm",
+  "message": "I\u2019ve been feeling completely empty lately, nothing makes me happy anymore and I keep thinking I\u2019m just a burden, I don\u2019t see any reason to keep going.",
+  "labeler_top3": [
+   61,
+   64,
+   62
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 37,
+  "expected_complaint": "Anorexia",
+  "message": "I\u2019ve noticed my appetite\u2019s gone, I\u2019m eating almost nothing and I feel weak, but I\u2019m not sure what to do.",
+  "labeler_top3": [
+   37,
+   6,
+   61
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 40,
+  "expected_complaint": "Foreign body in rectum",
+  "message": "My partner keeps complaining about a weird lump and pressure down there, they get sore when they sit and have trouble with bowel movements, sometimes there\u2019s a little blood.",
+  "labeler_top3": [
+   41,
+   43,
+   45
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 100,
+  "expected_complaint": "Lower extremity pain",
+  "message": "My leg hurts a lot when I stand or walk, especially on the outside. I\u2019m limping and trying not to put weight on it because it feels sharp and throbbing.",
+  "labeler_top3": [
+   100,
+   103,
+   99
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 59,
+  "expected_complaint": "Polyuria",
+  "message": "My partner keeps telling me they have to get up many times each night to use the bathroom, and they always seem really thirsty and drinking a lot more than usual.",
+  "labeler_top3": [
+   59,
+   147,
+   5
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 39,
+  "expected_complaint": "Diarrhea",
+  "message": "I keep needing to go quick, my tummy hurts, the water comes out, I feel sweaty and tired. Not sure what's wrong.",
+  "labeler_top3": [
+   39,
+   6,
+   42
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 109,
+  "expected_complaint": "Apneic spells in infants",
+  "message": "I was watching my baby and suddenly she stopped breathing for a few seconds, turned pale, then started breathing again on her own. It scared me a lot.",
+  "labeler_top3": [
+   109,
+   115,
+   114
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 131,
+  "expected_complaint": "Lumps, bumps, calluses",
+  "message": "My husband has a solid, raised spot on his leg that feels like a hard lump, it doesn\u2019t shift and sometimes it hurts when I touch it, the skin looks a bit irritated.",
+  "labeler_top3": [
+   131,
+   129,
+   130
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 146,
+  "expected_complaint": "Fever",
+  "message": "I\u2019m feeling warm, my skin feels hot, I\u2019m sweating and my heart feels fast. I\u2019m tired and just want to sit down.",
+  "labeler_top3": [
+   146,
+   117,
+   64
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 81,
+  "expected_complaint": "Sexual assault",
+  "message": "I can't stop crying and shaking, I keep having scary flashbacks and I can't sleep. I avoid places that remind me of what happened.",
+  "labeler_top3": [
+   62,
+   61,
+   64
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 108,
+  "expected_complaint": "Paediatric gait disorder / painful walk",
+  "message": "hey my knee hurts when i step lol fix it?",
+  "labeler_top3": [
+   100,
+   103,
+   99
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 31,
+  "expected_complaint": "Noxious inhalation",
+  "message": "I don't feel well; I keep hacking my throat, it burns, I get short breaths, and my eyes get all watery and red, please help.",
+  "labeler_top3": [
+   28,
+   120,
+   116
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 23,
+  "expected_complaint": "Difficulty swallowing / Dysphagia",
+  "message": "My husband always has to pause during meals, clears his throat often, and seems to choke on certain foods; I'm really worried.",
+  "labeler_top3": [
+   23,
+   50,
+   21
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 131,
+  "expected_complaint": "Lumps, bumps, calluses",
+  "message": "I've got this firm bump on my arm that feels hard and doesn't move, it\u2019s a bit sore when I press it and the skin looks a little red around it.",
+  "labeler_top3": [
+   131,
+   129,
+   130
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 72,
+  "expected_complaint": "Seizure",
+  "message": "i just freeze, twitchy arms, then blank, ugh",
+  "labeler_top3": [
+   72,
+   68,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 59,
+  "expected_complaint": "Polyuria",
+  "message": "i cant stop peeing all day night, sooo thirsty lol",
+  "labeler_top3": [
+   59,
+   147,
+   5
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 24,
+  "expected_complaint": "Facial pain (non-traumatic / non-dental)",
+  "message": "I got a sore spot on my face, near my eye, it hurts when I chew and feels tender, I don't know why but it bothers me.",
+  "labeler_top3": [
+   24,
+   18,
+   28
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 94,
+  "expected_complaint": "Periorbital swelling",
+  "message": "My partner's eyes have been swelling a lot, the skin looks stretched and shiny, and they say it feels heavy and sometimes hurts, making the dark circles look deeper.",
+  "labeler_top3": [
+   94,
+   91,
+   120
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 105,
+  "expected_complaint": "Neonatal jaundice",
+  "message": "hey kid looks yellow, sleepy af, cant eat, poop weird",
+  "labeler_top3": [
+   105,
+   6,
+   146
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 130,
+  "expected_complaint": "Other skin conditions",
+  "message": "My teenage daughter woke up with several raised bumps on her back that are flaky and itchy; I'm really concerned they might get worse.",
+  "labeler_top3": [
+   128,
+   127,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 28,
+  "expected_complaint": "URTI complaints",
+  "message": "My husband\u2019s been sneezing nonstop, his nose is stuffy, and his throat feels raw when he drinks. He\u2019s got watery eyes, a mild cough, and seems unusually sleepy.",
+  "labeler_top3": [
+   28,
+   26,
+   120
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 23,
+  "expected_complaint": "Difficulty swallowing / Dysphagia",
+  "message": "I try to eat, but it feels like things get caught and I have to stop and cough, so I choose soft stuff.",
+  "labeler_top3": [
+   23,
+   28,
+   6
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 37,
+  "expected_complaint": "Anorexia",
+  "message": "i cant even finish a sandwich lol i feel sooo weak",
+  "labeler_top3": [
+   6,
+   4,
+   7
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 69,
+  "expected_complaint": "Confusion",
+  "message": "My husband seems bewildered all the time, staring blankly, repeating questions, and can't finish simple tasks; I'm really worried about him.",
+  "labeler_top3": [
+   68,
+   69,
+   63
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 24,
+  "expected_complaint": "Facial pain (non-traumatic / non-dental)",
+  "message": "My partner has this sharp pain on one side of their face, around the jaw and eye, that gets worse when they eat or make faces, and they keep rubbing it.",
+  "labeler_top3": [
+   24,
+   18,
+   6
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 126,
+  "expected_complaint": "Blood and body fluid exposure",
+  "message": "My teen came home with splashes of something on his clothes and arm, he's scratching and looks upset, should we see a doctor?",
+  "labeler_top3": [
+   121,
+   122,
+   127
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 101,
+  "expected_complaint": "Upper extremity injury",
+  "message": "My right arm hurts whenever I try to lift anything, and I keep it close to my body because moving it feels sharp and achy.",
+  "labeler_top3": [
+   99,
+   101,
+   103
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 105,
+  "expected_complaint": "Neonatal jaundice",
+  "message": "My baby\u2019s skin and the whites of his eyes look yellow, he\u2019s sleepy, isn\u2019t feeding well, and his poop seems lighter than normal.",
+  "labeler_top3": [
+   105,
+   6,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 22,
+  "expected_complaint": "Neck trauma",
+  "message": "I think I hurt my throat; it\u2019s sore, I can\u2019t turn my head without a sharp ache and my ears seem to hum a little.",
+  "labeler_top3": [
+   21,
+   12,
+   26
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 135,
+  "expected_complaint": "Foreign body, skin",
+  "message": "I've got a tiny spot on my arm that feels gritty and itchy, like something's stuck under the skin, and it hurts when I press it.",
+  "labeler_top3": [
+   135,
+   127,
+   129
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 73,
+  "expected_complaint": "Gait disturbance / Ataxia",
+  "message": "My husband keeps stumbling and swaying side\u2011to\u2011side when he walks; he pauses often and seems unsteady, I'm really worried.",
+  "labeler_top3": [
+   73,
+   76,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 80,
+  "expected_complaint": "Vaginal discharge",
+  "message": "My teen daughter keeps complaining about a sticky discharge from her private area that changes color, smells bad, and makes her skin itch all the time.",
+  "labeler_top3": [
+   80,
+   86,
+   53
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 10,
+  "expected_complaint": "Cool pulseless limb",
+  "message": "I got a cold hand, it\u2019s blue and I can\u2019t move it. It feels weird. Please help me.",
+  "labeler_top3": [
+   10,
+   30,
+   34
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 140,
+  "expected_complaint": "Major trauma \u2013 blunt",
+  "message": "My partner fell onto the floor and now looks pale, breathing fast, skin is clammy, they\u2019re in a lot of pain and can\u2019t move their leg right.",
+  "labeler_top3": [
+   140,
+   76,
+   133
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 88,
+  "expected_complaint": "Foreign body, eye",
+  "message": "My eye feels gritty, like something is crawling on it, and it hurts more when I blink. It keeps tearing.",
+  "labeler_top3": [
+   88,
+   90,
+   92
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 147,
+  "expected_complaint": "Hyperglycemia",
+  "message": "I\u2019m not sure, but I\u2019ve been feeling thirsty, my mouth\u2019s dry, I\u2019m going to the washroom many times and feel a bit faint after meals.",
+  "labeler_top3": [
+   147,
+   59,
+   148
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 79,
+  "expected_complaint": "Foreign body, vagina",
+  "message": "I feel a strange pressure down there, like something\u2019s there and it\u2019s itchy, makes me uncomfortable when I sit.",
+  "labeler_top3": [
+   86,
+   83,
+   80
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 22,
+  "expected_complaint": "Neck trauma",
+  "message": "my throat hurts bad cant swallow, head hurts when i move lol",
+  "labeler_top3": [
+   23,
+   20,
+   71
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 18,
+  "expected_complaint": "Dental / Gum problems",
+  "message": "my tooth hurts bad cant eat anything lol ths is so annoying",
+  "labeler_top3": [
+   18,
+   24,
+   28
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 139,
+  "expected_complaint": "Major trauma \u2013 penetrating",
+  "message": "omg blood everywhere i\u2019m falling down cant stop bleeding",
+  "labeler_top3": [
+   124,
+   123,
+   126
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 135,
+  "expected_complaint": "Foreign body, skin",
+  "message": "My daughter has a small red bump on her leg that itches and feels like a grain of sand under the skin; she keeps trying to rub it off.",
+  "labeler_top3": [
+   128,
+   129,
+   121
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 122,
+  "expected_complaint": "Sting",
+  "message": "omg felt a zap on my leg, now it\u2019s red and puffy",
+  "labeler_top3": [
+   32,
+   125,
+   129
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 151,
+  "expected_complaint": "Pallor / Anemia",
+  "message": "I've been looking really pale lately, my lips and nails are whiter than usual, and I get tired really quickly, even when I just walk around.",
+  "labeler_top3": [
+   151,
+   6,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 82,
+  "expected_complaint": "Vaginal bleed",
+  "message": "I've been getting blood spots from down there, sometimes just a little, other times more, and it hurts a bit in my lower belly.",
+  "labeler_top3": [
+   82,
+   53,
+   41
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 82,
+  "expected_complaint": "Vaginal bleed",
+  "message": "My partner keeps noticing blood on their underwear at random times, not just during her period, and she says she feels cramping and uncomfortable.",
+  "labeler_top3": [
+   82,
+   53,
+   41
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 28,
+  "expected_complaint": "URTI complaints",
+  "message": "I\u2019ve got a runny nose, my throat hurts when I swallow, and I keep sneezing a lot. I also feel a bit feverish and tired.",
+  "labeler_top3": [
+   28,
+   26,
+   146
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 13,
+  "expected_complaint": "Foreign body ear",
+  "message": "I feel like there's something stuck in my right ear, it's itchy, painful, and I hear less than usual.",
+  "labeler_top3": [
+   13,
+   12,
+   17
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 75,
+  "expected_complaint": "Tremor",
+  "message": "I\u2019ve been noticing my arms shake a bit, especially when I try to hold a mug, and it gets stronger when I\u2019m worried or sleepy.",
+  "labeler_top3": [
+   75,
+   62,
+   64
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 123,
+  "expected_complaint": "Abrasion",
+  "message": "My son fell off his bike and now has a rough patch on his arm. The skin is raw, slightly swollen, a bit painful when I touch it, and a little clear fluid is leaking.",
+  "labeler_top3": [
+   123,
+   124,
+   125
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 136,
+  "expected_complaint": "Substance misuse / Intoxication",
+  "message": "I\u2019m scared, I can\u2019t do simple things, my hands shake, and I feel so confused all the time.",
+  "labeler_top3": [
+   62,
+   69,
+   68
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 40,
+  "expected_complaint": "Foreign body in rectum",
+  "message": "I\u2019ve been feeling a heavy pressure deep in my lower belly and pelvis, especially when I sit or try to go to the bathroom, and it\u2019s getting uncomfortable.",
+  "labeler_top3": [
+   36,
+   48,
+   41
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 109,
+  "expected_complaint": "Apneic spells in infants",
+  "message": "My partner's newborn sometimes just freezes, stops moving, lips turn bluish, no crying, then after a minute breathing comes back. I'm really worried about what this means.",
+  "labeler_top3": [
+   109,
+   115,
+   114
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 7,
+  "expected_complaint": "Syncope / Pre-syncope",
+  "message": "i felt woozy, eyes went blurry, started sweating then i just kinda passed out for a sec",
+  "labeler_top3": [
+   7,
+   68,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 75,
+  "expected_complaint": "Tremor",
+  "message": "My husband\u2019s hands and sometimes his head tremble uncontrollably, especially when he's trying to hold a pen or when he's exhausted \u2013 it's really worrying.",
+  "labeler_top3": [
+   75,
+   72,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 54,
+  "expected_complaint": "Penile swelling",
+  "message": "I\u2019ve got a swollen, heavy feeling down there, the skin looks stretched and shiny, and it hurts when I move or touch it.",
+  "labeler_top3": [
+   83,
+   54,
+   55
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 80,
+  "expected_complaint": "Vaginal discharge",
+  "message": "got weird drip down there lol it stinks and it itch",
+  "labeler_top3": [
+   53,
+   127,
+   128
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 128,
+  "expected_complaint": "Rash",
+  "message": "I've got these red, pink patches on my arms that itch and sometimes burn, and they sometimes look like little bumps or blisters.",
+  "labeler_top3": [
+   128,
+   129,
+   127
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 100,
+  "expected_complaint": "Lower extremity pain",
+  "message": "My husband keeps limping and says his knee and lower leg throb whenever he stands up or walks. He\u2019s swelling up and seems to avoid putting weight on that side.",
+  "labeler_top3": [
+   103,
+   100,
+   140
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 70,
+  "expected_complaint": "Vertigo",
+  "message": "I keep feeling like the room is spinning and I can't walk straight, so I have to hold onto furniture to stay steady.",
+  "labeler_top3": [
+   70,
+   73,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 117,
+  "expected_complaint": "Hyperventilation",
+  "message": "lol i cant stop breathing fast n my lips tingling",
+  "labeler_top3": [
+   117,
+   70,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 57,
+  "expected_complaint": "UTI complaints",
+  "message": "I've been needing to pee a lot, and it burns every time I go. The urine looks cloudy and smells bad.",
+  "labeler_top3": [
+   57,
+   52,
+   59
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 5,
+  "expected_complaint": "Hypertension",
+  "message": "I feel a funny pressure up here, like my brain's being pressed. Sometimes I get a headache, get tired fast, and feel a bit light\u2011headed when I get up",
+  "labeler_top3": [
+   71,
+   68,
+   5
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 28,
+  "expected_complaint": "URTI complaints",
+  "message": "I\u2019ve been feeling kinda blah\u2014my nose runs, I sneeze a lot, and my throat hurts a bit when I swallow. I\u2019m a little feverish too.",
+  "labeler_top3": [
+   28,
+   26,
+   146
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 69,
+  "expected_complaint": "Confusion",
+  "message": "I don\u2019t understand why I feel so mixed up, I stare at things and can\u2019t decide what to do.",
+  "labeler_top3": [
+   68,
+   69,
+   64
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 47,
+  "expected_complaint": "Hiccoughs",
+  "message": "My son keeps having quick hiccup attacks, especially after meals, and it makes him look uncomfortable and startled.",
+  "labeler_top3": [
+   47,
+   28,
+   146
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 83,
+  "expected_complaint": "Labial swelling",
+  "message": "my lip is puffed up and hurts, ugh",
+  "labeler_top3": [
+   127,
+   130,
+   128
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 111,
+  "expected_complaint": "Floppy child",
+  "message": "I feel so floppy lately, my arms just go limp when I move them and I can't even lift my head well.",
+  "labeler_top3": [
+   111,
+   76,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 94,
+  "expected_complaint": "Periorbital swelling",
+  "message": "I've been waking up with puffy, tight skin around my eyes that feels a bit shiny and tender, and my dark circles look worse.",
+  "labeler_top3": [
+   128,
+   151,
+   127
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 123,
+  "expected_complaint": "Abrasion",
+  "message": "I scraped the skin on my knee playing soccer, it's red and a bit sore, oozing a little clear fluid, and it\u2019s starting to crust over as it heals.",
+  "labeler_top3": [
+   123,
+   129,
+   130
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 144,
+  "expected_complaint": "Isolated abdominal trauma \u2013 blunt",
+  "message": "I think I bumped my gut a bit, now it\u2019s sore when I bend over or take a deep breath, but I\u2019m not sure.",
+  "labeler_top3": [
+   36,
+   144,
+   143
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 15,
+  "expected_complaint": "Tinnitus",
+  "message": "hey i got this weird ring in my ears cant sleep",
+  "labeler_top3": [
+   13,
+   12,
+   64
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 72,
+  "expected_complaint": "Seizure",
+  "message": "My partner suddenly stops talking, his eyes roll up and he starts moving his whole body like a dance for a few seconds, then he's confused and sleepy. I'm really scared.",
+  "labeler_top3": [
+   72,
+   68,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 26,
+  "expected_complaint": "Nasal congestion / Hay fever",
+  "message": "My husband keeps blowing his nose, one side feels blocked all the time, his eyes get watery and he sneezes a lot, especially when he's near dust or pollen.",
+  "labeler_top3": [
+   26,
+   28,
+   146
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 74,
+  "expected_complaint": "Head injury",
+  "message": "head hurts, dizzy, can't think straight, got a bump",
+  "labeler_top3": [
+   74,
+   71,
+   70
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 126,
+  "expected_complaint": "Blood and body fluid exposure",
+  "message": "I just noticed some red stains on my shirt and skin after a spill, and now it's itching and a little rash.",
+  "labeler_top3": [
+   128,
+   127,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 61,
+  "expected_complaint": "Depression / Suicidal / Deliberate self harm",
+  "message": "I don\u2019t feel like doing anything now. I\u2019m scared, I think I\u2019m just a weight and maybe I shouldn\u2019t keep going.",
+  "labeler_top3": [
+   61,
+   62,
+   64
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 69,
+  "expected_complaint": "Confusion",
+  "message": "I keep losing track of what people just said, and I ask the same questions over and over, feeling confused.",
+  "labeler_top3": [
+   69,
+   68,
+   64
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 136,
+  "expected_complaint": "Substance misuse / Intoxication",
+  "message": "I feel really dizzy and my speech is all slurred; I can\u2019t focus and everything looks blurry.",
+  "labeler_top3": [
+   70,
+   73,
+   68
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 58,
+  "expected_complaint": "Oliguria",
+  "message": "Lately I\u2019ve been going to the bathroom a lot less, only a few drops each time, and my bladder feels full even though I barely pee.",
+  "labeler_top3": [
+   58,
+   56,
+   57
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 151,
+  "expected_complaint": "Pallor / Anemia",
+  "message": "I don't feel like myself, my skin looks lighter and I get so sleepy after little chores, I even feel a little light\u2011headed sometimes.",
+  "labeler_top3": [
+   151,
+   68,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 144,
+  "expected_complaint": "Isolated abdominal trauma \u2013 blunt",
+  "message": "ouch my belly hurts when i sit up lol",
+  "labeler_top3": [
+   36,
+   96,
+   48
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 71,
+  "expected_complaint": "Headache",
+  "message": "head hurts, lights too bright, feel queasy lol",
+  "labeler_top3": [
+   71,
+   92,
+   42
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 80,
+  "expected_complaint": "Vaginal discharge",
+  "message": "I\u2019ve noticed some wetness down there that\u2019s been there all day, it smells strange and it makes me feel itchy, but I\u2019m not sure what\u2019s wrong.",
+  "labeler_top3": [
+   80,
+   86,
+   53
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 58,
+  "expected_complaint": "Oliguria",
+  "message": "hey i only pee a couple drops now weird u?",
+  "labeler_top3": [
+   58,
+   56,
+   57
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 102,
+  "expected_complaint": "Lower extremity injury",
+  "message": "My husband fell and now he\u2019s limping, his hip looks swollen and he says any movement makes him wince, we\u2019re scared to let him walk.",
+  "labeler_top3": [
+   103,
+   100,
+   140
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 57,
+  "expected_complaint": "UTI complaints",
+  "message": "so many trips to the loo, burning and gross pee lol",
+  "labeler_top3": [
+   57,
+   42,
+   146
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 130,
+  "expected_complaint": "Other skin conditions",
+  "message": "hey got weird skin thing lol it burns",
+  "labeler_top3": [
+   128,
+   127,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 7,
+  "expected_complaint": "Syncope / Pre-syncope",
+  "message": "My husband was in the kitchen, suddenly his eyes rolled back, he looked pale, started sweating and said he felt like he was going to pass out, then he slumped onto a chair and was unresponsive for a moment.",
+  "labeler_top3": [
+   7,
+   0,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 74,
+  "expected_complaint": "Head injury",
+  "message": "I\u2026 uh\u2026 bumped my noggin and now it\u2019s throbbing, I feel a little off\u2011balance and my eyes seem\u2026 weird.",
+  "labeler_top3": [
+   74,
+   70,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 38,
+  "expected_complaint": "Constipation",
+  "message": "I\u2019ve been having a hard time going, it\u2019s slow and I feel full after eating, but I\u2019m not sure what\u2019s wrong.",
+  "labeler_top3": [
+   38,
+   36,
+   48
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 108,
+  "expected_complaint": "Paediatric gait disorder / painful walk",
+  "message": "I've been limping a lot lately, especially when I put weight on my right leg, and it hurts every time I step.",
+  "labeler_top3": [
+   100,
+   103,
+   140
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 8,
+  "expected_complaint": "Edema, generalized",
+  "message": "My arms and legs have gotten puffy and tight, like my skin is stretched; my shirts feel tighter and I feel a heaviness when I move around.",
+  "labeler_top3": [
+   8,
+   9,
+   133
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 139,
+  "expected_complaint": "Major trauma \u2013 penetrating",
+  "message": "I got hit hard in the side and there\u2019s a big hole with blood pouring out, my arm is shaking and I feel dizzy and scared",
+  "labeler_top3": [
+   139,
+   124,
+   7
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 113,
+  "expected_complaint": "Congenital problem in children",
+  "message": "I've always felt my body is a bit odd, like my arms are shaped differently and I struggle with things other kids pick up easily. It\u2019s hard to keep up.",
+  "labeler_top3": [
+   73,
+   111,
+   76
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 141,
+  "expected_complaint": "Isolated chest trauma \u2013 penetrating",
+  "message": "My partner was hit in the chest with a sharp object, there's a nasty cut bleeding, they\u2019re clutching it, breathing fast, looks scared and can\u2019t speak well.",
+  "labeler_top3": [
+   139,
+   124,
+   115
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 5,
+  "expected_complaint": "Hypertension",
+  "message": "I've been feeling this constant pressure in my head, like a pounding, and I get random headaches that don't seem tied to anything. I also get tired quickly and dizzy when I stand up",
+  "labeler_top3": [
+   71,
+   70,
+   5
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 71,
+  "expected_complaint": "Headache",
+  "message": "My partner has been holding their head, saying it hurts like a heavy pressure, gets worse with noise and light, and they keep feeling nauseous and can't focus.",
+  "labeler_top3": [
+   71,
+   92,
+   42
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 6,
+  "expected_complaint": "General weakness Gener",
+  "message": "I can't do much now, even light stuff makes me tired, I have to sit a lot, feel weak.",
+  "labeler_top3": [
+   6,
+   151,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 125,
+  "expected_complaint": "Burn",
+  "message": "My son\u2019s hand is red, blistered and really sore, it\u2019s swelling and looks like it might be burning. I'm scared.",
+  "labeler_top3": [
+   125,
+   129,
+   130
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 92,
+  "expected_complaint": "Photophobia",
+  "message": "I dont like bright light much, it makes my eyes hurt and I try to stay in a dim place.",
+  "labeler_top3": [
+   92,
+   90,
+   89
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 8,
+  "expected_complaint": "Edema, generalized",
+  "message": "I\u2019ve noticed my skin looking all puffy and it feels tight, clothes don\u2019t fit like before, and it leaves a little dent when I press it.",
+  "labeler_top3": [
+   8,
+   130,
+   9
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 103,
+  "expected_complaint": "Joint(s) swelling",
+  "message": "My knee feels swollen and heavy, it looks puffy and I can barely bend it without pain.",
+  "labeler_top3": [
+   103,
+   129,
+   130
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 24,
+  "expected_complaint": "Facial pain (non-traumatic / non-dental)",
+  "message": "I've got a throbbing ache on my cheek near my eye that gets worse when I chew or smile, and it feels tender and a bit swollen.",
+  "labeler_top3": [
+   24,
+   18,
+   103
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 71,
+  "expected_complaint": "Headache",
+  "message": "I got this ache in my head that just won't go away, bright lights make it worse, and I feel a bit sick when I try to think.",
+  "labeler_top3": [
+   71,
+   92,
+   64
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 7,
+  "expected_complaint": "Syncope / Pre-syncope",
+  "message": "I was standing in line when everything went fuzzy, I felt dizzy, my vision blurred, I started sweating and then I just fell to the floor and blacked out for a second before I could get up again.",
+  "labeler_top3": [
+   7,
+   70,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 147,
+  "expected_complaint": "Hyperglycemia",
+  "message": "My husband keeps drinking water nonstop, his mouth is always dry, and he\u2019s up at night to pee a lot, he feels weak after eating.",
+  "labeler_top3": [
+   59,
+   147,
+   6
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 103,
+  "expected_complaint": "Joint(s) swelling",
+  "message": "My husband\u2019s wrist looks puffed up and tight, he says it feels heavy and he can\u2019t move it well.",
+  "labeler_top3": [
+   129,
+   103,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 70,
+  "expected_complaint": "Vertigo",
+  "message": "My husband suddenly feels the world turning, he wobbles when he stands and his eyes dart around, we\u2019re scared he might fall.",
+  "labeler_top3": [
+   70,
+   73,
+   72
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 141,
+  "expected_complaint": "Isolated chest trauma \u2013 penetrating",
+  "message": "ouch chest hurt, bleeding, can\u2019t breathe good",
+  "labeler_top3": [
+   3,
+   2,
+   115
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 12,
+  "expected_complaint": "Earache",
+  "message": "I have a dull pain by my ear that gets worse when I yawn or lie down, and it feels sore when I touch it, but I\u2019m not sure what\u2019s wrong.",
+  "labeler_top3": [
+   12,
+   17,
+   4
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 70,
+  "expected_complaint": "Vertigo",
+  "message": "room spin n i cant stand lol help",
+  "labeler_top3": [
+   70,
+   73,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 81,
+  "expected_complaint": "Sexual assault",
+  "message": "i cant sleep, keep shaking, i keep seein things, omg",
+  "labeler_top3": [
+   64,
+   63,
+   62
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 83,
+  "expected_complaint": "Labial swelling",
+  "message": "My partner's outer lip is puffy and looks red and shiny; it hurts when she moves her mouth or tries to eat.",
+  "labeler_top3": [
+   120,
+   127,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 83,
+  "expected_complaint": "Labial swelling",
+  "message": "I've got this swollen spot on the outside of my lip that feels tight and a bit sore, especially when I talk or eat.",
+  "labeler_top3": [
+   120,
+   127,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 105,
+  "expected_complaint": "Neonatal jaundice",
+  "message": "I\u2019ve noticed my little one\u2019s skin looks kind of yellow now, and the baby seems more drowsy and isn\u2019t eating much.",
+  "labeler_top3": [
+   105,
+   104,
+   146
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 8,
+  "expected_complaint": "Edema, generalized",
+  "message": "I'm really worried about my husband\u2014his whole body looks swollen, his clothes are tighter, and his skin leaves dents when pressed; he says it feels heavy.",
+  "labeler_top3": [
+   8,
+   130,
+   9
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 122,
+  "expected_complaint": "Sting",
+  "message": "I felt a sudden sting, like a tiny shock, on my hand and now there\u2019s a little red spot that\u2019s a bit swollen. It hurts a lot.",
+  "labeler_top3": [
+   122,
+   121,
+   129
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 133,
+  "expected_complaint": "Cyanosis",
+  "message": "My husband has this weird purple tint on his lips and nails, he gets winded easily and looks exhausted even doing simple chores. I'm really worried.",
+  "labeler_top3": [
+   133,
+   114,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 39,
+  "expected_complaint": "Diarrhea",
+  "message": "My partner keeps rushing to the bathroom with watery diarrhea, cramping, and looks pale and tired. I'm really worried they might be losing too much fluid.",
+  "labeler_top3": [
+   39,
+   42,
+   6
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 47,
+  "expected_complaint": "Hiccoughs",
+  "message": "I get sudden little jumps in my breathing that make a funny sound.",
+  "labeler_top3": [
+   117,
+   107,
+   114
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 71,
+  "expected_complaint": "Headache",
+  "message": "I've had this pounding feeling in my head all day, worse when I move or the lights are bright, and it makes me feel sick.",
+  "labeler_top3": [
+   71,
+   70,
+   64
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 113,
+  "expected_complaint": "Congenital problem in children",
+  "message": "my kid's hand is weird cant do stuff",
+  "labeler_top3": [
+   101,
+   99,
+   76
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 147,
+  "expected_complaint": "Hyperglycemia",
+  "message": "so thirsty, gotta pee a lot lol cant focus",
+  "labeler_top3": [
+   59,
+   147,
+   5
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 5,
+  "expected_complaint": "Hypertension",
+  "message": "My husband keeps telling me his head feels heavy, like a drum beating inside, and he gets occasional headaches for no reason. He gets winded fast and feels dizzy when he stands up quickly",
+  "labeler_top3": [
+   5,
+   71,
+   7
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 133,
+  "expected_complaint": "Cyanosis",
+  "message": "my lips look blue and i get super tired fast lol",
+  "labeler_top3": [
+   133,
+   114,
+   115
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 28,
+  "expected_complaint": "URTI complaints",
+  "message": "runny nose, sore throat, sneezin, feel crappy",
+  "labeler_top3": [
+   28,
+   26,
+   20
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 126,
+  "expected_complaint": "Blood and body fluid exposure",
+  "message": "omg got splat on my tee lol itchy tho",
+  "labeler_top3": [
+   128,
+   127,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 63,
+  "expected_complaint": "Hallucinations / Delusions",
+  "message": "Lately I keep hearing voices talking to me and see things that no one else notices.",
+  "labeler_top3": [
+   63,
+   62,
+   61
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 5,
+  "expected_complaint": "Hypertension",
+  "message": "head feels thump, got dizzy when i stand up lol",
+  "labeler_top3": [
+   7,
+   70,
+   5
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 108,
+  "expected_complaint": "Paediatric gait disorder / painful walk",
+  "message": "I try to walk but one foot feels sore, so I shuffle and sometimes sit down, not sure what's wrong.",
+  "labeler_top3": [
+   100,
+   76,
+   103
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 135,
+  "expected_complaint": "Foreign body, skin",
+  "message": "got a weird spot on my leg it feels like a tiny rock ugh",
+  "labeler_top3": [
+   131,
+   129,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 92,
+  "expected_complaint": "Photophobia",
+  "message": "My husband gets really uncomfortable in any bright light, he squints, his eyes get red and watery, and he always asks to go to a darker room.",
+  "labeler_top3": [
+   92,
+   90,
+   91
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 18,
+  "expected_complaint": "Dental / Gum problems",
+  "message": "My partner has been complaining of a sharp tooth ache that spikes when she eats, and her gums are swollen and sometimes bleed; she also says her mouth tastes nasty.",
+  "labeler_top3": [
+   18,
+   127,
+   130
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 10,
+  "expected_complaint": "Cool pulseless limb",
+  "message": "My husband\u2019s leg turned blue and feels freezing, he can\u2019t wiggle it or feel anything. I'm terrified\u2014what can we do right now?",
+  "labeler_top3": [
+   133,
+   10,
+   76
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 117,
+  "expected_complaint": "Hyperventilation",
+  "message": "My teen keeps breathing shallow and quick, looks like they're choking on air, and sometimes their lips and fingers go numb, I'm really scared.",
+  "labeler_top3": [
+   117,
+   115,
+   62
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 24,
+  "expected_complaint": "Facial pain (non-traumatic / non-dental)",
+  "message": "my face hurts when i chew lol",
+  "labeler_top3": [
+   24,
+   18,
+   71
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 50,
+  "expected_complaint": "Oral / Esophageal Foreign Body",
+  "message": "My partner suddenly started gagging, they say something feels lodged in their chest, they\u2019re coughing a lot and can\u2019t swallow anything, I\u2019m really scared.",
+  "labeler_top3": [
+   50,
+   23,
+   119
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 46,
+  "expected_complaint": "Jaundice",
+  "message": "my skin looks yellow, pee dark, itchy lol",
+  "labeler_top3": [
+   46,
+   127,
+   146
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 54,
+  "expected_complaint": "Penile swelling",
+  "message": "I\u2019m not sure, but my genitals feel big and heavy, the skin is shiny, and it hurts when I touch it a little.",
+  "labeler_top3": [
+   54,
+   55,
+   53
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 101,
+  "expected_complaint": "Upper extremity injury",
+  "message": "I\u2019m having trouble using my hand, it feels sore and I keep it near me. Even a little movement hurts a lot.",
+  "labeler_top3": [
+   124,
+   123,
+   99
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 81,
+  "expected_complaint": "Sexual assault",
+  "message": "I feel real sad, scared and I can't rest. I try not to think about it but it keeps coming back. I don't know what to do.",
+  "labeler_top3": [
+   61,
+   62,
+   64
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 57,
+  "expected_complaint": "UTI complaints",
+  "message": "I\u2019m not sure what\u2019s happening, but I have to get up many times, it\u2019s painful and the water looks strange.",
+  "labeler_top3": [
+   57,
+   59,
+   42
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 144,
+  "expected_complaint": "Isolated abdominal trauma \u2013 blunt",
+  "message": "I got hit in the stomach yesterday and now it hurts a lot when I move or cough, and it feels sore when I press it.",
+  "labeler_top3": [
+   144,
+   36,
+   140
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 31,
+  "expected_complaint": "Noxious inhalation",
+  "message": "coughin nonstop, throat burn, cant breathe right, eyes red lol",
+  "labeler_top3": [
+   116,
+   120,
+   91
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 72,
+  "expected_complaint": "Seizure",
+  "message": "I sometimes just blank out and my arms start shaking on their own for a minute, then I'm so tired and can't remember what happened.",
+  "labeler_top3": [
+   72,
+   68,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 53,
+  "expected_complaint": "Genital discharge / lesion",
+  "message": "I noticed some strange wetness and a little sore down there, it makes me uncomfortable and it kinda hurts when I go to the bathroom.",
+  "labeler_top3": [
+   53,
+   57,
+   64
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 100,
+  "expected_complaint": "Lower extremity pain",
+  "message": "my leg hurts when i stand, i\u2019m limping lol",
+  "labeler_top3": [
+   100,
+   76,
+   9
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 122,
+  "expected_complaint": "Sting",
+  "message": "I just felt a sudden sharp sting on my arm, like a tiny electric zap, and now there\u2019s a little red bump that\u2019s swelling fast.",
+  "labeler_top3": [
+   122,
+   129,
+   123
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 125,
+  "expected_complaint": "Burn",
+  "message": "my foot looks charred, hurts bad, swol lol",
+  "labeler_top3": [
+   125,
+   30,
+   34
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 109,
+  "expected_complaint": "Apneic spells in infants",
+  "message": "my kid just stopped breathing like a sec then was fine lol",
+  "labeler_top3": [
+   115,
+   114,
+   117
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 53,
+  "expected_complaint": "Genital discharge / lesion",
+  "message": "I've been getting a weird yellowish fluid from down there, and there's a sore that hurts when I pee or have sex.",
+  "labeler_top3": [
+   53,
+   57,
+   64
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 53,
+  "expected_complaint": "Genital discharge / lesion",
+  "message": "My teen daughter says there's a smelly discharge and a bump on her private area, and she feels burning every time she uses the bathroom.",
+  "labeler_top3": [
+   53,
+   54,
+   55
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 128,
+  "expected_complaint": "Rash",
+  "message": "My partner's skin has started showing reddish spots that itch and feel hot, some are flat, some are raised, and they seem to be spreading nearby \u2013 I'm really worried.",
+  "labeler_top3": [
+   127,
+   128,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 14,
+  "expected_complaint": "Loss of hearing",
+  "message": "My husband never seems to hear the phone ring or conversations around him, and he constantly asks us to say things again and watches TV at max volume.",
+  "labeler_top3": [
+   15,
+   71,
+   64
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 123,
+  "expected_complaint": "Abrasion",
+  "message": "I got a little scrape on my hand. It looks red, kinda raw, and a bit sore. It\u2019s leaking a bit and crusting up.",
+  "labeler_top3": [
+   123,
+   129,
+   124
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 23,
+  "expected_complaint": "Difficulty swallowing / Dysphagia",
+  "message": "hey i keep choking on soup lol cant even finish it",
+  "labeler_top3": [
+   112,
+   114,
+   115
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 102,
+  "expected_complaint": "Lower extremity injury",
+  "message": "I think I hurt my foot, it\u2019s sore and I can\u2019t stand long, I try not to move it much because it hurts.",
+  "labeler_top3": [
+   100,
+   76,
+   9
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 124,
+  "expected_complaint": "Laceration / Puncture",
+  "message": "got a cut on my leg, blood oozin, hurts bad",
+  "labeler_top3": [
+   124,
+   123,
+   129
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 146,
+  "expected_complaint": "Fever",
+  "message": "feelin hot sweaty heart fast lol",
+  "labeler_top3": [
+   4,
+   5,
+   62
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 79,
+  "expected_complaint": "Foreign body, vagina",
+  "message": "I think there\u2019s something stuck down there and it\u2019s itching and hurting, especially when I walk or sit, and sometimes I see a little blood.",
+  "labeler_top3": [
+   40,
+   49,
+   45
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 17,
+  "expected_complaint": "Ear injury",
+  "message": "ear's beat up, thump, can't hear good, it hurts when i tap it lol",
+  "labeler_top3": [
+   17,
+   12,
+   16
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 46,
+  "expected_complaint": "Jaundice",
+  "message": "My eyes and skin look kind of yellow now, my pee is dark, I feel a little itchy, not sure what's happening.",
+  "labeler_top3": [
+   46,
+   127,
+   151
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 59,
+  "expected_complaint": "Polyuria",
+  "message": "I keep needing to go to the bathroom all the time, even at night, and I feel like I'm always thirsty, but I don't know what's wrong.",
+  "labeler_top3": [
+   147,
+   59,
+   5
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 6,
+  "expected_complaint": "General weakness Gener",
+  "message": "My husband used to be so active, but now he moves so slowly, gets tired quickly, and has to stop often just to sit down.",
+  "labeler_top3": [
+   6,
+   76,
+   7
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 46,
+  "expected_complaint": "Jaundice",
+  "message": "I've noticed my skin and the whites of my eyes have turned a yellowish color, my urine looks darker and I feel itchy all over.",
+  "labeler_top3": [
+   46,
+   127,
+   151
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 113,
+  "expected_complaint": "Congenital problem in children",
+  "message": "My baby was born with a strange hand shape and can\u2019t grab toys like other kids. I'm scared she\u2019ll fall behind and need extra help.",
+  "labeler_top3": [
+   113,
+   108,
+   111
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 50,
+  "expected_complaint": "Oral / Esophageal Foreign Body",
+  "message": "I think something\u2019s stuck up here, it hurts and I keep coughing, I can\u2019t get it out, please help me?",
+  "labeler_top3": [
+   119,
+   27,
+   28
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 92,
+  "expected_complaint": "Photophobia",
+  "message": "lights hurt my eyes, i cant stand them lol",
+  "labeler_top3": [
+   92,
+   71,
+   89
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 37,
+  "expected_complaint": "Anorexia",
+  "message": "I haven't been able to finish my meals lately; I only eat a few bites and feel constantly tired and foggy.",
+  "labeler_top3": [
+   6,
+   151,
+   61
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 123,
+  "expected_complaint": "Abrasion",
+  "message": "scrape my arm red sore a bit crusty lol",
+  "labeler_top3": [
+   123,
+   129,
+   130
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 83,
+  "expected_complaint": "Labial swelling",
+  "message": "I got a big sore on my lip that looks stretched and hurts when I open my mouth.",
+  "labeler_top3": [
+   18,
+   50,
+   24
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 125,
+  "expected_complaint": "Burn",
+  "message": "I\u2019ve got a spot on my leg that\u2019s red and looks like a bad burn, it hurts and swells, not sure what\u2019s happening.",
+  "labeler_top3": [
+   125,
+   128,
+   129
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 151,
+  "expected_complaint": "Pallor / Anemia",
+  "message": "i look super pale lol cant even climb stairs without feeling out",
+  "labeler_top3": [
+   151,
+   6,
+   4
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 38,
+  "expected_complaint": "Constipation",
+  "message": "hard poop, bloated, takes ages on toilet",
+  "labeler_top3": [
+   38,
+   36,
+   48
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 88,
+  "expected_complaint": "Foreign body, eye",
+  "message": "my eye feels weird lol cant stop tearrrng",
+  "labeler_top3": [
+   90,
+   91,
+   88
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 147,
+  "expected_complaint": "Hyperglycemia",
+  "message": "Lately I've been super thirsty, my mouth feels dry all the time, and I'm going to the bathroom a lot, especially after meals.",
+  "labeler_top3": [
+   147,
+   59,
+   5
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 8,
+  "expected_complaint": "Edema, generalized",
+  "message": "my skin\u2019s all puffy, tight, and clothes feel weird lol",
+  "labeler_top3": [
+   8,
+   120,
+   5
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 9,
+  "expected_complaint": "Bilateral leg swelling / Edema",
+  "message": "My legs feel super heavy and tight, especially after I stand or sit a long time, and my shoes feel tighter than usual.",
+  "labeler_top3": [
+   9,
+   8,
+   5
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 82,
+  "expected_complaint": "Vaginal bleed",
+  "message": "I keep seeing wet spots and a bit of blood, and it makes me uneasy, but I\u2019m not sure what\u2019s happening.",
+  "labeler_top3": [
+   126,
+   130,
+   128
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 126,
+  "expected_complaint": "Blood and body fluid exposure",
+  "message": "I found some brown spots on my hand and shirt, it feels itchy, I\u2019m not sure what to do, maybe wash it?",
+  "labeler_top3": [
+   128,
+   127,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 61,
+  "expected_complaint": "Depression / Suicidal / Deliberate self harm",
+  "message": "My partner has been shutting down, not wanting to do anything they used to love. They talk about feeling useless, isolate themselves, and sometimes mention they don\u2019t want to be here anymore.",
+  "labeler_top3": [
+   61,
+   62,
+   64
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 31,
+  "expected_complaint": "Noxious inhalation",
+  "message": "My kid keeps coughing, his throat hurts, he\u2019s breathing fast and shallow, his eyes are watery and red, and he keeps covering his nose.",
+  "labeler_top3": [
+   28,
+   116,
+   120
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 139,
+  "expected_complaint": "Major trauma \u2013 penetrating",
+  "message": "My partner was hit by something and there\u2019s a huge gash with blood everywhere, they\u2019re clutching it, pale, breathing fast, and looks like they might pass out",
+  "labeler_top3": [
+   124,
+   140,
+   7
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 9,
+  "expected_complaint": "Bilateral leg swelling / Edema",
+  "message": "My husband\u2019s legs are getting heavy and tight, he says they feel full of pressure after he\u2019s been sitting or standing all day, and his socks are squeezing.",
+  "labeler_top3": [
+   9,
+   8,
+   6
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 130,
+  "expected_complaint": "Other skin conditions",
+  "message": "I've started getting these itchy red patches on my arms that feel dry and a bit sore, they just won't go away.",
+  "labeler_top3": [
+   128,
+   127,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 105,
+  "expected_complaint": "Neonatal jaundice",
+  "message": "My skin has turned a yellowish color and my eyes look pale; I feel extra tired and eating is harder than usual.",
+  "labeler_top3": [
+   46,
+   151,
+   6
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 136,
+  "expected_complaint": "Substance misuse / Intoxication",
+  "message": "lol i cant think right my breath smells weird lol",
+  "labeler_top3": [
+   33,
+   117,
+   146
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 63,
+  "expected_complaint": "Hallucinations / Delusions",
+  "message": "i think i see stuff that isn\u2019t real lol typo",
+  "labeler_top3": [
+   63,
+   67,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 75,
+  "expected_complaint": "Tremor",
+  "message": "My hands shake a lot, even when I'm just holding a cup or trying to write, and it gets worse when I'm stressed or tired.",
+  "labeler_top3": [
+   4,
+   75,
+   62
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 46,
+  "expected_complaint": "Jaundice",
+  "message": "My partner's skin and the whites of their eyes are looking yellow, their pee is darker than usual and they keep scratching, I'm really worried.",
+  "labeler_top3": [
+   46,
+   127,
+   130
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 88,
+  "expected_complaint": "Foreign body, eye",
+  "message": "My husband keeps rubbing his eye, says it feels like sand, and it\u2019s red and watery. He can\u2019t stop blinking.",
+  "labeler_top3": [
+   88,
+   90,
+   91
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 117,
+  "expected_complaint": "Hyperventilation",
+  "message": "I don't know what's wrong, but I find myself breathing fast and my hands feel funny, like pins and needles, it's worrying me.",
+  "labeler_top3": [
+   117,
+   62,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 39,
+  "expected_complaint": "Diarrhea",
+  "message": "I've been running to the bathroom a lot lately, getting loose, watery poops with cramps and I feel weak and sweaty, maybe dehydrated.",
+  "labeler_top3": [
+   39,
+   59,
+   6
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 108,
+  "expected_complaint": "Paediatric gait disorder / painful walk",
+  "message": "My daughter keeps favoring her left leg, limping and wincing when she walks, and she stops suddenly if she feels pain.",
+  "labeler_top3": [
+   100,
+   73,
+   76
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 151,
+  "expected_complaint": "Pallor / Anemia",
+  "message": "My daughter has turned very pale, her face and fingertips look almost white, and she says she feels weak and gets dizzy when she stands up.",
+  "labeler_top3": [
+   151,
+   7,
+   6
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 73,
+  "expected_complaint": "Gait disturbance / Ataxia",
+  "message": "I try to walk but my steps feel shaky, I stop a lot and feel scared to move fast.",
+  "labeler_top3": [
+   73,
+   62,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 72,
+  "expected_complaint": "Seizure",
+  "message": "I feel weird, like I lose it for a bit, my hands move and I don't know what's going on, then I'm so drowsy afterwards.",
+  "labeler_top3": [
+   72,
+   68,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 101,
+  "expected_complaint": "Upper extremity injury",
+  "message": "my arm hurts cant lift n stuff lol",
+  "labeler_top3": [
+   99,
+   103,
+   76
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 146,
+  "expected_complaint": "Fever",
+  "message": "I\u2019ve been feeling really hot all over, my skin feels like it\u2019s on fire, I\u2019m sweating a lot and my heart\u2019s racing, I just want to lie down and rest.",
+  "labeler_top3": [
+   146,
+   117,
+   34
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 82,
+  "expected_complaint": "Vaginal bleed",
+  "message": "hey got blood down there weird wetness lol",
+  "labeler_top3": [
+   82,
+   80,
+   79
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 7,
+  "expected_complaint": "Syncope / Pre-syncope",
+  "message": "I felt real light\u2011headed, my eyes got all fuzzy and I almost fell down. I got scared, felt sweaty and weak, then I sat down and it passed.",
+  "labeler_top3": [
+   7,
+   68,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 122,
+  "expected_complaint": "Sting",
+  "message": "My partner just got a quick, stabbing pain on their leg that felt like a pinprick, and now there\u2019s a small welt and it looks inflamed \u2013 should we be worried?",
+  "labeler_top3": [
+   129,
+   128,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 63,
+  "expected_complaint": "Hallucinations / Delusions",
+  "message": "My sister says she hears people calling her name and believes strangers are watching her, even though we see nothing.",
+  "labeler_top3": [
+   63,
+   68,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 15,
+  "expected_complaint": "Tinnitus",
+  "message": "I can't stop hearing a hiss in my head, it scares me and makes me cover my ears all day.",
+  "labeler_top3": [
+   63,
+   68,
+   69
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 124,
+  "expected_complaint": "Laceration / Puncture",
+  "message": "My partner fell and got a deep cut on their arm; blood is coming out fast, the skin looks torn and the area is red and swollen, I'm really scared.",
+  "labeler_top3": [
+   124,
+   126,
+   123
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 101,
+  "expected_complaint": "Upper extremity injury",
+  "message": "My daughter\u2019s left arm is swollen and bruised; she won\u2019t raise it and even a light touch makes her wince, she can\u2019t grip anything.",
+  "labeler_top3": [
+   99,
+   103,
+   76
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 17,
+  "expected_complaint": "Ear injury",
+  "message": "I think I bruised my ear when I slipped. It's sore, looks puffy, and I can't hear as well. It hurts if I touch it.",
+  "labeler_top3": [
+   17,
+   12,
+   14
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 54,
+  "expected_complaint": "Penile swelling",
+  "message": "hey got a weird puffy thing down there it hurts when i move",
+  "labeler_top3": [
+   86,
+   83,
+   82
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 69,
+  "expected_complaint": "Confusion",
+  "message": "i keep askin same stuff cant focus lol",
+  "labeler_top3": [
+   69,
+   68,
+   62
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 133,
+  "expected_complaint": "Cyanosis",
+  "message": "I've been feeling really tired lately and my lips and fingertips look kind of blue, especially when I walk up stairs or when it's cold outside.",
+  "labeler_top3": [
+   133,
+   6,
+   7
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 9,
+  "expected_complaint": "Bilateral leg swelling / Edema",
+  "message": "I\u2019m feeling my legs get heavy, tight, and the skin looks stretched, makes it hard to move, and my shoes feel tight.",
+  "labeler_top3": [
+   8,
+   9,
+   94
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 75,
+  "expected_complaint": "Tremor",
+  "message": "my hands shake a lot, cant even hold coffee",
+  "labeler_top3": [
+   4,
+   75,
+   62
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 136,
+  "expected_complaint": "Substance misuse / Intoxication",
+  "message": "My partner came home stumbling, eyes red, skin flushed, smelling weird, and he kept talking fast and nonsensical.",
+  "labeler_top3": [
+   136,
+   63,
+   147
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 140,
+  "expected_complaint": "Major trauma \u2013 blunt",
+  "message": "I fell down and now my body hurts bad, I\u2019m scared, can\u2019t walk, my skin looks dark and I feel dizzy.",
+  "labeler_top3": [
+   140,
+   97,
+   96
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 94,
+  "expected_complaint": "Periorbital swelling",
+  "message": "I got some puffiness under my eyes, the skin feels tight and a little sore, and it looks darker than before.",
+  "labeler_top3": [
+   94,
+   130,
+   128
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 40,
+  "expected_complaint": "Foreign body in rectum",
+  "message": "feels weird down low, cant pooop, hurts sitting",
+  "labeler_top3": [
+   38,
+   36,
+   43
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 117,
+  "expected_complaint": "Hyperventilation",
+  "message": "I've been breathing really fast and deep, like I'm gasping even when I'm just sitting still, and my fingers feel tingly.",
+  "labeler_top3": [
+   117,
+   62,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 63,
+  "expected_complaint": "Hallucinations / Delusions",
+  "message": "I\u2019m getting scared because I feel like there are pictures in my mind that aren\u2019t really there.",
+  "labeler_top3": [
+   63,
+   62,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 70,
+  "expected_complaint": "Vertigo",
+  "message": "I don\u2019t know what\u2019s happening, but everything seems to move and I can\u2019t keep my balance, so I just sit down.",
+  "labeler_top3": [
+   70,
+   73,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 128,
+  "expected_complaint": "Rash",
+  "message": "I\u2019ve got some red spots on my skin that itch and feel a bit hot. They\u2019re different sizes and sometimes a little bump.",
+  "labeler_top3": [
+   128,
+   127,
+   130
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 73,
+  "expected_complaint": "Gait disturbance / Ataxia",
+  "message": "my legs feel weird i keep tripping lol",
+  "labeler_top3": [
+   73,
+   77,
+   76
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 10,
+  "expected_complaint": "Cool pulseless limb",
+  "message": "My left arm feels ice\u2011cold and I can't move it at all, it looks pale and I have no feeling in my hand. What should I do?",
+  "labeler_top3": [
+   10,
+   76,
+   68
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 26,
+  "expected_complaint": "Nasal congestion / Hay fever",
+  "message": "I got this feeling where my nose is kinda clogged on one side, eyes get a bit watery and I sneeze a lot, but I don\u2019t know what\u2019s wrong.",
+  "labeler_top3": [
+   26,
+   28,
+   25
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 102,
+  "expected_complaint": "Lower extremity injury",
+  "message": "my foot hurts cant walk lol",
+  "labeler_top3": [
+   100,
+   102,
+   76
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 88,
+  "expected_complaint": "Foreign body, eye",
+  "message": "I\u2019ve got a nasty feeling in my eye, it\u2019s red and I keep tearing up. It won\u2019t stop.",
+  "labeler_top3": [
+   91,
+   90,
+   92
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 141,
+  "expected_complaint": "Isolated chest trauma \u2013 penetrating",
+  "message": "I got a cut on my chest, it\u2019s bleeding and it hurts when I move. I feel scared and can\u2019t catch my breath properly.",
+  "labeler_top3": [
+   124,
+   62,
+   115
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 140,
+  "expected_complaint": "Major trauma \u2013 blunt",
+  "message": "I slipped and hit my side really hard, it hurts a lot, my skin\u2019s bruised and swollen, I can\u2019t stand up straight or walk properly.",
+  "labeler_top3": [
+   144,
+   96,
+   51
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 140,
+  "expected_complaint": "Major trauma \u2013 blunt",
+  "message": "ouch hit my side hard cant move, skin bruised, breathing fast, feeling weird",
+  "labeler_top3": [
+   144,
+   114,
+   96
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 38,
+  "expected_complaint": "Constipation",
+  "message": "Lately my poops are really hard and take forever, and my stomach feels full and bloated after I eat, especially dinner.",
+  "labeler_top3": [
+   38,
+   36,
+   48
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 135,
+  "expected_complaint": "Foreign body, skin",
+  "message": "I\u2019ve noticed a little sore on my hand, it\u2019s a bit raised and itchy, like there\u2019s something inside, and it hurts a little when I touch it.",
+  "labeler_top3": [
+   135,
+   121,
+   127
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 59,
+  "expected_complaint": "Polyuria",
+  "message": "I've been getting up a lot at night to pee, and during the day I can't go long without rushing to the bathroom, even though I'm drinking normal amounts.",
+  "labeler_top3": [
+   59,
+   57,
+   56
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 124,
+  "expected_complaint": "Laceration / Puncture",
+  "message": "I cut my foot on a piece of glass and it\u2019s bleeding a lot, the edges look jagged and it hurts when I move it.",
+  "labeler_top3": [
+   124,
+   135,
+   100
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 74,
+  "expected_complaint": "Head injury",
+  "message": "My partner fell and hit their head; they're holding their head, looking confused, have a bump and bruise, and they're feeling nauseous and wobbly.",
+  "labeler_top3": [
+   74,
+   69,
+   42
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 124,
+  "expected_complaint": "Laceration / Puncture",
+  "message": "I got a nasty scrape on my hand, it\u2019s bleeding and looks a bit raw, it hurts a lot when I try to use it, and it\u2019s kind of swollen.",
+  "labeler_top3": [
+   123,
+   124,
+   127
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 80,
+  "expected_complaint": "Vaginal discharge",
+  "message": "I've been noticing a weird wet spot down there that changes color and smells odd, and it's itchy and keeps feeling moist all day.",
+  "labeler_top3": [
+   80,
+   127,
+   128
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 111,
+  "expected_complaint": "Floppy child",
+  "message": "I don't know what's wrong, my little one just hangs like a rag, can't eat well and doesn't seem to sit up.",
+  "labeler_top3": [
+   111,
+   104,
+   113
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 130,
+  "expected_complaint": "Other skin conditions",
+  "message": "I\u2019ve got some dry spots on my hands that look different and itch a little, not sure what\u2019s causing them.",
+  "labeler_top3": [
+   128,
+   127,
+   130
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 54,
+  "expected_complaint": "Penile swelling",
+  "message": "My partner's groin area looks puffy and red, it feels tight and sore, and she's having trouble going to the bathroom and being intimate.",
+  "labeler_top3": [
+   53,
+   55,
+   60
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 141,
+  "expected_complaint": "Isolated chest trauma \u2013 penetrating",
+  "message": "I think I got a stab wound in my chest, it hurts sharp when I breathe and I can see blood, I'm feeling really panicky and short of breath.",
+  "labeler_top3": [
+   141,
+   114,
+   2
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 14,
+  "expected_complaint": "Loss of hearing",
+  "message": "I keep missing what people say, even when they're right next to me, so I always ask them to repeat things and turn the TV up really loud.",
+  "labeler_top3": [
+   12,
+   15,
+   69
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 22,
+  "expected_complaint": "Neck trauma",
+  "message": "My husband fell and now his neck is bruised and swollen; he says the pain spikes when he moves his head or swallows, and he sounds faintly ringing in his ears.",
+  "labeler_top3": [
+   21,
+   22,
+   15
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 100,
+  "expected_complaint": "Lower extremity pain",
+  "message": "I\u2019m having a hard time walking, my foot and leg feel sore when I stand. It\u2019s swollen a bit and I can\u2019t move it like before.",
+  "labeler_top3": [
+   100,
+   9,
+   103
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 50,
+  "expected_complaint": "Oral / Esophageal Foreign Body",
+  "message": "I just felt a sharp thing stuck in my throat, it hurts and I keep coughing and trying to swallow but it won\u2019t move.",
+  "labeler_top3": [
+   50,
+   23,
+   36
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 23,
+  "expected_complaint": "Difficulty swallowing / Dysphagia",
+  "message": "I keep stopping while I eat, coughing a lot and feeling like food gets stuck, so I take tiny bites and sip slowly.",
+  "labeler_top3": [
+   23,
+   20,
+   36
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 47,
+  "expected_complaint": "Hiccoughs",
+  "message": "I've been getting these sudden hiccup-like sounds that come in rapid bursts after I eat or drink.",
+  "labeler_top3": [
+   47,
+   36,
+   71
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 79,
+  "expected_complaint": "Foreign body, vagina",
+  "message": "My partner says she feels like there\u2019s a foreign object inside her, it\u2019s sore, itchy, and she\u2019s getting spotting when she moves around.",
+  "labeler_top3": [
+   79,
+   80,
+   86
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 26,
+  "expected_complaint": "Nasal congestion / Hay fever",
+  "message": "I've got this constant stuffy feeling in the front of my nose, can't breathe well on that side, and my eyes are watery while I keep sneezing when I'm outside.",
+  "labeler_top3": [
+   26,
+   120,
+   28
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 37,
+  "expected_complaint": "Anorexia",
+  "message": "My teen keeps skipping breakfast and lunch, barely takes a snack, and now looks very skinny, dizzy, and can't focus at school.",
+  "labeler_top3": [
+   37,
+   6,
+   70
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 144,
+  "expected_complaint": "Isolated abdominal trauma \u2013 blunt",
+  "message": "My son fell onto his belly during soccer practice and he's been wincing, holding his tummy, and breathing shallowly when we try to move him.",
+  "labeler_top3": [
+   144,
+   36,
+   42
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 74,
+  "expected_complaint": "Head injury",
+  "message": "I hit my head on the coffee table and now my head hurts a lot, I feel dizzy and can't remember what happened earlier today.",
+  "labeler_top3": [
+   74,
+   71,
+   69
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 31,
+  "expected_complaint": "Noxious inhalation",
+  "message": "I've been coughing a lot, my throat feels like it's on fire, and I can barely catch a normal breath; my eyes are tearing and red.",
+  "labeler_top3": [
+   116,
+   114,
+   90
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 10,
+  "expected_complaint": "Cool pulseless limb",
+  "message": "my foot is cold and numb, cant move it lol",
+  "labeler_top3": [
+   10,
+   76,
+   100
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 58,
+  "expected_complaint": "Oliguria",
+  "message": "My husband only manages a tiny stream when he uses the restroom and says his bladder feels heavy, but he hardly ever has to go.",
+  "labeler_top3": [
+   56,
+   58,
+   59
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 12,
+  "expected_complaint": "Earache",
+  "message": "My partner keeps saying there's a sharp, throbbing pain right behind his ear that gets worse when he swallows or the pressure changes, and he winces whenever I touch that spot.",
+  "labeler_top3": [
+   17,
+   12,
+   15
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 103,
+  "expected_complaint": "Joint(s) swelling",
+  "message": "my knoe looks puffy cant move it today",
+  "labeler_top3": [
+   103,
+   100,
+   102
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 13,
+  "expected_complaint": "Foreign body ear",
+  "message": "got something stuck in ear lol cant hear nada",
+  "labeler_top3": [
+   13,
+   12,
+   15
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 58,
+  "expected_complaint": "Oliguria",
+  "message": "I\u2019m getting older and I can\u2019t seem to empty my bladder; just a few drops come out and I feel a pressure inside.",
+  "labeler_top3": [
+   56,
+   58,
+   59
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 26,
+  "expected_complaint": "Nasal congestion / Hay fever",
+  "message": "nasal blockage one side, eyes watery, sneezing nonstop lol",
+  "labeler_top3": [
+   26,
+   120,
+   28
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 13,
+  "expected_complaint": "Foreign body ear",
+  "message": "I think there\u2019s something in my ear, it\u2019s bothering me and I can\u2019t hear well, but I\u2019m not sure what.",
+  "labeler_top3": [
+   13,
+   12,
+   15
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 111,
+  "expected_complaint": "Floppy child",
+  "message": "My baby just lies limp, barely moves her arms, sucks slowly, and hasn't started rolling or sitting yet. I'm really scared.",
+  "labeler_top3": [
+   111,
+   104,
+   109
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 18,
+  "expected_complaint": "Dental / Gum problems",
+  "message": "I have a sore tooth that hurts when I bite down, my gums are red and a little swollen, and I can't clean it well.",
+  "labeler_top3": [
+   18,
+   24,
+   7
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 61,
+  "expected_complaint": "Depression / Suicidal / Deliberate self harm",
+  "message": "i feel so down, nothing matters, i dont want to be here",
+  "labeler_top3": [
+   61,
+   62,
+   63
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 14,
+  "expected_complaint": "Loss of hearing",
+  "message": "i cant hear ppl ask me to repeat lol volume max",
+  "labeler_top3": [
+   12,
+   13,
+   15
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 109,
+  "expected_complaint": "Apneic spells in infants",
+  "message": "I saw my grandson just sit still, his face went white, then he started breathing again. It felt odd and I don't know why it happened.",
+  "labeler_top3": [
+   7,
+   68,
+   69
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 113,
+  "expected_complaint": "Congenital problem in children",
+  "message": "I got this kid with a weird limb size. It\u2019s tough, I don\u2019t know what to do, but I try to help him do simple stuff.",
+  "labeler_top3": [
+   8,
+   9,
+   76
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 18,
+  "expected_complaint": "Dental / Gum problems",
+  "message": "I've got a constant throbbing pain in one of my teeth that gets worse when I chew or drink anything hot or cold, and my gums look red and swell a bit.",
+  "labeler_top3": [
+   18,
+   24,
+   7
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 9,
+  "expected_complaint": "Bilateral leg swelling / Edema",
+  "message": "legs feel heavy, tight, shoes tight after standing all day",
+  "labeler_top3": [
+   8,
+   9,
+   76
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 57,
+  "expected_complaint": "UTI complaints",
+  "message": "My husband keeps going to the bathroom every hour, only a little comes out, it hurts and the pee looks weird and stinky.",
+  "labeler_top3": [
+   57,
+   56,
+   52
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 131,
+  "expected_complaint": "Lumps, bumps, calluses",
+  "message": "got a hard bump, sore if i press it, skin looks red",
+  "labeler_top3": [
+   129,
+   130,
+   128
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 13,
+  "expected_complaint": "Foreign body ear",
+  "message": "My son keeps rubbing his left ear, says it feels full and itchy, and his hearing seems muffled today.",
+  "labeler_top3": [
+   12,
+   13,
+   16
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 94,
+  "expected_complaint": "Periorbital swelling",
+  "message": "my eyes look puffy and tight, dark circles more, kinda sore lol",
+  "labeler_top3": [
+   94,
+   90,
+   92
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 22,
+  "expected_complaint": "Neck trauma",
+  "message": "My throat hurts badly, it feels like a sharp throbbing pain whenever I turn my head or try to swallow, and my neck is swollen.",
+  "labeler_top3": [
+   20,
+   21,
+   23
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 139,
+  "expected_complaint": "Major trauma \u2013 penetrating",
+  "message": "I... I think I\u2019m bleeding real bad, there\u2019s a cut and I can see something inside, I feel weak and scared to move",
+  "labeler_top3": [
+   124,
+   126,
+   6
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ },
+ {
+  "idx": 15,
+  "expected_complaint": "Tinnitus",
+  "message": "My husband keeps saying he hears a buzzing noise that no one else hears; it's getting worse and keeps him up at bedtime.",
+  "labeler_top3": [
+   15,
+   63,
+   62
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 12,
+  "expected_complaint": "Earache",
+  "message": "I've got this constant ache on the side of my head near my ear, especially when I yawn or the plane takes off, and it really hurts when anyone touches it.",
+  "labeler_top3": [
+   71,
+   12,
+   15
+  ],
+  "agree_top1": false,
+  "agree_top3": true
+ },
+ {
+  "idx": 103,
+  "expected_complaint": "Joint(s) swelling",
+  "message": "I think my elbow is bigger now, the skin looks stretched and it feels hard to lift things.",
+  "labeler_top3": [
+   103,
+   101,
+   8
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 38,
+  "expected_complaint": "Constipation",
+  "message": "My partner has been struggling with really tough, infrequent stools and feels uncomfortable after meals, sometimes even not finishing the bathroom trip fully.",
+  "labeler_top3": [
+   38,
+   36,
+   37
+  ],
+  "agree_top1": true,
+  "agree_top3": true
+ },
+ {
+  "idx": 81,
+  "expected_complaint": "Sexual assault",
+  "message": "My partner has been crying a lot, looks scared all the time, won't go to certain spots, and seems jumpy at loud noises. I'm really worried.",
+  "labeler_top3": [
+   62,
+   61,
+   67
+  ],
+  "agree_top1": false,
+  "agree_top3": false
+ }
+]

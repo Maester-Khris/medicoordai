@@ -1,0 +1,72 @@
+{
+  "opening_message": "I've got terrible pain in my left side by my back that goes down into my left groin.",
+  "disclosure_items": [
+    {
+      "feature_id": "pain_intensity",
+      "category": "chief_complaint",
+      "first_person_phrasing": "It's a 10 out of 10.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pain_radiation",
+      "category": "chief_complaint",
+      "first_person_phrasing": "It travels down to my left groin.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vomiting",
+      "category": "history",
+      "first_person_phrasing": "I've been throwing up.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pain_history",
+      "category": "history",
+      "first_person_phrasing": "I had a kidney pain attack like this three years ago.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vital_signs_pulse",
+      "category": "vitals",
+      "first_person_phrasing": "My heart is racing.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vital_signs_blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "I feel a little woozy.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vital_signs_respirations",
+      "category": "vitals",
+      "first_person_phrasing": "My breathing feels normal.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "current_pain_level",
+      "category": "chief_complaint",
+      "first_person_phrasing": "It's eased to a dull ache now, about 1 out of 10.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pale",
+      "category": "exam",
+      "first_person_phrasing": "I can't see myself, but I feel really awful.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "diaphoretic",
+      "category": "exam",
+      "first_person_phrasing": "I'm drenched in sweat.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "restlessness",
+      "category": "exam",
+      "first_person_phrasing": "I can't keep still, the pain is too much.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

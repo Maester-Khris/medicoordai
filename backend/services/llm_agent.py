@@ -1,11 +1,22 @@
 import json
 import os
 import logging
-from config import llm_provider_chain
+from dataclasses import dataclass, field
+from config import (
+    llm_breaker_cooldown_seconds,
+    llm_breaker_failures,
+    llm_conversation_token_cap,
+    llm_provider_chain,
+    llm_retry_attempts,
+)
 from graph.base import GraphContextProvider
 from graph.factory import get_graph_provider
-from llm.base import BaseLLMClient, LLMMessage
+from llm.base import BaseLLMClient, LLMMessage, LLMResponse
+from llm.spend import SpendStore, conversation_cap_reached
 from llm.tools import ALL_TOOLS, TRIAGE_RESPONSE
+
+VALID_SEVERITIES = frozenset(TRIAGE_RESPONSE.parameters["severity"]["enum"])  # routine | moderate | urgent | emergent
+from metrics import LLM_CAP_REACHED
 from llm.prompts import build_system_prompt, build_medical_context_block, build_graph_context_block
 from services import facility_load
 from services.proximity import find_nearest_facilities
@@ -31,24 +42,44 @@ def _build_provider_client(provider: str, max_retries: int | None) -> BaseLLMCli
     return GroqClient(max_retries=max_retries)
 
 
+def build_guarded_client(provider: str, *, breaker: bool) -> BaseLLMClient:
+    """One provider behind the whole guard stack, outermost first:
+    Instrumented -> CircuitBreaker (optional) -> Retrying -> the provider client.
+
+    The SDK's own retries are off (max_retries=0) so llm.retry is the only retry policy: a 400 is
+    never retried and the eval sees the same behaviour as production. The breaker sits outside the
+    retries, so one exhausted retry sequence counts as one failure and an open breaker skips them.
+    The eval builds its client here too (breaker=False, see scripts/symptom_eval/system_under_test.py).
+    """
+    from llm.breaker import CircuitBreakerLLMClient
+    from llm.instrumented import InstrumentedLLMClient
+    from llm.retry import RetryingLLMClient
+
+    client: BaseLLMClient = RetryingLLMClient(
+        _build_provider_client(provider, 0), provider=provider, attempts=llm_retry_attempts(),
+    )
+    if breaker:
+        client = CircuitBreakerLLMClient(
+            client, provider=provider, failure_threshold=llm_breaker_failures(),
+            cooldown_seconds=llm_breaker_cooldown_seconds(),
+        )
+    return InstrumentedLLMClient(client, provider)
+
+
 def get_llm_client() -> BaseLLMClient:
     """
-    Factory. Every provider client comes back wrapped in InstrumentedLLMClient.
+    Factory. Every provider comes back behind build_guarded_client (retry, breaker, metrics).
 
-    LLM_PROVIDER_CHAIN unset: one client chosen by LLM_PROVIDER (groq by default), with the SDK's
-    own retries, exactly as before.
+    LLM_PROVIDER_CHAIN unset: one client chosen by LLM_PROVIDER (groq by default).
     LLM_PROVIDER_CHAIN="groq,openai,anthropic": those providers in that order behind
-    FallbackLLMClient, each with SDK retries off (the next provider is the retry). A name that is
-    unknown, or whose key is missing, is skipped with a warning.
+    FallbackLLMClient. A name that is unknown, or whose key is missing, is skipped with a warning.
     """
-    from llm.instrumented import InstrumentedLLMClient
-
     chain = llm_provider_chain()
     if not chain:
         provider = os.environ.get("LLM_PROVIDER", "groq").lower()
         if provider not in KNOWN_PROVIDERS:
             provider = "groq"
-        return InstrumentedLLMClient(_build_provider_client(provider, None), provider)
+        return build_guarded_client(provider, breaker=True)
 
     from llm.fallback import FallbackLLMClient
 
@@ -58,12 +89,92 @@ def get_llm_client() -> BaseLLMClient:
             logger.warning("llm_provider_skipped", extra={"provider": provider, "reason": "unknown provider"})
             continue
         try:
-            clients.append(InstrumentedLLMClient(_build_provider_client(provider, 0), provider))
+            clients.append(build_guarded_client(provider, breaker=True))
         except RuntimeError as exc:  # a missing key or model
             logger.warning("llm_provider_skipped", extra={"provider": provider, "reason": str(exc)})
     if not clients:
         raise RuntimeError("LLM_PROVIDER_CHAIN names no usable provider")
     return FallbackLLMClient(clients)
+
+
+CLASSIFY_TEMPERATURE = 0.2
+RESPONSE_TEMPERATURE = 0.3
+
+
+def triage_max_followups() -> int:
+    return int(os.environ.get("TRIAGE_MAX_FOLLOWUPS", "4"))
+
+
+def triage_min_turns() -> int:
+    return int(os.environ.get("TRIAGE_MIN_TURNS", "3"))
+
+
+def triage_context_window() -> int:
+    return int(os.environ.get("TRIAGE_CONTEXT_WINDOW", "10"))
+
+
+# Fixed wording, not model output: the eval must be reproducible, so the run manifest records the
+# hash of these strings. Edit them freely, but a changed hash starts a new eval configuration.
+SAFETY_LINE = "If this is an emergency, call 911. For other health help, call 211."
+CAPPED_NOTE = (
+    "I'm wrapping up here to keep this conversation short, so this is based on what you've shared "
+    "so far. If your symptoms change or get worse, call 911."
+)
+CAPPED_NO_RESULT = f"I couldn't finish assessing this. {SAFETY_LINE}"
+
+
+def capped_reply(severity: str, facility: dict | None) -> str:
+    """The patient-facing text once a conversation has spent its token allowance.
+
+    No model call: the cap exists to stop spend, so the grounded reply that normally costs a
+    second call is a template. Everything it says comes from the classification and the facility
+    the backend already chose.
+    """
+    if facility:
+        where = (
+            f"The nearest appropriate facility is {facility['name']} at {facility['address']}, "
+            f"about {facility['distanceKm']} km away."
+        )
+    else:
+        where = "I can't point to a facility from here, so please call 211 or search online for nearby care."
+    urgency = " Please call 911 now." if severity == "emergent" else ""
+    return f"Based on what you've told me, this looks {severity}.{urgency} {where} {CAPPED_NOTE}"
+
+
+def capped_reply_fingerprint() -> str:
+    """Every fixed string and template a capped turn can show, rendered. The eval manifest hashes it,
+    so changing any wording starts a new configuration instead of silently mixing two."""
+    sample_facility = {"name": "Sample Hospital", "address": "1 Sample St", "distanceKm": 1.0}
+    return "\n".join([
+        SAFETY_LINE, CAPPED_NOTE, CAPPED_NO_RESULT,
+        capped_reply("urgent", sample_facility), capped_reply("emergent", None),
+    ])
+
+
+@dataclass
+class _TurnContext:
+    """What one turn needs to know about its conversation's spend, and what it has spent so far.
+
+    One instance per turn, never shared: `tokens_used` is added to by every model call of the turn.
+    """
+
+    conversation_id: str | None
+    capped: bool
+    tokens_used: int = field(default=0)
+
+
+def _followup(text: str, ctx: _TurnContext) -> dict:
+    """A turn that asks for more information. Past the cap there is nothing left to ask with."""
+    return {
+        "response": CAPPED_NO_RESULT if ctx.capped else text,
+        "severity": None,
+        "reasoning": None,
+        "recommended_facility": None,
+        "nearby_facilities": [],
+        "turn_type": "followup",
+        "cap_reached": ctx.capped,
+        "tokens_used": ctx.tokens_used,
+    }
 
 
 class LLMAgent:
@@ -83,14 +194,16 @@ class LLMAgent:
         self,
         client: BaseLLMClient | None = None,
         graph_provider: GraphContextProvider | None = None,
+        spend_store: SpendStore | None = None,
     ) -> None:
         self._client = client or get_llm_client()
         self._graph_provider = graph_provider or get_graph_provider()
-        self._max_followups = int(os.environ.get("TRIAGE_MAX_FOLLOWUPS", "4"))
-        self._min_turns_before_triage = int(os.environ.get("TRIAGE_MIN_TURNS", "3"))
-        self._context_window = int(os.environ.get("TRIAGE_CONTEXT_WINDOW", "10"))
-        self._temperature = 0.2
-        self._response_temperature = 0.3
+        self._spend_store = spend_store  # None: no cap (callers that have no conversation to count)
+        self._max_followups = triage_max_followups()
+        self._min_turns_before_triage = triage_min_turns()
+        self._context_window = triage_context_window()
+        self._temperature = CLASSIFY_TEMPERATURE
+        self._response_temperature = RESPONSE_TEMPERATURE
         self._stop_sequences = ["</response>"]
 
     async def respond(
@@ -100,6 +213,7 @@ class LLMAgent:
         lat: float | None = None,
         lng: float | None = None,
         user_profile: dict | None = None,
+        conversation_id: str | None = None,
     ) -> dict:
         """
         Main entry point. Returns:
@@ -110,19 +224,47 @@ class LLMAgent:
             "recommended_facility": dict | None,
             "nearby_facilities": list[dict],
             "turn_type": "followup" | "triage",
+            "cap_reached": bool,
+            "tokens_used": int,  # prompt + completion tokens of this turn's model calls
         }
+
+        With a `conversation_id` (and a spend store) every model call's tokens are counted against
+        that conversation. Once the total reaches LLM_CONVERSATION_TOKEN_CAP the turn is forced to
+        classify and answers from a template: the guest still gets a result, with no further spend.
         """
         messages = await run_in_threadpool(
             self._build_messages, user_message, history, user_profile=user_profile
         )
         user_turns = sum(1 for m in history if m.get("role") == "user")
-        force_classify = user_turns >= self._max_followups
+        ctx = await self._turn_context(conversation_id)
+        force_classify = user_turns >= self._max_followups or ctx.capped
 
         return await self._run(
             messages, lat, lng,
             force=force_classify,
             user_turns=user_turns,
+            ctx=ctx,
         )
+
+    async def _turn_context(self, conversation_id: str | None) -> _TurnContext:
+        if conversation_id is None or self._spend_store is None:
+            return _TurnContext(conversation_id=None, capped=False)
+        spent = await self._spend_store.total(conversation_id)
+        capped = conversation_cap_reached(spent, llm_conversation_token_cap())
+        if capped:
+            LLM_CAP_REACHED.inc()
+            logger.warning("conversation_cap_reached", extra={"spent_tokens": spent})
+        return _TurnContext(conversation_id=conversation_id, capped=capped)
+
+    async def _chat(self, ctx: _TurnContext, **call: object) -> LLMResponse:
+        """The one place a model call is made and its tokens are counted."""
+        resp = await self._client.chat(**call)
+        usage = resp.usage or {}
+        tokens = (usage.get("prompt_tokens") or 0) + (usage.get("completion_tokens") or 0)
+        ctx.tokens_used += tokens
+        if ctx.conversation_id is not None and self._spend_store is not None:
+            await self._spend_store.add(ctx.conversation_id, tokens)
+        return resp
 
     def _build_messages(
         self, user_message: str, history: list[dict],
@@ -172,10 +314,13 @@ class LLMAgent:
         lng: float | None,
         force: bool,
         user_turns: int = 0,
+        ctx: _TurnContext | None = None,
     ) -> dict:
+        ctx = ctx or _TurnContext(conversation_id=None, capped=False)
         force_tool = TRIAGE_RESPONSE.name if force else None
 
-        resp = await self._client.chat(
+        resp = await self._chat(
+            ctx,
             messages=messages,
             tools=ALL_TOOLS,
             temperature=self._temperature,
@@ -191,6 +336,12 @@ class LLMAgent:
                 if tool_call["name"] == TRIAGE_RESPONSE.name:
 
                     args = json.loads(tool_call["arguments"])
+                    if args.get("severity") not in VALID_SEVERITIES:
+                        # The model's output is untrusted: the tool enum is only a hint to it. Fail toward
+                        # the safe side so a synonym or injected value never delays care or drops the 911 line.
+                        logger.warning("triage_invalid_severity", extra={"user_turns": user_turns})
+                        args["severity"] = "emergent"
+                        tool_call = {**tool_call, "arguments": json.dumps(args)}
                     is_emergency = args.get("severity") == "emergent"
                     below_min_turns = user_turns < self._min_turns_before_triage
 
@@ -204,35 +355,14 @@ class LLMAgent:
                                 "severity": args.get("severity"),
                             },
                         )
-                        return {
-                            "response": resp.content or "Could you tell me more about your symptoms?",
-                            "severity": None,
-                            "reasoning": None,
-                            "recommended_facility": None,
-                            "nearby_facilities": [],
-                            "turn_type": "followup",
-                        }
+                        return _followup(resp.content or "Could you tell me more about your symptoms?", ctx)
 
-                    return await self._handle_triage(tool_call, messages, lat, lng, user_turns)
+                    return await self._handle_triage(tool_call, messages, lat, lng, user_turns, ctx)
             logger.warning("unexpected_tool_call")
-            return {
-                "response": "I need a bit more information. Can you describe your symptoms?",
-                "severity": None,
-                "reasoning": None,
-                "recommended_facility": None,
-                "nearby_facilities": [],
-                "turn_type": "followup",
-            }
+            return _followup("I need a bit more information. Can you describe your symptoms?", ctx)
 
         # No tool call — conversational follow-up response
-        return {
-            "response": resp.content or "Could you tell me more about your symptoms?",
-            "severity": None,
-            "reasoning": None,
-            "recommended_facility": None,
-            "nearby_facilities": [],
-            "turn_type": "followup",
-        }
+        return _followup(resp.content or "Could you tell me more about your symptoms?", ctx)
 
     async def _handle_triage(
         self,
@@ -241,7 +371,9 @@ class LLMAgent:
         lat: float | None,
         lng: float | None,
         user_turns: int = 0,
+        ctx: _TurnContext | None = None,
     ) -> dict:
+        ctx = ctx or _TurnContext(conversation_id=None, capped=False)
         args = json.loads(tool_call["arguments"])
         severity = args["severity"]
         reasoning = args["reasoning"]
@@ -276,12 +408,21 @@ class LLMAgent:
                 nearby_facilities = ranked[1:]
                 facility_load.record(recommended_facility, severity, lat, lng)
 
-        response_text = await self._generate_grounded_response(
-            messages=messages,
-            severity=severity,
-            reasoning=reasoning,
-            facility=recommended_facility,
-        )
+        if ctx.capped:
+            response_text = capped_reply(severity, recommended_facility)
+        else:
+            response_text = await self._generate_grounded_response(
+                messages=messages,
+                severity=severity,
+                reasoning=reasoning,
+                facility=recommended_facility,
+                ctx=ctx,
+            )
+
+        if severity == "emergent" and "911" not in response_text:
+            # The model decides whether to say 911 (measured: it left it out in 5 of 10 emergent replies,
+            # and with no location sent the guest to 211). For an emergency the number is not optional.
+            response_text = response_text.rstrip() + " Please call 911 now."
 
         grounding = check_facility_groundedness(response_text, recommended_facility)
         logger.info(
@@ -301,6 +442,8 @@ class LLMAgent:
             "recommended_facility": recommended_facility,
             "nearby_facilities": nearby_facilities,
             "turn_type": "triage",
+            "cap_reached": ctx.capped,
+            "tokens_used": ctx.tokens_used,
         }
 
     async def _generate_grounded_response(
@@ -309,6 +452,7 @@ class LLMAgent:
         severity: str,
         reasoning: str,
         facility: dict | None,
+        ctx: _TurnContext,
     ) -> str:
         if facility:
             facility_fact = (
@@ -337,7 +481,8 @@ class LLMAgent:
             ),
         )
 
-        resp = await self._client.chat(
+        resp = await self._chat(
+            ctx,
             messages=messages + [grounding],
             tools=None,
             temperature=self._response_temperature,
@@ -357,5 +502,8 @@ def get_agent() -> LLMAgent:
     """
     global _agent
     if _agent is None:
-        _agent = LLMAgent()
+        from llm.spend import RedisSpendStore
+        from services.wait_times import redis_client  # imported here: it needs UPSTASH_REDIS_URL at import
+
+        _agent = LLMAgent(spend_store=RedisSpendStore(redis_client))
     return _agent

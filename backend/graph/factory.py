@@ -10,10 +10,16 @@ while preserving the existing eval-script pattern of setting
 GRAPH_RAG_PROVIDER at runtime mid-process and expecting a fresh provider for
 the new value (backend/scripts/graphrag_eval/run_track_a_retrieval.py's
 build_provider()). See plan: 2026-08-03-sprint19-postreview-critical-important-fixes.md, C1.
+
+Supported provider names: off (NullGraphProvider), static (StaticLookupProvider),
+neo4j (Neo4jSnomedProvider), neo4j_semantic (Neo4jSemanticProvider).
 """
+import logging
 import os
 
 from graph.base import GraphContextProvider, NullGraphProvider
+
+logger = logging.getLogger(__name__)
 
 _provider_cache: dict[str, GraphContextProvider] = {}
 
@@ -25,6 +31,12 @@ def _build_provider(provider_name: str) -> GraphContextProvider:
     if provider_name == "neo4j":
         from graph.snomed_neo4j.provider import Neo4jSnomedProvider
         return Neo4jSnomedProvider()
+    if provider_name == "neo4j_semantic":
+        from graph.snomed_neo4j.semantic_provider import Neo4jSemanticProvider
+        return Neo4jSemanticProvider(autoload=True)
+    if provider_name != "off":
+        # a typo must not look like a working switch: it is off, and the log says why
+        logger.warning("graph_provider_unknown", extra={"provider": provider_name})
     return NullGraphProvider()
 
 

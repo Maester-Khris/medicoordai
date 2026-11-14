@@ -1,0 +1,36 @@
+{
+  "opening_message": "A big dog bit me on the calf.",
+  "disclosure_items": [
+    {
+      "feature_id": "pain_level",
+      "category": "chief_complaint",
+      "first_person_phrasing": "It hurts about 3 out of 10.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "anxiety",
+      "category": "history",
+      "first_person_phrasing": "I'm a bit worried about the bite.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "puncture_wounds",
+      "category": "exam",
+      "first_person_phrasing": "There are a few puncture holes in my calf.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "no_lacerations",
+      "category": "exam",
+      "first_person_phrasing": "No tears or gashes, just the puncture holes.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vital_signs",
+      "category": "vitals",
+      "first_person_phrasing": "My vitals are steady.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

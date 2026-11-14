@@ -1,0 +1,54 @@
+{
+  "opening_message": "My baby is very sick and keeps throwing up.",
+  "disclosure_items": [
+    {
+      "feature_id": "illness_duration",
+      "category": "history",
+      "first_person_phrasing": "He's been sick for two days now.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vomiting",
+      "category": "history",
+      "first_person_phrasing": "Yes, he's been throwing up a lot.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "food_intake",
+      "category": "history",
+      "first_person_phrasing": "He's had hardly anything to eat or drink.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pallor",
+      "category": "exam",
+      "first_person_phrasing": "Yes, he looks very pale.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "limpness",
+      "category": "exam",
+      "first_person_phrasing": "He feels floppy when I hold him.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respiratory_rate",
+      "category": "vitals",
+      "first_person_phrasing": "He's breathing very fast, about 46 breaths a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse_quality",
+      "category": "vitals",
+      "first_person_phrasing": "His pulse is quick and very faint.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "I don't think they managed to get a blood pressure reading.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

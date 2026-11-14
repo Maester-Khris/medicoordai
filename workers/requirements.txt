@@ -1,4 +1,4 @@
-requests==2.32.3
+requests==2.34.*
 beautifulsoup4==4.12.3
 redis==5.0.8
 psycopg[binary]==3.*

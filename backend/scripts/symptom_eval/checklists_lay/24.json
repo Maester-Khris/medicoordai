@@ -1,0 +1,36 @@
+{
+  "opening_message": "I've been feeling really down lately.",
+  "disclosure_items": [
+    {
+      "feature_id": "past_depression",
+      "category": "history",
+      "first_person_phrasing": "I've had depression before.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "no_suicide_ideation",
+      "category": "history",
+      "first_person_phrasing": "I'm not thinking of hurting myself.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "no_medication",
+      "category": "history",
+      "first_person_phrasing": "I'm not on any medication for it.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "no_alcohol",
+      "category": "history",
+      "first_person_phrasing": "I don't drink.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vital_signs_normal",
+      "category": "vitals",
+      "first_person_phrasing": "My vitals are normal.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

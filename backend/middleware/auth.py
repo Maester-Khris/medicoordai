@@ -29,6 +29,11 @@ def _is_internal(header_value: str) -> bool:
     return bool(expected) and hmac.compare_digest(header_value.encode(), expected.encode())
 
 
+def is_internal_request(request: Request) -> bool:
+    """True when the caller sent the internal token (operators, load tests, the deploy's own checks)."""
+    return _is_internal(request.headers.get("X-Internal", ""))
+
+
 def require_internal(request: Request) -> None:
     """403 unless the caller sent the internal token. Closed when no token is configured."""
     if not _is_internal(request.headers.get("X-Internal", "")):
@@ -68,11 +73,16 @@ class AuthMiddleware(BaseHTTPMiddleware):
             # verify_token() here would reject it as a malformed token and
             # surface as a 503, before the route's own check ever runs.
             return await call_next(request)
+        if demo_mode():
+            # Guests identify with X-Guest-Id and never use a Supabase token. Verifying one here
+            # would let any anonymous caller make the API call Supabase per request.
+            return await call_next(request)
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
             token = auth_header.removeprefix("Bearer ").strip()
             try:
-                user = verify_token(token)
+                # blocking HTTP call: off the event loop so one slow auth call cannot stall every request
+                user = await run_in_threadpool(verify_token, token)
                 request.state.user_id = user.id
             except HTTPException as exc:
                 if exc.status_code != 401:

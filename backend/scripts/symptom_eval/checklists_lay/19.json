@@ -1,0 +1,42 @@
+{
+  "opening_message": "My little one swallowed a tiny plastic toy.",
+  "disclosure_items": [
+    {
+      "feature_id": "vomiting",
+      "category": "history",
+      "first_person_phrasing": "Yes, they threw up while being checked.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "gagging",
+      "category": "history",
+      "first_person_phrasing": "They gag now and then.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "stridor",
+      "category": "exam",
+      "first_person_phrasing": "I can hear a bit of a high-pitched noise when they breathe in.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respiratory_effort",
+      "category": "exam",
+      "first_person_phrasing": "No, they're not working hard to breathe.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "chest_clear",
+      "category": "exam",
+      "first_person_phrasing": "The doctor said their chest sounds clear.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vital_signs",
+      "category": "vitals",
+      "first_person_phrasing": "Yes, their vitals are normal.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

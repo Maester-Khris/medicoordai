@@ -1,0 +1,2498 @@
+[
+ {
+  "idx": 32,
+  "message": "I think I got shocked by a live wire while fixing something. My arm has burns and it hurts a lot. There's also some weird tingling in my hand.",
+  "labeler_top3": [
+   33,
+   125,
+   136
+  ],
+  "expected_complaint": "Electrical injury",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 49,
+  "message": "hey, i fell down and now there's a bit of blood near my butt. it hurts a little, what should i do?",
+  "labeler_top3": [
+   49,
+   43,
+   124
+  ],
+  "expected_complaint": "Anal / Rectal trauma",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 33,
+  "message": "hey, i spilled some cleaner and my hand is red. it kinda hurts too. what should i do?",
+  "labeler_top3": [
+   33,
+   130,
+   124
+  ],
+  "expected_complaint": "Chemical exposure",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 33,
+  "message": "I think I got some cleaning chemicals on my skin and now it's really irritated and red. It started burning a little while after I touched it. What should I do?",
+  "labeler_top3": [
+   33,
+   130,
+   120
+  ],
+  "expected_complaint": "Chemical exposure",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 112,
+  "message": "I've been having this weird wheezing sound when I breathe in, especially when I have a cold. It feels like I can't get enough air, and it's really frustrating.",
+  "labeler_top3": [
+   114,
+   107,
+   116
+  ],
+  "expected_complaint": "Stridor",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 141,
+  "message": "I accidentally cut myself on the chest with a knife while cooking. It's pretty deep, and I'm having trouble breathing. I think I need help right away.",
+  "labeler_top3": [
+   124,
+   14,
+   114
+  ],
+  "expected_complaint": "Isolated chest trauma \u2013 penetrating",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 59,
+  "message": "I\u2019m not really sure what's going on, but I feel like I have to pee more often, especially at night. It\u2019s just strange for someone my age.",
+  "labeler_top3": [
+   57,
+   59,
+   6
+  ],
+  "expected_complaint": "Polyuria",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 81,
+  "message": "hey, my friend got hurt last week and now they act all weird, like they don\u2019t want to go outside or hang out so much.",
+  "labeler_top3": [
+   61,
+   62,
+   69
+  ],
+  "expected_complaint": "Sexual assault",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 140,
+  "message": "omg i saw someone fall from a height and they hit their back hard. they were in so much pain, it looked bad. hope they\u2019re okay.",
+  "labeler_top3": [
+   140,
+   74,
+   96
+  ],
+  "expected_complaint": "Major trauma \u2013 blunt",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 81,
+  "message": "I've been feeling really anxious since that incident last week. I got hurt on my arm, and now I can't stop thinking about it. It's affecting my sleep and making it hard to focus.",
+  "labeler_top3": [
+   61,
+   62,
+   64
+  ],
+  "expected_complaint": "Sexual assault",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 39,
+  "message": "I think my stomach is upset. I keep going to the bathroom a lot, and it started after I drank some funny-tasting water. I feel weak too.",
+  "labeler_top3": [
+   42,
+   36,
+   10
+  ],
+  "expected_complaint": "Diarrhea",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 55,
+  "message": "I've been feeling a lot of pain in my lower abdomen lately. It started suddenly, and now it's really tender and swollen. I'm also feeling a bit nauseous.",
+  "labeler_top3": [
+   36,
+   42,
+   11
+  ],
+  "expected_complaint": "Scrotal pain and/or swelling",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 79,
+  "message": "I've been feeling pain in my pelvic area and noticed some unusual discharge after we had sex. It's really uncomfortable, and I'm starting to feel anxious about it.",
+  "labeler_top3": [
+   53,
+   80,
+   86
+  ],
+  "expected_complaint": "Foreign body, vagina",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 145,
+  "message": "My partner has been coughing a lot and they had close contact with someone who was sick last week. I'm really worried they might be catching something contagious.",
+  "labeler_top3": [
+   145,
+   28,
+   114
+  ],
+  "expected_complaint": "Exposure to communicable disease",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 142,
+  "message": "hey, i fell and now my chest hurts when i breathe. need help.",
+  "labeler_top3": [
+   2,
+   3,
+   4
+  ],
+  "expected_complaint": "Isolated chest trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 81,
+  "message": "I'm really worried about my partner. They went through something really upsetting at work last month and now they're avoiding certain places. They seem so distant and unhappy.",
+  "labeler_top3": [
+   61,
+   62,
+   69
+  ],
+  "expected_complaint": "Sexual assault",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 137,
+  "message": "hey i think my buddy drank too much stuff from a bottle, he's acting weird and can't talk right. need help, like, now",
+  "labeler_top3": [
+   137,
+   136,
+   138
+  ],
+  "expected_complaint": "Overdose ingestion",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 83,
+  "message": "I've been noticing that the outer folds of my genital area have become swollen and tender over the last few days. It's really uncomfortable, and the skin looks red and shiny. What could be going on?",
+  "labeler_top3": [
+   83,
+   80,
+   86
+  ],
+  "expected_complaint": "Labial swelling",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 40,
+  "message": "i think my friend did something silly and now they can't sit right and it hurts when they poop, is that bad?",
+  "labeler_top3": [
+   40,
+   43,
+   36
+  ],
+  "expected_complaint": "Foreign body in rectum",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 87,
+  "message": "I think I got something in my eyes while gardening. They\u2019re red and kind of sting. I\u2019m not sure what to do. Should I rinse them?",
+  "labeler_top3": [
+   88,
+   90,
+   87
+  ],
+  "expected_complaint": "Chemical exposure, eye",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 33,
+  "message": "My son just spilled some kind of chemical at school, and now his skin is red and he\u2019s coughing. I\u2019m really worried about how he\u2019s feeling right now.",
+  "labeler_top3": [
+   33,
+   120,
+   128
+  ],
+  "expected_complaint": "Chemical exposure",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 83,
+  "message": "hey, my gf's lady parts are kinda puffy and red now. it started last week, and she says it hurts a bit. should we see someone?",
+  "labeler_top3": [
+   80,
+   83,
+   86
+  ],
+  "expected_complaint": "Labial swelling",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 55,
+  "message": "hey, my stomach hurts a lot, like down low. kind of swelled up and feels weird. not sure what's wrong",
+  "labeler_top3": [
+   36,
+   48,
+   41
+  ],
+  "expected_complaint": "Scrotal pain and/or swelling",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 141,
+  "message": "My partner just got hurt. He has a visible wound on his chest from a sharp object, and he seems to be struggling to breathe. I'm really worried.",
+  "labeler_top3": [
+   141,
+   114,
+   42
+  ],
+  "expected_complaint": "Isolated chest trauma \u2013 penetrating",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 140,
+  "message": "My son fell off his bike and hit his leg hard. It looks really bruised and he can't walk on it. I'm scared he might be hurt badly.",
+  "labeler_top3": [
+   102,
+   100,
+   99
+  ],
+  "expected_complaint": "Major trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 85,
+  "message": "I'm over 20 weeks pregnant, and I'm feeling really uncomfortable lately. My belly feels huge and I've got this back pain that won't go away. Is this normal?",
+  "labeler_top3": [
+   85,
+   84,
+   96
+  ],
+  "expected_complaint": "Pregnancy issues > 20 wks",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 30,
+  "message": "I've been outside skiing all day, and my fingers are super cold and numb. They look pale too. I'm worried I might have done something to them.",
+  "labeler_top3": [
+   30,
+   34,
+   125
+  ],
+  "expected_complaint": "Frostbite / Cold injury",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 122,
+  "message": "My daughter touched a plant in the yard, and now her leg is red and looks swollen. She's saying it hurts really bad. Should I be worried?",
+  "labeler_top3": [
+   120,
+   128,
+   4
+  ],
+  "expected_complaint": "Sting",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 87,
+  "message": "hey, i was cleaning and got some stuff in my eyes. they\u2019re all red and super itchy, i can barely open them ugh",
+  "labeler_top3": [
+   87,
+   88,
+   90
+  ],
+  "expected_complaint": "Chemical exposure, eye",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 145,
+  "message": "I\u2019m not sure, but I think I might be getting sick. I was with someone who has a bad cold, and now I feel tired and have a slight fever. It\u2019s just strange.",
+  "labeler_top3": [
+   28,
+   146,
+   61
+  ],
+  "expected_complaint": "Exposure to communicable disease",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 39,
+  "message": "I've been having really watery poop more than three times a day since I ate some bad food. I'm feeling pretty tired and dizzy from it.",
+  "labeler_top3": [
+   42,
+   36,
+   10
+  ],
+  "expected_complaint": "Diarrhea",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 140,
+  "message": "I was in a car accident and now my arm is really bruised and swollen. It hurts a lot, and I can barely move it. Should I go to the doctor?",
+  "labeler_top3": [
+   101,
+   102,
+   96
+  ],
+  "expected_complaint": "Major trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 65,
+  "message": "I\u2019m not sure what\u2019s going on, but my neighbor\u2019s son has been yelling and acting really strange. It\u2019s a bit frightening, and I don\u2019t know how to help.",
+  "labeler_top3": [
+   67,
+   61,
+   69
+  ],
+  "expected_complaint": "Violent / Homicidal behaviour",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 27,
+  "message": "hey, my kid has something stuck in their nose and can\u2019t breathe right. any ideas?",
+  "labeler_top3": [
+   27,
+   26,
+   28
+  ],
+  "expected_complaint": "Foreign body, nose",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 94,
+  "message": "hey, my eyes are kinda puffy and red. it just started a few hours ago, not sure why, but it looks weird.",
+  "labeler_top3": [
+   91,
+   92,
+   90
+  ],
+  "expected_complaint": "Periorbital swelling",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 86,
+  "message": "hey, down there is super itchy and feels sore. idk why it started but it\u2019s kinda annoying. any ideas?",
+  "labeler_top3": [
+   86,
+   80,
+   81
+  ],
+  "expected_complaint": "Vaginal pain / itch",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 43,
+  "message": "hey, my butt hurts a lot when i sit or poop. what could be wrong?",
+  "labeler_top3": [
+   43,
+   40,
+   36
+  ],
+  "expected_complaint": "Rectal / Perineal pain",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 38,
+  "message": "I'm really worried about my mom. She's been struggling with going to the bathroom for a week now, and I can see she's uncomfortable, especially after meals. She hardly eats anything.",
+  "labeler_top3": [
+   56,
+   57,
+   36
+  ],
+  "expected_complaint": "Constipation",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 141,
+  "message": "hey, i think my buddy cut his chest with a knife, breathing weird, kinda bad. help?",
+  "labeler_top3": [
+   141,
+   114,
+   42
+  ],
+  "expected_complaint": "Isolated chest trauma \u2013 penetrating",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 32,
+  "message": "I had a little accident with a wire. My hand is burned and it's been hurting. I'm not sure if I should go to the doctor right away.",
+  "labeler_top3": [
+   125,
+   124,
+   123
+  ],
+  "expected_complaint": "Electrical injury",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 59,
+  "message": "I've been needing to go to the bathroom a lot lately, even more than usual. It's really bothering me at night because I keep waking up to pee.",
+  "labeler_top3": [
+   59,
+   57,
+   42
+  ],
+  "expected_complaint": "Polyuria",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 17,
+  "message": "I was playing soccer and got hit in the ear with the ball. It's been hurting and feels really swollen. Should I be worried?",
+  "labeler_top3": [
+   17,
+   90,
+   14
+  ],
+  "expected_complaint": "Ear injury",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 32,
+  "message": "My son touched a live electrical wire while playing. He has burns on his skin and keeps saying his arms feel weak and tingly. I'm really worried!",
+  "labeler_top3": [
+   32,
+   136,
+   125
+  ],
+  "expected_complaint": "Electrical injury",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 83,
+  "message": "I don't know if this is normal, but my outer lady parts seem puffy lately. It started a few days ago and feels a bit sore. Should I be concerned about it?",
+  "labeler_top3": [
+   80,
+   83,
+   86
+  ],
+  "expected_complaint": "Labial swelling",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 39,
+  "message": "My child has been running to the bathroom with loose stools all day after having some street food yesterday. I'm really worried about dehydration.",
+  "labeler_top3": [
+   42,
+   57,
+   36
+  ],
+  "expected_complaint": "Diarrhea",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 59,
+  "message": "My mom has been getting up several times at night to urinate, and it's been hard for her to sleep. I'm really worried about it.",
+  "labeler_top3": [
+   59,
+   57,
+   42
+  ],
+  "expected_complaint": "Polyuria",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 94,
+  "message": "My eyes have been a bit swollen for a few weeks now. They look puffy, especially around the lids. I'm not really sure what\u2019s causing it, but it\u2019s annoying.",
+  "labeler_top3": [
+   91,
+   94,
+   129
+  ],
+  "expected_complaint": "Periorbital swelling",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 138,
+  "message": "I don\u2019t know much about this, but my grandson stopped using something he was on for a while, and now he\u2019s sweating a lot and just seems on edge. I\u2019m not sure how to help.",
+  "labeler_top3": [
+   138,
+   136,
+   61
+  ],
+  "expected_complaint": "Substance withdrawal",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 117,
+  "message": "I've been breathing really fast and deeply when I get stressed, and it makes me feel lightheaded and tingly in my fingers. It happens suddenly, and I just feel anxious.",
+  "labeler_top3": [
+   117,
+   62,
+   68
+  ],
+  "expected_complaint": "Hyperventilation",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 138,
+  "message": "I\u2019m really worried about my brother. He quit smoking suddenly, and now he looks pale, shakes a lot, and seems really anxious all the time. It\u2019s hard to watch.",
+  "labeler_top3": [
+   138,
+   136,
+   61
+  ],
+  "expected_complaint": "Substance withdrawal",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 35,
+  "message": "My child was playing in the pool and went under. They\u2019re coughing and struggling to breathe. I'm really scared; please help!",
+  "labeler_top3": [
+   35,
+   114,
+   10
+  ],
+  "expected_complaint": "Near Drowning",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 22,
+  "message": "My teenage son fell while skateboarding, and now he can't move his neck without wincing. I'm really worried about him!",
+  "labeler_top3": [
+   96,
+   97,
+   73
+  ],
+  "expected_complaint": "Neck trauma",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 55,
+  "message": "I'm feeling some discomfort in my lower belly. It's been tender for a few days, and I\u2019m not sure what to do about it.",
+  "labeler_top3": [
+   36,
+   42,
+   41
+  ],
+  "expected_complaint": "Scrotal pain and/or swelling",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 43,
+  "message": "I've got this ache down there, you know, in the rear area. It hurts more when I sit for a long time. I don\u2019t understand why it\u2019s happening.",
+  "labeler_top3": [
+   43,
+   40,
+   36
+  ],
+  "expected_complaint": "Rectal / Perineal pain",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 13,
+  "message": "I've been feeling a lot of pressure and pain in my ear since I accidentally put my finger in it while cleaning. It's really bothering me, and I can't hear well.",
+  "labeler_top3": [
+   16,
+   12,
+   14
+  ],
+  "expected_complaint": "Foreign body ear",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 67,
+  "message": "I don't know what's going on with my friend. They seem lost and are acting odd, talking to themselves. It began suddenly last week, and I'm quite concerned.",
+  "labeler_top3": [
+   63,
+   69,
+   61
+  ],
+  "expected_complaint": "Bizarre behaviour",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 136,
+  "message": "I don't feel right. My head is all fuzzy and I can\u2019t think straight after drinking last night. I\u2019m worried I might hurt myself doing something stupid.",
+  "labeler_top3": [
+   61,
+   136,
+   68
+  ],
+  "expected_complaint": "Substance misuse / Intoxication",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 65,
+  "message": "I've been feeling really agitated and angry lately, and I sometimes have outbursts that worry me. I'm not sure what's causing it, but I feel like I'm losing control.",
+  "labeler_top3": [
+   65,
+   136,
+   61
+  ],
+  "expected_complaint": "Violent / Homicidal behaviour",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 122,
+  "message": "I just got stung by some bug while gardening. My arm feels really sharp and burning. There's a bit of redness too. I hope it goes away soon.",
+  "labeler_top3": [
+   120,
+   121,
+   123
+  ],
+  "expected_complaint": "Sting",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 121,
+  "message": "I got bitten by a dog on my arm while I was out for a walk. It really hurts and there's some swelling around the bite. I\u2019m not sure if I need to see a doctor.",
+  "labeler_top3": [
+   121,
+   124,
+   136
+  ],
+  "expected_complaint": "Bite",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 65,
+  "message": "my friend is acting super weird and aggressive these days, like he\u2019s frustrated all the time. hope he\u2019s okay, but it\u2019s kinda scary",
+  "labeler_top3": [
+   61,
+   69,
+   67
+  ],
+  "expected_complaint": "Violent / Homicidal behaviour",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 117,
+  "message": "My partner started breathing really quickly just now, and they look really anxious. They always get like this when they're stressed. It's concerning to watch.",
+  "labeler_top3": [
+   117,
+   62,
+   69
+  ],
+  "expected_complaint": "Hyperventilation",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 67,
+  "message": "I'm really worried about my partner. They keep saying things that don\u2019t make sense and don\u2019t seem to know what's happening around them. This started a few days ago.",
+  "labeler_top3": [
+   68,
+   69,
+   61
+  ],
+  "expected_complaint": "Bizarre behaviour",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 47,
+  "message": "I've been having these weird moments where I suddenly gasp for air. It happens after I eat too fast or drink soda, and it's just so annoying.",
+  "labeler_top3": [
+   114,
+   42,
+   36
+  ],
+  "expected_complaint": "Hiccoughs",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 129,
+  "message": "hey, my ankle is all puffy and red after i twisted it. it hurts when i touch it. any idea what\u2019s going on?",
+  "labeler_top3": [
+   103,
+   100,
+   101
+  ],
+  "expected_complaint": "Localized swelling / redness",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 27,
+  "message": "I saw my grandkid playing and now they're having a hard time breathing through their nose. It looks like they might have stuck something up there. What should I do?",
+  "labeler_top3": [
+   27,
+   28,
+   116
+  ],
+  "expected_complaint": "Foreign body, nose",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 13,
+  "message": "My son just stuck a small toy in his ear while playing, and now he's crying and pulling at it. I'm so worried about him!",
+  "labeler_top3": [
+   13,
+   88,
+   17
+  ],
+  "expected_complaint": "Foreign body ear",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 83,
+  "message": "I'm really worried about my partner. They've suddenly developed swelling in their outer genital area, and it looks red and shiny. They keep saying it hurts, and I don't know what to do.",
+  "labeler_top3": [
+   53,
+   54,
+   80
+  ],
+  "expected_complaint": "Labial swelling",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 142,
+  "message": "I was in a fall and hit my chest hard. It's been hurting a lot, especially when I breathe or move. There's some swelling too.",
+  "labeler_top3": [
+   141,
+   142,
+   36
+  ],
+  "expected_complaint": "Isolated chest trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 141,
+  "message": "I\u2019m not sure what to do. My friend has a big cut on his chest from something sharp, and he looks really scared and is breathing fast. It just happened.",
+  "labeler_top3": [
+   139,
+   141,
+   12
+  ],
+  "expected_complaint": "Isolated chest trauma \u2013 penetrating",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 111,
+  "message": "I've noticed that my baby's arms and legs feel really floppy when I hold them. They can't seem to hold their head up and don't react much when I play with them.",
+  "labeler_top3": [
+   111,
+   106,
+   84
+  ],
+  "expected_complaint": "Floppy child",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 112,
+  "message": "My daughter just started wheezing while playing outside. She seems to be struggling to breathe and looks scared, especially since she just had a cold last week.",
+  "labeler_top3": [
+   114,
+   107,
+   28
+  ],
+  "expected_complaint": "Stridor",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 35,
+  "message": "I saw a young person in the lake who looked like they were having trouble. They were splashing around and didn't seem to be able to get their breath. What should I do?",
+  "labeler_top3": [
+   35,
+   114,
+   12
+  ],
+  "expected_complaint": "Near Drowning",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 87,
+  "message": "My friend just got some paint in her eyes while we were working on a project. She's squinting a lot and keeps rubbing them. I'm really worried!",
+  "labeler_top3": [
+   87,
+   88,
+   90
+  ],
+  "expected_complaint": "Chemical exposure, eye",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 112,
+  "message": "I\u2019m not sure what\u2019s wrong, but my chest feels tight and I\u2019m making a funny sound when I breathe in. It\u2019s been happening since yesterday, and it worries me.",
+  "labeler_top3": [
+   114,
+   42,
+   36
+  ],
+  "expected_complaint": "Stridor",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 143,
+  "message": "I saw a man get shot in the stomach a while ago, and he\u2019s looking very weak and sick. I think he needs help fast!",
+  "labeler_top3": [
+   139,
+   140,
+   76
+  ],
+  "expected_complaint": "Isolated abdominal trauma \u2013 penetrating",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 94,
+  "message": "I'm worried about my son. His eyes are really swollen and puffy, both top and bottom, and he says they feel uncomfortable. It happened pretty quickly.",
+  "labeler_top3": [
+   91,
+   92,
+   89
+  ],
+  "expected_complaint": "Periorbital swelling",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 95,
+  "message": "My kid got hit in the eye with a ball and now it's all red and puffy. They keep saying it hurts and there's some discharge. What should we do?",
+  "labeler_top3": [
+   88,
+   90,
+   91
+  ],
+  "expected_complaint": "Eye trauma",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 22,
+  "message": "I kind of hurt my neck when I was gardening last week. It\u2019s a bit sore and I feel like I can\u2019t move it right now. Should I be concerned?",
+  "labeler_top3": [
+   21,
+   96,
+   97
+  ],
+  "expected_complaint": "Neck trauma",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 40,
+  "message": "I'm really worried about my partner. They've been having a hard time sitting down and seem in pain down there after an accident. I don't know what to do.",
+  "labeler_top3": [
+   60,
+   53,
+   80
+  ],
+  "expected_complaint": "Foreign body in rectum",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 140,
+  "message": "I tripped and fell yesterday, and my knee is all swollen and painful. I'm not sure if it's serious or what I should do about it.",
+  "labeler_top3": [
+   100,
+   103,
+   96
+  ],
+  "expected_complaint": "Major trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 143,
+  "message": "My partner just got stabbed in the belly during a fight, and there's a lot of blood. They look really pale and shaky, I'm scared.",
+  "labeler_top3": [
+   139,
+   144,
+   141
+  ],
+  "expected_complaint": "Isolated abdominal trauma \u2013 penetrating",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 79,
+  "message": "I'm really worried about my daughter. She's been having pain in her pelvic area after using some new products, and there\u2019s also some strange bleeding. She's been acting really stressed.",
+  "labeler_top3": [
+   82,
+   53,
+   78
+  ],
+  "expected_complaint": "Foreign body, vagina",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 121,
+  "message": "got bitten by a dog on my foot, it\u2019s bleeding a little, should i go see someone or what?",
+  "labeler_top3": [
+   121,
+   124,
+   136
+  ],
+  "expected_complaint": "Bite",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 47,
+  "message": "My kid just started having these strange gasping moments after meals. It doesn't seem to hurt him, but it happens when he eats too quickly or drinks fizzy drinks.",
+  "labeler_top3": [
+   114,
+   107,
+   70
+  ],
+  "expected_complaint": "Hiccoughs",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 142,
+  "message": "I think I might have hurt my chest. I fell down and now it hurts a lot when I breathe, and I'm not sure if I should be worried.",
+  "labeler_top3": [
+   2,
+   3,
+   14
+  ],
+  "expected_complaint": "Isolated chest trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 122,
+  "message": "I got a strange pain on my arm after brushing against something in the garden. It's burning and red. I'm not sure if I should do anything about it.",
+  "labeler_top3": [
+   130,
+   123,
+   127
+  ],
+  "expected_complaint": "Sting",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 111,
+  "message": "my kid is super floppy all the time. like, he can't hold his head up and just lays there. is this normal?",
+  "labeler_top3": [
+   111,
+   113,
+   84
+  ],
+  "expected_complaint": "Floppy child",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 30,
+  "message": "I was out walking in the cold for too long, and now my ears feel really cold and feel like they might be getting hurt. I'm not sure what to do.",
+  "labeler_top3": [
+   30,
+   34,
+   125
+  ],
+  "expected_complaint": "Frostbite / Cold injury",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 49,
+  "message": "I had a little accident and hurt my behind, and there\u2019s some blood. I'm not sure what to do about it, but it\u2019s bothering me a lot.",
+  "labeler_top3": [
+   49,
+   43,
+   40
+  ],
+  "expected_complaint": "Anal / Rectal trauma",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 131,
+  "message": "I've noticed some weird bumps on my hands that feel firm. They didn\u2019t hurt at first, but now they feel uncomfortable when I grip things tightly. What's going on?",
+  "labeler_top3": [
+   131,
+   130,
+   128
+  ],
+  "expected_complaint": "Lumps, bumps, calluses",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 119,
+  "message": "I\u2019m an older person and I don\u2019t really know what\u2019s happening, but my friend is having a hard time breathing after eating something small. It looks serious.",
+  "labeler_top3": [
+   114,
+   119,
+   116
+  ],
+  "expected_complaint": "Respiratory foreign body",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 86,
+  "message": "I've been feeling a lot of discomfort in my genital area lately. It burns and feels sore sometimes. I think it might be because of stress or hormonal changes.",
+  "labeler_top3": [
+   80,
+   53,
+   12
+  ],
+  "expected_complaint": "Vaginal pain / itch",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 22,
+  "message": "I was in a minor car accident yesterday, and now my neck really hurts. It feels stiff and I can\u2019t turn my head without pain.",
+  "labeler_top3": [
+   22,
+   21,
+   96
+  ],
+  "expected_complaint": "Neck trauma",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 142,
+  "message": "My son fell off his bike and hit his chest really hard. He has a bruise and is having trouble breathing deeply. I'm really worried about him.",
+  "labeler_top3": [
+   141,
+   142,
+   2
+  ],
+  "expected_complaint": "Isolated chest trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 32,
+  "message": "hey, i touched a wire and now my hand\u2019s burned and feels funny. like it\u2019s tingling or something. what should i do?",
+  "labeler_top3": [
+   32,
+   33,
+   125
+  ],
+  "expected_complaint": "Electrical injury",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 129,
+  "message": "I have this swollen, red patch on my hand. It\u2019s been there since I cut it yesterday. It hurts a little, but I don\u2019t want to bother anyone about it.",
+  "labeler_top3": [
+   130,
+   127,
+   128
+  ],
+  "expected_complaint": "Localized swelling / redness",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 137,
+  "message": "I think I might have taken too much of my medication. I feel really confused and drowsy right now. I don't know what to do.",
+  "labeler_top3": [
+   138,
+   136,
+   61
+  ],
+  "expected_complaint": "Overdose ingestion",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 85,
+  "message": "My partner is 20 weeks pregnant, and she's been really sore all over. Her belly is getting bigger, and she's worried about some unusual bleeding she's noticed.",
+  "labeler_top3": [
+   85,
+   84,
+   82
+  ],
+  "expected_complaint": "Pregnancy issues > 20 wks",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 43,
+  "message": "I've been having this really sharp pain in my pelvic area lately. It's worse when I sit for a long time or during bowel movements. Not sure what to do!",
+  "labeler_top3": [
+   36,
+   43,
+   41
+  ],
+  "expected_complaint": "Rectal / Perineal pain",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 129,
+  "message": "My partner has this puffy, red area on their leg. It looks really inflamed and is warm. They say it hurts a bit, and I'm getting worried.",
+  "labeler_top3": [
+   11,
+   10,
+   1
+  ],
+  "expected_complaint": "Localized swelling / redness",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 38,
+  "message": "I don\u2019t know what\u2019s going on, but I haven\u2019t been able to go to the bathroom like I should. It hurts, and I feel so full. I'm not young anymore, and this isn\u2019t good.",
+  "labeler_top3": [
+   38,
+   42,
+   36
+  ],
+  "expected_complaint": "Constipation",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 35,
+  "message": "hey, someone just went under the water and now they're coughing a lot. they look kinda lost. what should we do?",
+  "labeler_top3": [
+   114,
+   115,
+   8
+  ],
+  "expected_complaint": "Near Drowning",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 17,
+  "message": "ear hurts, hit it while playing, kinda swollen, not sure if i need to go get it checked or what",
+  "labeler_top3": [
+   17,
+   90,
+   91
+  ],
+  "expected_complaint": "Ear injury",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 38,
+  "message": "hey, i think my friend is constipated or something. they only go like once a week and always look bloated. idk what to do.",
+  "labeler_top3": [
+   38,
+   36,
+   42
+  ],
+  "expected_complaint": "Constipation",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 33,
+  "message": "I touched something that smelled strong, and now my hands are burning a bit. I\u2019m not sure what it was, but it happened about 30 minutes ago.",
+  "labeler_top3": [
+   33,
+   120,
+   126
+  ],
+  "expected_complaint": "Chemical exposure",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 79,
+  "message": "I'm not sure what's going on, but my granddaughter said she has pain down there after her date last week. It's making her really upset, but she doesn't want to see a doctor.",
+  "labeler_top3": [
+   80,
+   53,
+   61
+  ],
+  "expected_complaint": "Foreign body, vagina",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 85,
+  "message": "hey, my girlfriend is pregnant and around 20 weeks. her back hurts and her belly is super big. is that normal or something?",
+  "labeler_top3": [
+   84,
+   85,
+   36
+  ],
+  "expected_complaint": "Pregnancy issues > 20 wks",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 31,
+  "message": "My child was playing nearby when I accidentally spilled some cleaning product. Now they\u2019re coughing and having trouble breathing. I'm really worried and don\u2019t know what to do!",
+  "labeler_top3": [
+   114,
+   107,
+   116
+  ],
+  "expected_complaint": "Noxious inhalation",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 121,
+  "message": "I accidentally stepped in the way of my neighbor's dog, and it bit my leg. I'm not quite sure what to do, but it looks like it might be getting worse.",
+  "labeler_top3": [
+   121,
+   123,
+   124
+  ],
+  "expected_complaint": "Bite",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 60,
+  "message": "Hi, I had a rough soccer game and I think I hurt myself down there. There's a lot of swelling and it really hurts. What should I do?",
+  "labeler_top3": [
+   55,
+   101,
+   100
+  ],
+  "expected_complaint": "Genital trauma",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 138,
+  "message": "I've been feeling really anxious and shaky since I stopped using alcohol suddenly last week. It's been tough, and I get super sweaty too. I don\u2019t know what to do.",
+  "labeler_top3": [
+   138,
+   136,
+   61
+  ],
+  "expected_complaint": "Substance withdrawal",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 43,
+  "message": "My partner is having a lot of pain in their lower area. They keep shifting around and say it hurts a lot when they go to the bathroom. I'm really worried about them.",
+  "labeler_top3": [
+   56,
+   57,
+   53
+  ],
+  "expected_complaint": "Rectal / Perineal pain",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 144,
+  "message": "I had a little fall yesterday, and now my tummy is sore. It hurts when I press on it, and there\u2019s a bit of a bruise. I\u2019m not sure what to do.",
+  "labeler_top3": [
+   36,
+   42,
+   38
+  ],
+  "expected_complaint": "Isolated abdominal trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 81,
+  "message": "I'm not sure how to say this, but my friend had a rough experience recently. They hurt their shoulder and now they just seem sad and can't relax at all.",
+  "labeler_top3": [
+   61,
+   69,
+   72
+  ],
+  "expected_complaint": "Sexual assault",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 136,
+  "message": "I saw my neighbor at the bar last night, and now he seems confused and walks unsteady. I think he drank too much. What should I do?",
+  "labeler_top3": [
+   138,
+   136,
+   69
+  ],
+  "expected_complaint": "Substance misuse / Intoxication",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 49,
+  "message": "I fell hard while playing soccer and now I see some bleeding near my backside. It really hurts, and I'm worried about what might be going on.",
+  "labeler_top3": [
+   49,
+   43,
+   36
+  ],
+  "expected_complaint": "Anal / Rectal trauma",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 13,
+  "message": "I think I've got something stuck in my ear. It feels full and hurts a bit, but I'm not sure what to do about it.",
+  "labeler_top3": [
+   13,
+   12,
+   14
+  ],
+  "expected_complaint": "Foreign body ear",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 109,
+  "message": "I've been having these weird moments where I feel like I can\u2019t breathe for a few seconds. It\u2019s really scary and I don\u2019t know why it\u2019s happening to me.",
+  "labeler_top3": [
+   70,
+   114,
+   42
+  ],
+  "expected_complaint": "Apneic spells in infants",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 135,
+  "message": "I was gardening and got a thorn stuck in my hand. It hurts a bit and is a little red. I'm not sure if I should pull it out or leave it alone.",
+  "labeler_top3": [
+   123,
+   124,
+   130
+  ],
+  "expected_complaint": "Foreign body, skin",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 31,
+  "message": "I think I might have breathed in something harmful while cooking. My chest feels tight, and I'm having a hard time catching my breath. I\u2019m not sure what to do about it.",
+  "labeler_top3": [
+   31,
+   114,
+   42
+  ],
+  "expected_complaint": "Noxious inhalation",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 144,
+  "message": "fell down and my belly hurts, there\u2019s a bruise. what should i do?",
+  "labeler_top3": [
+   36,
+   43,
+   15
+  ],
+  "expected_complaint": "Isolated abdominal trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 5,
+  "message": "I've been feeling a bit dizzy and sometimes get headaches. I think my blood pressure might be high, but I haven't checked it yet. I'm trying to be more active and eat better.",
+  "labeler_top3": [
+   5,
+   61,
+   69
+  ],
+  "expected_complaint": "Hypertension",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 79,
+  "message": "hey, my friend has pelvic pain after sex and some weird discharge. she\u2019s been kinda down about it. any tips?",
+  "labeler_top3": [
+   80,
+   53,
+   18
+  ],
+  "expected_complaint": "Foreign body, vagina",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 94,
+  "message": "I've noticed my eyelids are really puffy and swollen lately, especially in the mornings. It just started a few days ago, and they sometimes feel itchy too.",
+  "labeler_top3": [
+   128,
+   127,
+   129
+  ],
+  "expected_complaint": "Periorbital swelling",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 5,
+  "message": "I\u2019m getting older and I don\u2019t feel so great sometimes. I notice I get lightheaded after doing chores, and I just wonder if my blood pressure is acting up or something.",
+  "labeler_top3": [
+   5,
+   61,
+   69
+  ],
+  "expected_complaint": "Hypertension",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 111,
+  "message": "I saw a baby today who looked really weak. The poor thing couldn't stay sitting up at all. It reminded me of what my friend mentioned about children having trouble moving.",
+  "labeler_top3": [
+   111,
+   108,
+   73
+  ],
+  "expected_complaint": "Floppy child",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 119,
+  "message": "I'm really worried about my son. He was playing with small toys and now he seems to be gasping for air and wheezing.",
+  "labeler_top3": [
+   107,
+   114,
+   119
+  ],
+  "expected_complaint": "Respiratory foreign body",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 85,
+  "message": "I have a friend who's well into her pregnancy, like over 20 weeks. She complains about her belly hurting and sometimes seems really stressed. Should I be concerned?",
+  "labeler_top3": [
+   85,
+   84,
+   36
+  ],
+  "expected_complaint": "Pregnancy issues > 20 wks",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 60,
+  "message": "Um, I\u2019m not really sure what happened, but my grandson got hurt in his private area while playing. He seems to be in a lot of discomfort and I'm not sure if it\u2019s serious.",
+  "labeler_top3": [
+   60,
+   54,
+   61
+  ],
+  "expected_complaint": "Genital trauma",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 131,
+  "message": "I\u2019m really worried about my son. He has these strange growths on his feet that appeared suddenly, and they seem to bother him when he walks. Should I be concerned?",
+  "labeler_top3": [
+   108,
+   73,
+   96
+  ],
+  "expected_complaint": "Lumps, bumps, calluses",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 86,
+  "message": "I'm an older person and I\u2019m not sure how to explain this, but I\u2019ve been feeling soreness and irritation in my private area. It's been bothering me a lot lately, usually after I get stressed.",
+  "labeler_top3": [
+   80,
+   53,
+   61
+  ],
+  "expected_complaint": "Vaginal pain / itch",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 31,
+  "message": "hey, i think i breathed in some bad gas or something. my chest hurts and i can\u2019t breathe right. not sure if i should go to the doctor or what.",
+  "labeler_top3": [
+   33,
+   114,
+   42
+  ],
+  "expected_complaint": "Noxious inhalation",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 27,
+  "message": "My son was playing and I think he put a small toy in his nose. Now he can't breathe well and keeps rubbing his face. I'm really worried!",
+  "labeler_top3": [
+   27,
+   57,
+   116
+  ],
+  "expected_complaint": "Foreign body, nose",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 135,
+  "message": "hey, i think i got a splinter in my finger from the wood. it kinda hurts and is puffy. what do i do?",
+  "labeler_top3": [
+   135,
+   123,
+   124
+  ],
+  "expected_complaint": "Foreign body, skin",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 60,
+  "message": "I'm really worried about my son. He was playing rough with friends and now he's in pain down below. There's some bruising and I'm not sure if we should go to the doctor.",
+  "labeler_top3": [
+   60,
+   54,
+   61
+  ],
+  "expected_complaint": "Genital trauma",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 143,
+  "message": "hey, someone got hurt in the belly with a knife. there's blood everywhere and they look bad. help?",
+  "labeler_top3": [
+   139,
+   140,
+   141
+  ],
+  "expected_complaint": "Isolated abdominal trauma \u2013 penetrating",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 47,
+  "message": "Sometimes I get these fast breaths, like my chest is jumping or something. I think it\u2019s when I eat too fast, but it\u2019s just so odd. I\u2019m not sure what to do.",
+  "labeler_top3": [
+   4,
+   61,
+   17
+  ],
+  "expected_complaint": "Hiccoughs",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 67,
+  "message": "I've been feeling really strange lately, like I'm talking to myself and not even noticing when people are around. It started a few weeks ago, and it's pretty unsettling.",
+  "labeler_top3": [
+   63,
+   69,
+   61
+  ],
+  "expected_complaint": "Bizarre behaviour",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 55,
+  "message": "My son is having a lot of pain in his belly below the stomach. It came on quickly and now it's swollen. I'm really worried about him.",
+  "labeler_top3": [
+   36,
+   48,
+   41
+  ],
+  "expected_complaint": "Scrotal pain and/or swelling",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 129,
+  "message": "I noticed a puffy red spot on my arm after I bumped it against something. It feels warm and tender to touch, and I'm not sure what to do about it.",
+  "labeler_top3": [
+   129,
+   123,
+   124
+  ],
+  "expected_complaint": "Localized swelling / redness",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 87,
+  "message": "I accidentally got some cleaning spray in my eyes while I was tidying up, and now they're really red and watery. It hurts a bit, too.",
+  "labeler_top3": [
+   87,
+   88,
+   90
+  ],
+  "expected_complaint": "Chemical exposure, eye",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 59,
+  "message": "hey, so i keep having to pee a ton at night, it\u2019s annoying. like, way more than normal, idk what's up with that.",
+  "labeler_top3": [
+   56,
+   59,
+   57
+  ],
+  "expected_complaint": "Polyuria",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 109,
+  "message": "My baby sometimes stops breathing and turns a bit blue. It lasts just a little while but it really freaks me out. What should I do?",
+  "labeler_top3": [
+   109,
+   114,
+   68
+  ],
+  "expected_complaint": "Apneic spells in infants",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 30,
+  "message": "My son just came in from playing in the snow, and his toes are really cold and white. I'm really worried he might be hurt or something.",
+  "labeler_top3": [
+   30,
+   34,
+   4
+  ],
+  "expected_complaint": "Frostbite / Cold injury",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 5,
+  "message": "I'm really worried about my partner. They seem out of breath when doing simple things, and they're not usually like this. I just want to make sure everything's okay.",
+  "labeler_top3": [
+   114,
+   2,
+   3
+  ],
+  "expected_complaint": "Hypertension",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 112,
+  "message": "hey, my friend is kinda wheezing when he breathes and he looks really anxious. idk why this is happening, hope it\u2019s nothing serious.",
+  "labeler_top3": [
+   107,
+   114,
+   4
+  ],
+  "expected_complaint": "Stridor",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 60,
+  "message": "hey, my buddy got hit in the balls playing basketball, and now it\u2019s all swollen. is that a big deal or what?",
+  "labeler_top3": [
+   55,
+   54,
+   4
+  ],
+  "expected_complaint": "Genital trauma",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 47,
+  "message": "had a weird episode of sharp breaths after lunch, felt like breath got stuck or something. not sure why it happened, but it was random.",
+  "labeler_top3": [
+   114,
+   42,
+   4
+  ],
+  "expected_complaint": "Hiccoughs",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 119,
+  "message": "I've been having trouble breathing after I accidentally swallowed a piece of food while eating. It feels really tight in my chest and I'm coughing a lot.",
+  "labeler_top3": [
+   119,
+   114,
+   42
+  ],
+  "expected_complaint": "Respiratory foreign body",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 40,
+  "message": "I'm an older man and I think I messed up somehow. There\u2019s this uncomfortable feeling in my rear end and it hurts to go to the bathroom but I'm not sure what to say about it.",
+  "labeler_top3": [
+   43,
+   40,
+   36
+  ],
+  "expected_complaint": "Foreign body in rectum",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 131,
+  "message": "got some bumps on my feet now, they kinda hurt when i walk. they showed up after wearing tight shoes, what should i do?",
+  "labeler_top3": [
+   130,
+   131,
+   123
+  ],
+  "expected_complaint": "Lumps, bumps, calluses",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 95,
+  "message": "I bumped my eye during a game, and now it's really swollen and red. There's some tearing too. It hurts quite a bit, and I'm worried about it.",
+  "labeler_top3": [
+   95,
+   88,
+   90
+  ],
+  "expected_complaint": "Eye trauma",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 67,
+  "message": "hey, my friend is acting weird. they talk to themselves and don\u2019t notice stuff around them. started a few days ago, it\u2019s kinda strange.",
+  "labeler_top3": [
+   63,
+   69,
+   61
+  ],
+  "expected_complaint": "Bizarre behaviour",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 109,
+  "message": "I\u2019ve noticed my grandchild, who is younger than a year, sometimes goes still and isn\u2019t breathing for a moment. It worries me so much, but I can't describe it well.",
+  "labeler_top3": [
+   109,
+   114,
+   68
+  ],
+  "expected_complaint": "Apneic spells in infants",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 13,
+  "message": "hey, my ear feels weird and kinda hurts, i think i got something in it idk, help?",
+  "labeler_top3": [
+   13,
+   12,
+   16
+  ],
+  "expected_complaint": "Foreign body ear",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 135,
+  "message": "My son fell while playing outside and got a sharp piece of metal stuck in his leg. It's really swollen, and he's crying. What should I do?",
+  "labeler_top3": [
+   124,
+   4,
+   12
+  ],
+  "expected_complaint": "Foreign body, skin",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 49,
+  "message": "My son took a bad tumble while riding his bike, and now there's some blood around his rear. He's in a lot of pain, and I'm concerned.",
+  "labeler_top3": [
+   49,
+   43,
+   36
+  ],
+  "expected_complaint": "Anal / Rectal trauma",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 144,
+  "message": "My son fell off his bike today, and now he\u2019s saying his belly hurts. There\u2019s a bruise on his stomach, and it feels tender when I touch it.",
+  "labeler_top3": [
+   36,
+   41,
+   4
+  ],
+  "expected_complaint": "Isolated abdominal trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 17,
+  "message": "My son just fell off his bike and now his ear is all red and looks bruised. He keeps touching it and I\u2019m really concerned.",
+  "labeler_top3": [
+   19,
+   24,
+   12
+  ],
+  "expected_complaint": "Ear injury",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 22,
+  "message": "hurt my neck in a fall. it\u2019s stiff and hurts a lot. what should i do?",
+  "labeler_top3": [
+   21,
+   36,
+   22
+  ],
+  "expected_complaint": "Neck trauma",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 27,
+  "message": "I've been having trouble breathing through one nostril for a few days. I think I might have something stuck up there from playing around. It's really uncomfortable.",
+  "labeler_top3": [
+   27,
+   26,
+   28
+  ],
+  "expected_complaint": "Foreign body, nose",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 119,
+  "message": "hey, my little brother is kinda choking or something after he tried to eat a toy. he\u2019s like wheezing and it\u2019s kinda scary.",
+  "labeler_top3": [
+   119,
+   107,
+   114
+  ],
+  "expected_complaint": "Respiratory foreign body",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 5,
+  "message": "hey, my head hurts sometimes and i feel kinda dizzy. could it be my blood pressure? idk, but i\u2019m worried.",
+  "labeler_top3": [
+   71,
+   5,
+   4
+  ],
+  "expected_complaint": "Hypertension",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 136,
+  "message": "hey, my buddy is acting weird after some drinks. he\u2019s slurring his words and just sitting there. like do i need to help him or something?",
+  "labeler_top3": [
+   136,
+   138,
+   61
+  ],
+  "expected_complaint": "Substance misuse / Intoxication",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 38,
+  "message": "I've been having a really hard time with my bathroom visits lately. I only go maybe twice a week, and it feels painful. My stomach is really bloated, and I'm not hungry at all.",
+  "labeler_top3": [
+   38,
+   36,
+   42
+  ],
+  "expected_complaint": "Constipation",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 143,
+  "message": "I just hurt my stomach with a knife while cooking, and now there's a cut and it's bleeding a bit. I'm really worried about how bad it is.",
+  "labeler_top3": [
+   124,
+   36,
+   45
+  ],
+  "expected_complaint": "Isolated abdominal trauma \u2013 penetrating",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 138,
+  "message": "hey, my friend stopped drugs and now he\u2019s all shaky and kinda moody. i think he\u2019s having a rough time.",
+  "labeler_top3": [
+   138,
+   136,
+   61
+  ],
+  "expected_complaint": "Substance withdrawal",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 145,
+  "message": "I've been feeling really tired and have a cough lately. I was around my friend who has the flu a few days ago, and now I'm worried I might be getting it too.",
+  "labeler_top3": [
+   28,
+   146,
+   42
+  ],
+  "expected_complaint": "Exposure to communicable disease",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 86,
+  "message": "My partner has been really uncomfortable down there for a while now. They keep scratching and shifting around, and I noticed some redness. I'm really worried about them.",
+  "labeler_top3": [
+   80,
+   53,
+   86
+  ],
+  "expected_complaint": "Vaginal pain / itch",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 135,
+  "message": "I accidentally scraped my arm on a branch while hiking, and now there's something stuck in my skin. It's red and painful. Should I do something about it?",
+  "labeler_top3": [
+   135,
+   123,
+   124
+  ],
+  "expected_complaint": "Foreign body, skin",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 17,
+  "message": "I bumped my ear while cleaning the attic. It hurts a bit and is swelling up. I\u2019m not sure if I should see a doctor or not.",
+  "labeler_top3": [
+   88,
+   90,
+   91
+  ],
+  "expected_complaint": "Ear injury",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 137,
+  "message": "I\u2019m not sure what to say. My husband took too many pills and now he\u2019s really sleepy and out of it. I hope he\u2019s okay.",
+  "labeler_top3": [
+   137,
+   136,
+   61
+  ],
+  "expected_complaint": "Overdose ingestion",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 121,
+  "message": "My child just got bitten by a friend's cat on their hand while playing. There\u2019s a bit of blood, and the area looks really red and swollen. I'm worried about it.",
+  "labeler_top3": [
+   121,
+   124,
+   136
+  ],
+  "expected_complaint": "Bite",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 30,
+  "message": "hey, i was out in the cold a bit too long and now my fingers hurt and feel cold. what should i do?",
+  "labeler_top3": [
+   30,
+   34,
+   125
+  ],
+  "expected_complaint": "Frostbite / Cold injury",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 35,
+  "message": "I was swimming and went underwater too long. Now I can\u2019t catch my breath and I'm feeling really shaky. I think I swallowed a lot of water.",
+  "labeler_top3": [
+   115,
+   114,
+   36
+  ],
+  "expected_complaint": "Near Drowning",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 65,
+  "message": "I\u2019m really worried about my son. He\u2019s been acting aggressively towards his friends and family lately, and it\u2019s getting worse. I think he\u2019s under a lot of stress.",
+  "labeler_top3": [
+   61,
+   62,
+   69
+  ],
+  "expected_complaint": "Violent / Homicidal behaviour",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 95,
+  "message": "I poked my eye while gardening. It\u2019s a bit bruised and watering a lot. I\u2019m not sure if I should just wait or see someone. It\u2019s been a few hours.",
+  "labeler_top3": [
+   88,
+   90,
+   91
+  ],
+  "expected_complaint": "Eye trauma",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 31,
+  "message": "I was cleaning the garage and inhaled some bad fumes. Now I'm coughing a lot and have this burning in my throat. It\u2019s hard to breathe and I feel really anxious.",
+  "labeler_top3": [
+   31,
+   33,
+   116
+  ],
+  "expected_complaint": "Noxious inhalation",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 144,
+  "message": "I fell hard while playing soccer, and now my stomach really hurts. It hurts more when I touch it, and there's some bruising too. What should I do?",
+  "labeler_top3": [
+   36,
+   41,
+   45
+  ],
+  "expected_complaint": "Isolated abdominal trauma \u2013 blunt",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 136,
+  "message": "My friend was drinking at a party and now he\u2019s acting really strange. He can\u2019t walk straight and keeps mumbling. I\u2019m scared something is wrong.",
+  "labeler_top3": [
+   68,
+   136,
+   61
+  ],
+  "expected_complaint": "Substance misuse / Intoxication",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 137,
+  "message": "My friend just drank a bunch of something from a bottle and now they can't stand straight. They're acting really strange and I\u2019m scared.",
+  "labeler_top3": [
+   136,
+   68,
+   61
+  ],
+  "expected_complaint": "Overdose ingestion",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 111,
+  "message": "My little brother seems really limp when I pick him up. He struggles to sit up and doesn't respond when I call his name. I'm really worried about him.",
+  "labeler_top3": [
+   111,
+   68,
+   61
+  ],
+  "expected_complaint": "Floppy child",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 117,
+  "message": "hey, sometimes i breathe too fast and feel kinda dizzy. just happens when im stressed, i think. fingers get tingly too.",
+  "labeler_top3": [
+   117,
+   70,
+   68
+  ],
+  "expected_complaint": "Hyperventilation",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 39,
+  "message": "hey, been feeling bad. poop is super watery, like 4 times today. had a burrito yesterday, not sure what\u2019s up.",
+  "labeler_top3": [
+   42,
+   36,
+   38
+  ],
+  "expected_complaint": "Diarrhea",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 40,
+  "message": "I've been feeling a lot of discomfort in my anal area lately. I think I might have done something accidentally and now it's painful when I try to go to the bathroom.",
+  "labeler_top3": [
+   43,
+   40,
+   36
+  ],
+  "expected_complaint": "Foreign body in rectum",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 131,
+  "message": "I\u2019m not sure what these things are on my hands. They just popped up and they feel raised. I\u2019m getting old, and I don\u2019t want anything to get worse.",
+  "labeler_top3": [
+   130,
+   131,
+   128
+  ],
+  "expected_complaint": "Lumps, bumps, calluses",
+  "agree_top1": false,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 117,
+  "message": "I've noticed that when I get nervous, I start breathing fast, and my hands tingle. I'm not sure why it happens, but it feels strange. It seems to happen out of nowhere.",
+  "labeler_top3": [
+   117,
+   68,
+   70
+  ],
+  "expected_complaint": "Hyperventilation",
+  "agree_top1": true,
+  "agree_top3": true,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 145,
+  "message": "hey, i was with someone who had a fever and now im feeling kinda off like tired and coughs. is that bad?",
+  "labeler_top3": [
+   28,
+   146,
+   114
+  ],
+  "expected_complaint": "Exposure to communicable disease",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 109,
+  "message": "baby stop breathing for a sec, skin looks weird, what\u2019s up?? like idk what to do, help!",
+  "labeler_top3": [
+   114,
+   68,
+   61
+  ],
+  "expected_complaint": "Apneic spells in infants",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 122,
+  "message": "ouch i just got bit by something on my leg. it hurts and is red. hope it goes away fast.",
+  "labeler_top3": [
+   121,
+   123,
+   124
+  ],
+  "expected_complaint": "Sting",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ },
+ {
+  "idx": 95,
+  "message": "hit my eye, it's red and swollen now. kinda hurts and watery. just happened like 20 min ago. what to do?",
+  "labeler_top3": [
+   88,
+   90,
+   91
+  ],
+  "expected_complaint": "Eye trauma",
+  "agree_top1": false,
+  "agree_top3": false,
+  "source": "gpt-4o-mini pass 2"
+ }
+]

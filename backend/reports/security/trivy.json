@@ -1,0 +1,5059 @@
+{
+  "SchemaVersion": 2,
+  "Trivy": {
+    "Version": "0.76.0"
+  },
+  "ReportID": "01a1c203-b613-762c-ad73-8d089028e0dd",
+  "CreatedAt": "2026-11-09T20:33:05.555406716Z",
+  "ArtifactName": "/w",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "webapp/package-lock.json",
+      "Class": "lang-pkgs",
+      "Type": "npm",
+      "Packages": [
+        {
+          "ID": "@phosphor-icons/react@2.1.10",
+          "Name": "@phosphor-icons/react",
+          "Identifier": {
+            "PURL": "pkg:npm/%40phosphor-icons/react@2.1.10",
+            "UID": "af9b87b0aee1f489"
+          },
+          "Version": "2.1.10",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "react-dom@19.1.0",
+            "react@19.1.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1311,
+              "EndLine": 1323
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@sentry/react@10.53.1",
+          "Name": "@sentry/react",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sentry/react@10.53.1",
+            "UID": "5c10f02919562c78"
+          },
+          "Version": "10.53.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "@sentry/browser@10.53.1",
+            "@sentry/core@10.53.1",
+            "react@19.1.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1808,
+              "EndLine": 1823
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@supabase/supabase-js@2.105.4",
+          "Name": "@supabase/supabase-js",
+          "Identifier": {
+            "PURL": "pkg:npm/%40supabase/supabase-js@2.105.4",
+            "UID": "bad40425cd860837"
+          },
+          "Version": "2.105.4",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "@supabase/auth-js@2.105.4",
+            "@supabase/functions-js@2.105.4",
+            "@supabase/postgrest-js@2.105.4",
+            "@supabase/realtime-js@2.105.4",
+            "@supabase/storage-js@2.105.4"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1899,
+              "EndLine": 1914
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/vite@4.1.8",
+          "Name": "@tailwindcss/vite",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/vite@4.1.8",
+            "UID": "a047ffdb96ad7ec"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "@tailwindcss/node@4.1.8",
+            "@tailwindcss/oxide@4.1.8",
+            "tailwindcss@4.1.8",
+            "vite@6.4.6"
+          ],
+          "Locations": [
+            {
+              "StartLine": 2217,
+              "EndLine": 2230
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@types/node@22.15.30",
+          "Name": "@types/node",
+          "Identifier": {
+            "PURL": "pkg:npm/%40types/node@22.15.30",
+            "UID": "4cbad0f3f4d8b4ae"
+          },
+          "Version": "22.15.30",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "undici-types@6.21.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 2344,
+              "EndLine": 2353
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "leaflet@1.9.4",
+          "Name": "leaflet",
+          "Identifier": {
+            "PURL": "pkg:npm/leaflet@1.9.4",
+            "UID": "94b57f66ab889b14"
+          },
+          "Version": "1.9.4",
+          "Licenses": [
+            "BSD-2-Clause"
+          ],
+          "Relationship": "direct",
+          "Locations": [
+            {
+              "StartLine": 3974,
+              "EndLine": 3979
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "motion@12.41.0",
+          "Name": "motion",
+          "Identifier": {
+            "PURL": "pkg:npm/motion@12.41.0",
+            "UID": "5701f360665afe0"
+          },
+          "Version": "12.41.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "framer-motion@12.41.0",
+            "react-dom@19.1.0",
+            "react@19.1.0",
+            "tslib@2.8.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4341,
+              "EndLine": 4366
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "postcss@8.5.32",
+          "Name": "postcss",
+          "Identifier": {
+            "PURL": "pkg:npm/postcss@8.5.32",
+            "UID": "73a8b8d275e3c28a"
+          },
+          "Version": "8.5.32",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "nanoid@3.3.20",
+            "picocolors@1.1.1",
+            "source-map-js@1.2.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4626,
+              "EndLine": 4653
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "react@19.1.0",
+          "Name": "react",
+          "Identifier": {
+            "PURL": "pkg:npm/react@19.1.0",
+            "UID": "83ad1c8a858b0aa2"
+          },
+          "Version": "19.1.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "Locations": [
+            {
+              "StartLine": 4713,
+              "EndLine": 4721
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "react-dom@19.1.0",
+          "Name": "react-dom",
+          "Identifier": {
+            "PURL": "pkg:npm/react-dom@19.1.0",
+            "UID": "c9b92a0f2deb0de7"
+          },
+          "Version": "19.1.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "react@19.1.0",
+            "scheduler@0.26.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4722,
+              "EndLine": 4733
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "react-icons@5.5.0",
+          "Name": "react-icons",
+          "Identifier": {
+            "PURL": "pkg:npm/react-icons@5.5.0",
+            "UID": "c127b02ca0490763"
+          },
+          "Version": "5.5.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "react@19.1.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4746,
+              "EndLine": 4754
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "react-leaflet@5.0.0-rc.2",
+          "Name": "react-leaflet",
+          "Identifier": {
+            "PURL": "pkg:npm/react-leaflet@5.0.0-rc.2",
+            "UID": "2accaba85fe13b70"
+          },
+          "Version": "5.0.0-rc.2",
+          "Licenses": [
+            "Hippocratic-2.1"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "@react-leaflet/core@3.0.0",
+            "leaflet@1.9.4",
+            "react-dom@19.1.0",
+            "react@19.1.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4761,
+              "EndLine": 4774
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "react-responsive-carousel@3.2.23",
+          "Name": "react-responsive-carousel",
+          "Identifier": {
+            "PURL": "pkg:npm/react-responsive-carousel@3.2.23",
+            "UID": "fc91d77d713bea71"
+          },
+          "Version": "3.2.23",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "classnames@2.3.2",
+            "prop-types@15.8.1",
+            "react-easy-swipe@0.0.21"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4796,
+              "EndLine": 4806
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "react-router-dom@6.30.6",
+          "Name": "react-router-dom",
+          "Identifier": {
+            "PURL": "pkg:npm/react-router-dom@6.30.6",
+            "UID": "113463a0377d4376"
+          },
+          "Version": "6.30.6",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "@remix-run/router@1.23.4",
+            "react-dom@19.1.0",
+            "react-router@6.30.6",
+            "react@19.1.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4822,
+              "EndLine": 4838
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "tailwindcss@4.1.8",
+          "Name": "tailwindcss",
+          "Identifier": {
+            "PURL": "pkg:npm/tailwindcss@4.1.8",
+            "UID": "8288ff29dad70ff8"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "Locations": [
+            {
+              "StartLine": 5054,
+              "EndLine": 5059
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "vite@6.4.6",
+          "Name": "vite",
+          "Identifier": {
+            "PURL": "pkg:npm/vite@6.4.6",
+            "UID": "e26477a29715f6d2"
+          },
+          "Version": "6.4.6",
+          "Licenses": [
+            "MIT"
+          ],
+          "Relationship": "direct",
+          "DependsOn": [
+            "@types/node@22.15.30",
+            "esbuild@0.25.5",
+            "fdir@6.4.5",
+            "fsevents@2.3.3",
+            "jiti@2.4.2",
+            "lightningcss@1.30.1",
+            "picomatch@4.0.7",
+            "postcss@8.5.32",
+            "rollup@4.68.2",
+            "tinyglobby@0.2.17"
+          ],
+          "Locations": [
+            {
+              "StartLine": 5352,
+              "EndLine": 5425
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@ampproject/remapping@2.3.0",
+          "Name": "@ampproject/remapping",
+          "Identifier": {
+            "PURL": "pkg:npm/%40ampproject/remapping@2.3.0",
+            "UID": "1faebdae6b58884"
+          },
+          "Version": "2.3.0",
+          "Licenses": [
+            "Apache-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@jridgewell/gen-mapping@0.3.13",
+            "@jridgewell/trace-mapping@0.3.31"
+          ],
+          "Locations": [
+            {
+              "StartLine": 48,
+              "EndLine": 60
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@emnapi/core@1.4.3",
+          "Name": "@emnapi/core",
+          "Identifier": {
+            "PURL": "pkg:npm/%40emnapi/core@1.4.3",
+            "UID": "58a3bb9730f6ea13"
+          },
+          "Version": "1.4.3",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@emnapi/wasi-threads@1.0.2",
+            "tslib@2.8.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 2131,
+              "EndLine": 2140
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@emnapi/runtime@1.4.3",
+          "Name": "@emnapi/runtime",
+          "Identifier": {
+            "PURL": "pkg:npm/%40emnapi/runtime@1.4.3",
+            "UID": "da978ff408e183f3"
+          },
+          "Version": "1.4.3",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "tslib@2.8.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 2141,
+              "EndLine": 2149
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@emnapi/wasi-threads@1.0.2",
+          "Name": "@emnapi/wasi-threads",
+          "Identifier": {
+            "PURL": "pkg:npm/%40emnapi/wasi-threads@1.0.2",
+            "UID": "277ebcfe9ae8fc8c"
+          },
+          "Version": "1.0.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "tslib@2.8.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 2150,
+              "EndLine": 2158
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/aix-ppc64@0.25.5",
+          "Name": "@esbuild/aix-ppc64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/aix-ppc64@0.25.5",
+            "UID": "fee15d01de592d5f"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 547,
+              "EndLine": 562
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/android-arm@0.25.5",
+          "Name": "@esbuild/android-arm",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/android-arm@0.25.5",
+            "UID": "f9c63c33406bfc20"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 563,
+              "EndLine": 578
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/android-arm64@0.25.5",
+          "Name": "@esbuild/android-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/android-arm64@0.25.5",
+            "UID": "e66794b4a47996a8"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 579,
+              "EndLine": 594
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/android-x64@0.25.5",
+          "Name": "@esbuild/android-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/android-x64@0.25.5",
+            "UID": "8d8e10e57513b1b7"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 595,
+              "EndLine": 610
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/darwin-arm64@0.25.5",
+          "Name": "@esbuild/darwin-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/darwin-arm64@0.25.5",
+            "UID": "a64147e7addcadb"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 611,
+              "EndLine": 626
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/darwin-x64@0.25.5",
+          "Name": "@esbuild/darwin-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/darwin-x64@0.25.5",
+            "UID": "8d1bd16eaeffdf23"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 627,
+              "EndLine": 642
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/freebsd-arm64@0.25.5",
+          "Name": "@esbuild/freebsd-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/freebsd-arm64@0.25.5",
+            "UID": "a2b849606a52b19f"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 643,
+              "EndLine": 658
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/freebsd-x64@0.25.5",
+          "Name": "@esbuild/freebsd-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/freebsd-x64@0.25.5",
+            "UID": "cb7ff0a05fb7f0ab"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 659,
+              "EndLine": 674
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/linux-arm@0.25.5",
+          "Name": "@esbuild/linux-arm",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/linux-arm@0.25.5",
+            "UID": "7b2f69a639b4daa5"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 675,
+              "EndLine": 690
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/linux-arm64@0.25.5",
+          "Name": "@esbuild/linux-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/linux-arm64@0.25.5",
+            "UID": "9cb91b4a8b981609"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 691,
+              "EndLine": 706
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/linux-ia32@0.25.5",
+          "Name": "@esbuild/linux-ia32",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/linux-ia32@0.25.5",
+            "UID": "6d04bf19bfcf8572"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 707,
+              "EndLine": 722
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/linux-loong64@0.25.5",
+          "Name": "@esbuild/linux-loong64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/linux-loong64@0.25.5",
+            "UID": "1068279a2923a31a"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 723,
+              "EndLine": 738
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/linux-mips64el@0.25.5",
+          "Name": "@esbuild/linux-mips64el",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/linux-mips64el@0.25.5",
+            "UID": "8a75b27d10d92559"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 739,
+              "EndLine": 754
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/linux-ppc64@0.25.5",
+          "Name": "@esbuild/linux-ppc64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/linux-ppc64@0.25.5",
+            "UID": "621ca4cd2945301c"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 755,
+              "EndLine": 770
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/linux-riscv64@0.25.5",
+          "Name": "@esbuild/linux-riscv64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/linux-riscv64@0.25.5",
+            "UID": "3bb4f730f25fcd13"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 771,
+              "EndLine": 786
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/linux-s390x@0.25.5",
+          "Name": "@esbuild/linux-s390x",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/linux-s390x@0.25.5",
+            "UID": "adb7d4f5ab1ffa0c"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 787,
+              "EndLine": 802
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/linux-x64@0.25.5",
+          "Name": "@esbuild/linux-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/linux-x64@0.25.5",
+            "UID": "aa61fa08a81b81c4"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 803,
+              "EndLine": 818
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/netbsd-arm64@0.25.5",
+          "Name": "@esbuild/netbsd-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/netbsd-arm64@0.25.5",
+            "UID": "169d849c918492b"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 819,
+              "EndLine": 834
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/netbsd-x64@0.25.5",
+          "Name": "@esbuild/netbsd-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/netbsd-x64@0.25.5",
+            "UID": "2a17a3413a0dc76"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 835,
+              "EndLine": 850
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/openbsd-arm64@0.25.5",
+          "Name": "@esbuild/openbsd-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/openbsd-arm64@0.25.5",
+            "UID": "343c9b1f04d351f2"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 851,
+              "EndLine": 866
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/openbsd-x64@0.25.5",
+          "Name": "@esbuild/openbsd-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/openbsd-x64@0.25.5",
+            "UID": "3458fde3ea634c07"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 867,
+              "EndLine": 882
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/sunos-x64@0.25.5",
+          "Name": "@esbuild/sunos-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/sunos-x64@0.25.5",
+            "UID": "2c1a155a773376ff"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 883,
+              "EndLine": 898
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/win32-arm64@0.25.5",
+          "Name": "@esbuild/win32-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/win32-arm64@0.25.5",
+            "UID": "7bbd291042823c98"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 899,
+              "EndLine": 914
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/win32-ia32@0.25.5",
+          "Name": "@esbuild/win32-ia32",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/win32-ia32@0.25.5",
+            "UID": "3d35630ff1d23896"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 915,
+              "EndLine": 930
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@esbuild/win32-x64@0.25.5",
+          "Name": "@esbuild/win32-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40esbuild/win32-x64@0.25.5",
+            "UID": "98bea6c8e35b04f8"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 931,
+              "EndLine": 946
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@isaacs/fs-minipass@4.0.1",
+          "Name": "@isaacs/fs-minipass",
+          "Identifier": {
+            "PURL": "pkg:npm/%40isaacs/fs-minipass@4.0.1",
+            "UID": "168e345300ef5dfb"
+          },
+          "Version": "4.0.1",
+          "Licenses": [
+            "ISC"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "minipass@7.1.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1215,
+              "EndLine": 1226
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@jridgewell/gen-mapping@0.3.13",
+          "Name": "@jridgewell/gen-mapping",
+          "Identifier": {
+            "PURL": "pkg:npm/%40jridgewell/gen-mapping@0.3.13",
+            "UID": "8ea91a1bea845160"
+          },
+          "Version": "0.3.13",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@jridgewell/sourcemap-codec@1.5.5",
+            "@jridgewell/trace-mapping@0.3.31"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1227,
+              "EndLine": 1236
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@jridgewell/resolve-uri@3.1.2",
+          "Name": "@jridgewell/resolve-uri",
+          "Identifier": {
+            "PURL": "pkg:npm/%40jridgewell/resolve-uri@3.1.2",
+            "UID": "abaefc1aeac904ba"
+          },
+          "Version": "3.1.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1248,
+              "EndLine": 1256
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@jridgewell/sourcemap-codec@1.5.5",
+          "Name": "@jridgewell/sourcemap-codec",
+          "Identifier": {
+            "PURL": "pkg:npm/%40jridgewell/sourcemap-codec@1.5.5",
+            "UID": "1977c23c20e51ab"
+          },
+          "Version": "1.5.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1257,
+              "EndLine": 1262
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@jridgewell/trace-mapping@0.3.31",
+          "Name": "@jridgewell/trace-mapping",
+          "Identifier": {
+            "PURL": "pkg:npm/%40jridgewell/trace-mapping@0.3.31",
+            "UID": "1bc64579f4710bd1"
+          },
+          "Version": "0.3.31",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@jridgewell/resolve-uri@3.1.2",
+            "@jridgewell/sourcemap-codec@1.5.5"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1263,
+              "EndLine": 1272
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@napi-rs/wasm-runtime@0.2.10",
+          "Name": "@napi-rs/wasm-runtime",
+          "Identifier": {
+            "PURL": "pkg:npm/%40napi-rs/wasm-runtime@0.2.10",
+            "UID": "9d99e68d214dc8bf"
+          },
+          "Version": "0.2.10",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@emnapi/core@1.4.3",
+            "@emnapi/runtime@1.4.3",
+            "@tybys/wasm-util@0.9.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 2159,
+              "EndLine": 2169
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@react-leaflet/core@3.0.0",
+          "Name": "@react-leaflet/core",
+          "Identifier": {
+            "PURL": "pkg:npm/%40react-leaflet/core@3.0.0",
+            "UID": "d2496031441d66e9"
+          },
+          "Version": "3.0.0",
+          "Licenses": [
+            "Hippocratic-2.1"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "leaflet@1.9.4",
+            "react-dom@19.1.0",
+            "react@19.1.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4775,
+              "EndLine": 4785
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@remix-run/router@1.23.4",
+          "Name": "@remix-run/router",
+          "Identifier": {
+            "PURL": "pkg:npm/%40remix-run/router@1.23.4",
+            "UID": "2ef3539a1b6f3cde"
+          },
+          "Version": "1.23.4",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1340,
+              "EndLine": 1348
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-android-arm-eabi@4.68.2",
+          "Name": "@rollup/rollup-android-arm-eabi",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-android-arm-eabi@4.68.2",
+            "UID": "56a9b1a2d8910d90"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1356,
+              "EndLine": 1368
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-android-arm64@4.68.2",
+          "Name": "@rollup/rollup-android-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-android-arm64@4.68.2",
+            "UID": "d504ee423d9741c5"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1369,
+              "EndLine": 1381
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-android-x64@4.68.2",
+          "Name": "@rollup/rollup-android-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-android-x64@4.68.2",
+            "UID": "7ff7bbd334824296"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1382,
+              "EndLine": 1394
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-darwin-arm64@4.68.2",
+          "Name": "@rollup/rollup-darwin-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-darwin-arm64@4.68.2",
+            "UID": "b749c95194d6476d"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1395,
+              "EndLine": 1407
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-darwin-x64@4.68.2",
+          "Name": "@rollup/rollup-darwin-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-darwin-x64@4.68.2",
+            "UID": "da421af717503629"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1408,
+              "EndLine": 1420
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-freebsd-arm64@4.68.2",
+          "Name": "@rollup/rollup-freebsd-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-freebsd-arm64@4.68.2",
+            "UID": "97ae235a18a4896f"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1421,
+              "EndLine": 1433
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-freebsd-x64@4.68.2",
+          "Name": "@rollup/rollup-freebsd-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-freebsd-x64@4.68.2",
+            "UID": "2c1a471c11feeed2"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1434,
+              "EndLine": 1446
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-arm-gnueabihf@4.68.2",
+          "Name": "@rollup/rollup-linux-arm-gnueabihf",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-arm-gnueabihf@4.68.2",
+            "UID": "d6836a1a7c1821bd"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1447,
+              "EndLine": 1462
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-arm-musleabihf@4.68.2",
+          "Name": "@rollup/rollup-linux-arm-musleabihf",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-arm-musleabihf@4.68.2",
+            "UID": "175435ca4e12ad92"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1463,
+              "EndLine": 1478
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-arm64-gnu@4.68.2",
+          "Name": "@rollup/rollup-linux-arm64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-arm64-gnu@4.68.2",
+            "UID": "3b809c92e6d9b411"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1479,
+              "EndLine": 1494
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-arm64-musl@4.68.2",
+          "Name": "@rollup/rollup-linux-arm64-musl",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-arm64-musl@4.68.2",
+            "UID": "f6498fc140a1884b"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1495,
+              "EndLine": 1510
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-loong64-gnu@4.68.2",
+          "Name": "@rollup/rollup-linux-loong64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-loong64-gnu@4.68.2",
+            "UID": "341e757bb8888e74"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1511,
+              "EndLine": 1526
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-loong64-musl@4.68.2",
+          "Name": "@rollup/rollup-linux-loong64-musl",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-loong64-musl@4.68.2",
+            "UID": "8f897126b0065077"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1527,
+              "EndLine": 1542
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-ppc64-gnu@4.68.2",
+          "Name": "@rollup/rollup-linux-ppc64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-ppc64-gnu@4.68.2",
+            "UID": "fc03b2d460816f5b"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1543,
+              "EndLine": 1558
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-ppc64-musl@4.68.2",
+          "Name": "@rollup/rollup-linux-ppc64-musl",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-ppc64-musl@4.68.2",
+            "UID": "f7b0405a6dba50e8"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1559,
+              "EndLine": 1574
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-riscv64-gnu@4.68.2",
+          "Name": "@rollup/rollup-linux-riscv64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-riscv64-gnu@4.68.2",
+            "UID": "c3254f8753ecec64"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1575,
+              "EndLine": 1590
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-riscv64-musl@4.68.2",
+          "Name": "@rollup/rollup-linux-riscv64-musl",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-riscv64-musl@4.68.2",
+            "UID": "8619b46308b3a351"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1591,
+              "EndLine": 1606
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-s390x-gnu@4.68.2",
+          "Name": "@rollup/rollup-linux-s390x-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-s390x-gnu@4.68.2",
+            "UID": "5f1b39f5407f04a1"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1607,
+              "EndLine": 1622
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-x64-gnu@4.68.2",
+          "Name": "@rollup/rollup-linux-x64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-x64-gnu@4.68.2",
+            "UID": "6b15151314f495c7"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1623,
+              "EndLine": 1638
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-linux-x64-musl@4.68.2",
+          "Name": "@rollup/rollup-linux-x64-musl",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-linux-x64-musl@4.68.2",
+            "UID": "7ee4f468b326c581"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1639,
+              "EndLine": 1654
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-openbsd-x64@4.68.2",
+          "Name": "@rollup/rollup-openbsd-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-openbsd-x64@4.68.2",
+            "UID": "c45a3dcbbc5ec48e"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1655,
+              "EndLine": 1667
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-openharmony-arm64@4.68.2",
+          "Name": "@rollup/rollup-openharmony-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-openharmony-arm64@4.68.2",
+            "UID": "8d8d8cdd001a00f8"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1668,
+              "EndLine": 1680
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-win32-arm64-msvc@4.68.2",
+          "Name": "@rollup/rollup-win32-arm64-msvc",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-win32-arm64-msvc@4.68.2",
+            "UID": "76ba30370d8bb68"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1681,
+              "EndLine": 1693
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-win32-ia32-msvc@4.68.2",
+          "Name": "@rollup/rollup-win32-ia32-msvc",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-win32-ia32-msvc@4.68.2",
+            "UID": "84a01ac68ff9a6ee"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1694,
+              "EndLine": 1706
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-win32-x64-gnu@4.68.2",
+          "Name": "@rollup/rollup-win32-x64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-win32-x64-gnu@4.68.2",
+            "UID": "237e452608b485a6"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1707,
+              "EndLine": 1719
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@rollup/rollup-win32-x64-msvc@4.68.2",
+          "Name": "@rollup/rollup-win32-x64-msvc",
+          "Identifier": {
+            "PURL": "pkg:npm/%40rollup/rollup-win32-x64-msvc@4.68.2",
+            "UID": "aca5aeec2dfd2f92"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1720,
+              "EndLine": 1732
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@sentry-internal/browser-utils@10.53.1",
+          "Name": "@sentry-internal/browser-utils",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sentry-internal/browser-utils@10.53.1",
+            "UID": "8880495552c34e4f"
+          },
+          "Version": "10.53.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@sentry/core@10.53.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1733,
+              "EndLine": 1744
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@sentry-internal/feedback@10.53.1",
+          "Name": "@sentry-internal/feedback",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sentry-internal/feedback@10.53.1",
+            "UID": "23459b9f2f95b089"
+          },
+          "Version": "10.53.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@sentry/core@10.53.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1745,
+              "EndLine": 1756
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@sentry-internal/replay@10.53.1",
+          "Name": "@sentry-internal/replay",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sentry-internal/replay@10.53.1",
+            "UID": "8a3747cf7e143688"
+          },
+          "Version": "10.53.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@sentry-internal/browser-utils@10.53.1",
+            "@sentry/core@10.53.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1757,
+              "EndLine": 1769
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@sentry-internal/replay-canvas@10.53.1",
+          "Name": "@sentry-internal/replay-canvas",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sentry-internal/replay-canvas@10.53.1",
+            "UID": "dc0a4959063a71f2"
+          },
+          "Version": "10.53.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@sentry-internal/replay@10.53.1",
+            "@sentry/core@10.53.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1770,
+              "EndLine": 1782
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@sentry/browser@10.53.1",
+          "Name": "@sentry/browser",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sentry/browser@10.53.1",
+            "UID": "9783fa8096cbe4ef"
+          },
+          "Version": "10.53.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@sentry-internal/browser-utils@10.53.1",
+            "@sentry-internal/feedback@10.53.1",
+            "@sentry-internal/replay-canvas@10.53.1",
+            "@sentry-internal/replay@10.53.1",
+            "@sentry/core@10.53.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1783,
+              "EndLine": 1798
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@sentry/core@10.53.1",
+          "Name": "@sentry/core",
+          "Identifier": {
+            "PURL": "pkg:npm/%40sentry/core@10.53.1",
+            "UID": "55b3392ba29b5b61"
+          },
+          "Version": "10.53.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1799,
+              "EndLine": 1807
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@supabase/auth-js@2.105.4",
+          "Name": "@supabase/auth-js",
+          "Identifier": {
+            "PURL": "pkg:npm/%40supabase/auth-js@2.105.4",
+            "UID": "bf0d17b2a8fedc9f"
+          },
+          "Version": "2.105.4",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "tslib@2.8.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1831,
+              "EndLine": 1842
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@supabase/functions-js@2.105.4",
+          "Name": "@supabase/functions-js",
+          "Identifier": {
+            "PURL": "pkg:npm/%40supabase/functions-js@2.105.4",
+            "UID": "e64215084a9e76f3"
+          },
+          "Version": "2.105.4",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "tslib@2.8.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1843,
+              "EndLine": 1854
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@supabase/phoenix@0.4.2",
+          "Name": "@supabase/phoenix",
+          "Identifier": {
+            "PURL": "pkg:npm/%40supabase/phoenix@0.4.2",
+            "UID": "b40f9f0a731e886f"
+          },
+          "Version": "0.4.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1855,
+              "EndLine": 1860
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@supabase/postgrest-js@2.105.4",
+          "Name": "@supabase/postgrest-js",
+          "Identifier": {
+            "PURL": "pkg:npm/%40supabase/postgrest-js@2.105.4",
+            "UID": "31f9f7ee81207ffd"
+          },
+          "Version": "2.105.4",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "tslib@2.8.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1861,
+              "EndLine": 1872
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@supabase/realtime-js@2.105.4",
+          "Name": "@supabase/realtime-js",
+          "Identifier": {
+            "PURL": "pkg:npm/%40supabase/realtime-js@2.105.4",
+            "UID": "1ac43bf687741209"
+          },
+          "Version": "2.105.4",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@supabase/phoenix@0.4.2",
+            "tslib@2.8.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1873,
+              "EndLine": 1885
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@supabase/storage-js@2.105.4",
+          "Name": "@supabase/storage-js",
+          "Identifier": {
+            "PURL": "pkg:npm/%40supabase/storage-js@2.105.4",
+            "UID": "293cc9524f7e9d02"
+          },
+          "Version": "2.105.4",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "iceberg-js@0.8.1",
+            "tslib@2.8.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1886,
+              "EndLine": 1898
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/node@4.1.8",
+          "Name": "@tailwindcss/node",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/node@4.1.8",
+            "UID": "ae63e44a9bc3576c"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@ampproject/remapping@2.3.0",
+            "enhanced-resolve@5.18.1",
+            "jiti@2.4.2",
+            "lightningcss@1.30.1",
+            "magic-string@0.30.21",
+            "source-map-js@1.2.2",
+            "tailwindcss@4.1.8"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1915,
+              "EndLine": 1929
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide@4.1.8",
+          "Name": "@tailwindcss/oxide",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide@4.1.8",
+            "UID": "eb5bccfd6804cfbe"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@tailwindcss/oxide-android-arm64@4.1.8",
+            "@tailwindcss/oxide-darwin-arm64@4.1.8",
+            "@tailwindcss/oxide-darwin-x64@4.1.8",
+            "@tailwindcss/oxide-freebsd-x64@4.1.8",
+            "@tailwindcss/oxide-linux-arm-gnueabihf@4.1.8",
+            "@tailwindcss/oxide-linux-arm64-gnu@4.1.8",
+            "@tailwindcss/oxide-linux-arm64-musl@4.1.8",
+            "@tailwindcss/oxide-linux-x64-gnu@4.1.8",
+            "@tailwindcss/oxide-linux-x64-musl@4.1.8",
+            "@tailwindcss/oxide-wasm32-wasi@4.1.8",
+            "@tailwindcss/oxide-win32-arm64-msvc@4.1.8",
+            "@tailwindcss/oxide-win32-x64-msvc@4.1.8",
+            "detect-libc@2.0.4",
+            "tar@7.5.22"
+          ],
+          "Locations": [
+            {
+              "StartLine": 1930,
+              "EndLine": 1957
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-android-arm64@4.1.8",
+          "Name": "@tailwindcss/oxide-android-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-android-arm64@4.1.8",
+            "UID": "8e439672c4526478"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1958,
+              "EndLine": 1973
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-darwin-arm64@4.1.8",
+          "Name": "@tailwindcss/oxide-darwin-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-darwin-arm64@4.1.8",
+            "UID": "63cdae97d9b812e3"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1974,
+              "EndLine": 1989
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-darwin-x64@4.1.8",
+          "Name": "@tailwindcss/oxide-darwin-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-darwin-x64@4.1.8",
+            "UID": "741f31503ad0a84"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 1990,
+              "EndLine": 2005
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-freebsd-x64@4.1.8",
+          "Name": "@tailwindcss/oxide-freebsd-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-freebsd-x64@4.1.8",
+            "UID": "6e07f008ac212280"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2006,
+              "EndLine": 2021
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-linux-arm-gnueabihf@4.1.8",
+          "Name": "@tailwindcss/oxide-linux-arm-gnueabihf",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-linux-arm-gnueabihf@4.1.8",
+            "UID": "b1a1e234b24c3d24"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2022,
+              "EndLine": 2037
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-linux-arm64-gnu@4.1.8",
+          "Name": "@tailwindcss/oxide-linux-arm64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-linux-arm64-gnu@4.1.8",
+            "UID": "c3bf125f00c8d90e"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2038,
+              "EndLine": 2053
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-linux-arm64-musl@4.1.8",
+          "Name": "@tailwindcss/oxide-linux-arm64-musl",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-linux-arm64-musl@4.1.8",
+            "UID": "663f887472f2280a"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2054,
+              "EndLine": 2069
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-linux-x64-gnu@4.1.8",
+          "Name": "@tailwindcss/oxide-linux-x64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-linux-x64-gnu@4.1.8",
+            "UID": "1b25d2b127cc69a5"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2070,
+              "EndLine": 2085
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-linux-x64-musl@4.1.8",
+          "Name": "@tailwindcss/oxide-linux-x64-musl",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-linux-x64-musl@4.1.8",
+            "UID": "ccb337aad753f446"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2086,
+              "EndLine": 2101
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-wasm32-wasi@4.1.8",
+          "Name": "@tailwindcss/oxide-wasm32-wasi",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-wasm32-wasi@4.1.8",
+            "UID": "bf066320d1c67eb6"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@emnapi/core@1.4.3",
+            "@emnapi/runtime@1.4.3",
+            "@emnapi/wasi-threads@1.0.2",
+            "@napi-rs/wasm-runtime@0.2.10",
+            "@tybys/wasm-util@0.9.0",
+            "tslib@2.8.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 2102,
+              "EndLine": 2130
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-win32-arm64-msvc@4.1.8",
+          "Name": "@tailwindcss/oxide-win32-arm64-msvc",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-win32-arm64-msvc@4.1.8",
+            "UID": "e610b3a54e3dc5c6"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2185,
+              "EndLine": 2200
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tailwindcss/oxide-win32-x64-msvc@4.1.8",
+          "Name": "@tailwindcss/oxide-win32-x64-msvc",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tailwindcss/oxide-win32-x64-msvc@4.1.8",
+            "UID": "3dc8b66c216ad6fb"
+          },
+          "Version": "4.1.8",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2201,
+              "EndLine": 2216
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@tybys/wasm-util@0.9.0",
+          "Name": "@tybys/wasm-util",
+          "Identifier": {
+            "PURL": "pkg:npm/%40tybys/wasm-util@0.9.0",
+            "UID": "d05676e28ede2faa"
+          },
+          "Version": "0.9.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "tslib@2.8.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 2170,
+              "EndLine": 2178
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "@types/estree@1.0.10",
+          "Name": "@types/estree",
+          "Identifier": {
+            "PURL": "pkg:npm/%40types/estree@1.0.10",
+            "UID": "bdfc3f12b57239f9"
+          },
+          "Version": "1.0.10",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2294,
+              "EndLine": 2299
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "chownr@3.0.0",
+          "Name": "chownr",
+          "Identifier": {
+            "PURL": "pkg:npm/chownr@3.0.0",
+            "UID": "ea97fa3726eb366f"
+          },
+          "Version": "3.0.0",
+          "Licenses": [
+            "BlueOak-1.0.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 3042,
+              "EndLine": 3050
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "classnames@2.3.2",
+          "Name": "classnames",
+          "Identifier": {
+            "PURL": "pkg:npm/classnames@2.3.2",
+            "UID": "bc186c3fb78ba02c"
+          },
+          "Version": "2.3.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 3051,
+              "EndLine": 3056
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "detect-libc@2.0.4",
+          "Name": "detect-libc",
+          "Identifier": {
+            "PURL": "pkg:npm/detect-libc@2.0.4",
+            "UID": "cd302e28de3b43f9"
+          },
+          "Version": "2.0.4",
+          "Licenses": [
+            "Apache-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 3173,
+              "EndLine": 3181
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "enhanced-resolve@5.18.1",
+          "Name": "enhanced-resolve",
+          "Identifier": {
+            "PURL": "pkg:npm/enhanced-resolve@5.18.1",
+            "UID": "734a53bff145cd11"
+          },
+          "Version": "5.18.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "graceful-fs@4.2.11",
+            "tapable@2.2.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 3189,
+              "EndLine": 3201
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "esbuild@0.25.5",
+          "Name": "esbuild",
+          "Identifier": {
+            "PURL": "pkg:npm/esbuild@0.25.5",
+            "UID": "51ae3bc22aae1c69"
+          },
+          "Version": "0.25.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@esbuild/aix-ppc64@0.25.5",
+            "@esbuild/android-arm64@0.25.5",
+            "@esbuild/android-arm@0.25.5",
+            "@esbuild/android-x64@0.25.5",
+            "@esbuild/darwin-arm64@0.25.5",
+            "@esbuild/darwin-x64@0.25.5",
+            "@esbuild/freebsd-arm64@0.25.5",
+            "@esbuild/freebsd-x64@0.25.5",
+            "@esbuild/linux-arm64@0.25.5",
+            "@esbuild/linux-arm@0.25.5",
+            "@esbuild/linux-ia32@0.25.5",
+            "@esbuild/linux-loong64@0.25.5",
+            "@esbuild/linux-mips64el@0.25.5",
+            "@esbuild/linux-ppc64@0.25.5",
+            "@esbuild/linux-riscv64@0.25.5",
+            "@esbuild/linux-s390x@0.25.5",
+            "@esbuild/linux-x64@0.25.5",
+            "@esbuild/netbsd-arm64@0.25.5",
+            "@esbuild/netbsd-x64@0.25.5",
+            "@esbuild/openbsd-arm64@0.25.5",
+            "@esbuild/openbsd-x64@0.25.5",
+            "@esbuild/sunos-x64@0.25.5",
+            "@esbuild/win32-arm64@0.25.5",
+            "@esbuild/win32-ia32@0.25.5",
+            "@esbuild/win32-x64@0.25.5"
+          ],
+          "Locations": [
+            {
+              "StartLine": 3222,
+              "EndLine": 3261
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "fdir@6.4.5",
+          "Name": "fdir",
+          "Identifier": {
+            "PURL": "pkg:npm/fdir@6.4.5",
+            "UID": "462166d128c4297f"
+          },
+          "Version": "6.4.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "picomatch@4.0.7"
+          ],
+          "Locations": [
+            {
+              "StartLine": 5426,
+              "EndLine": 5439
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "fdir@6.5.0",
+          "Name": "fdir",
+          "Identifier": {
+            "PURL": "pkg:npm/fdir@6.5.0",
+            "UID": "1d5e4d44c703f6d7"
+          },
+          "Version": "6.5.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "picomatch@4.0.5"
+          ],
+          "Locations": [
+            {
+              "StartLine": 5127,
+              "EndLine": 5143
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "framer-motion@12.41.0",
+          "Name": "framer-motion",
+          "Identifier": {
+            "PURL": "pkg:npm/framer-motion@12.41.0",
+            "UID": "8976c19012b9cba2"
+          },
+          "Version": "12.41.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "motion-dom@12.41.0",
+            "motion-utils@12.39.0",
+            "react-dom@19.1.0",
+            "react@19.1.0",
+            "tslib@2.8.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 3622,
+              "EndLine": 3648
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "fsevents@2.3.3",
+          "Name": "fsevents",
+          "Identifier": {
+            "PURL": "pkg:npm/fsevents@2.3.3",
+            "UID": "f6ed92826a0d1ba3"
+          },
+          "Version": "2.3.3",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 3649,
+              "EndLine": 3662
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "graceful-fs@4.2.11",
+          "Name": "graceful-fs",
+          "Identifier": {
+            "PURL": "pkg:npm/graceful-fs@4.2.11",
+            "UID": "d6737e617db877f8"
+          },
+          "Version": "4.2.11",
+          "Licenses": [
+            "ISC"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 3699,
+              "EndLine": 3704
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "iceberg-js@0.8.1",
+          "Name": "iceberg-js",
+          "Identifier": {
+            "PURL": "pkg:npm/iceberg-js@0.8.1",
+            "UID": "3246bac8cc6502f0"
+          },
+          "Version": "0.8.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 3735,
+              "EndLine": 3743
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "jiti@2.4.2",
+          "Name": "jiti",
+          "Identifier": {
+            "PURL": "pkg:npm/jiti@2.4.2",
+            "UID": "19eb7e845040694b"
+          },
+          "Version": "2.4.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 3828,
+              "EndLine": 3836
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "js-tokens@4.0.0",
+          "Name": "js-tokens",
+          "Identifier": {
+            "PURL": "pkg:npm/js-tokens@4.0.0",
+            "UID": "4270de8cb24dc733"
+          },
+          "Version": "4.0.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 3837,
+              "EndLine": 3842
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss@1.30.1",
+          "Name": "lightningcss",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss@1.30.1",
+            "UID": "39679066b13ee3a"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "detect-libc@2.0.4",
+            "lightningcss-darwin-arm64@1.30.1",
+            "lightningcss-darwin-x64@1.30.1",
+            "lightningcss-freebsd-x64@1.30.1",
+            "lightningcss-linux-arm-gnueabihf@1.30.1",
+            "lightningcss-linux-arm64-gnu@1.30.1",
+            "lightningcss-linux-arm64-musl@1.30.1",
+            "lightningcss-linux-x64-gnu@1.30.1",
+            "lightningcss-linux-x64-musl@1.30.1",
+            "lightningcss-win32-arm64-msvc@1.30.1",
+            "lightningcss-win32-x64-msvc@1.30.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 3994,
+              "EndLine": 4021
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-darwin-arm64@1.30.1",
+          "Name": "lightningcss-darwin-arm64",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-darwin-arm64@1.30.1",
+            "UID": "f76e4412907c2e39"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4022,
+              "EndLine": 4041
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-darwin-x64@1.30.1",
+          "Name": "lightningcss-darwin-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-darwin-x64@1.30.1",
+            "UID": "ea10734c97e976d3"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4042,
+              "EndLine": 4061
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-freebsd-x64@1.30.1",
+          "Name": "lightningcss-freebsd-x64",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-freebsd-x64@1.30.1",
+            "UID": "331c5cfda5e3acd5"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4062,
+              "EndLine": 4081
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-linux-arm-gnueabihf@1.30.1",
+          "Name": "lightningcss-linux-arm-gnueabihf",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-linux-arm-gnueabihf@1.30.1",
+            "UID": "5e2455246a1c3d3b"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4082,
+              "EndLine": 4101
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-linux-arm64-gnu@1.30.1",
+          "Name": "lightningcss-linux-arm64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-linux-arm64-gnu@1.30.1",
+            "UID": "bf9be2419787aa0"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4102,
+              "EndLine": 4121
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-linux-arm64-musl@1.30.1",
+          "Name": "lightningcss-linux-arm64-musl",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-linux-arm64-musl@1.30.1",
+            "UID": "5921d0c49157f48a"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4122,
+              "EndLine": 4141
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-linux-x64-gnu@1.30.1",
+          "Name": "lightningcss-linux-x64-gnu",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-linux-x64-gnu@1.30.1",
+            "UID": "4b7f3aeabc921bac"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4142,
+              "EndLine": 4161
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-linux-x64-musl@1.30.1",
+          "Name": "lightningcss-linux-x64-musl",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-linux-x64-musl@1.30.1",
+            "UID": "8f8f6c687963fc2e"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4162,
+              "EndLine": 4181
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-win32-arm64-msvc@1.30.1",
+          "Name": "lightningcss-win32-arm64-msvc",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-win32-arm64-msvc@1.30.1",
+            "UID": "d15766c623978b59"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4182,
+              "EndLine": 4201
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "lightningcss-win32-x64-msvc@1.30.1",
+          "Name": "lightningcss-win32-x64-msvc",
+          "Identifier": {
+            "PURL": "pkg:npm/lightningcss-win32-x64-msvc@1.30.1",
+            "UID": "bec71c912bb64065"
+          },
+          "Version": "1.30.1",
+          "Licenses": [
+            "MPL-2.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4202,
+              "EndLine": 4221
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "loose-envify@1.4.0",
+          "Name": "loose-envify",
+          "Identifier": {
+            "PURL": "pkg:npm/loose-envify@1.4.0",
+            "UID": "1f3f50f5d84ba4c9"
+          },
+          "Version": "1.4.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "js-tokens@4.0.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4245,
+              "EndLine": 4256
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "magic-string@0.30.21",
+          "Name": "magic-string",
+          "Identifier": {
+            "PURL": "pkg:npm/magic-string@0.30.21",
+            "UID": "2a35c42c878b3e38"
+          },
+          "Version": "0.30.21",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@jridgewell/sourcemap-codec@1.5.5"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4267,
+              "EndLine": 4275
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "minipass@7.1.2",
+          "Name": "minipass",
+          "Identifier": {
+            "PURL": "pkg:npm/minipass@7.1.2",
+            "UID": "a08ec8cf6dafcb19"
+          },
+          "Version": "7.1.2",
+          "Licenses": [
+            "ISC"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4320,
+              "EndLine": 4328
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "minizlib@3.1.0",
+          "Name": "minizlib",
+          "Identifier": {
+            "PURL": "pkg:npm/minizlib@3.1.0",
+            "UID": "eb60910643bb2495"
+          },
+          "Version": "3.1.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "minipass@7.1.2"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4329,
+              "EndLine": 4340
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "motion-dom@12.41.0",
+          "Name": "motion-dom",
+          "Identifier": {
+            "PURL": "pkg:npm/motion-dom@12.41.0",
+            "UID": "9a1dd599ea41b638"
+          },
+          "Version": "12.41.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "motion-utils@12.39.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4367,
+              "EndLine": 4375
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "motion-utils@12.39.0",
+          "Name": "motion-utils",
+          "Identifier": {
+            "PURL": "pkg:npm/motion-utils@12.39.0",
+            "UID": "6ae0876971ca21d4"
+          },
+          "Version": "12.39.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4376,
+              "EndLine": 4381
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "nanoid@3.3.20",
+          "Name": "nanoid",
+          "Identifier": {
+            "PURL": "pkg:npm/nanoid@3.3.20",
+            "UID": "cbf103cdab2d4f55"
+          },
+          "Version": "3.3.20",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4389,
+              "EndLine": 4406
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "object-assign@4.1.1",
+          "Name": "object-assign",
+          "Identifier": {
+            "PURL": "pkg:npm/object-assign@4.1.1",
+            "UID": "f00bd042f3ce8f5d"
+          },
+          "Version": "4.1.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4434,
+              "EndLine": 4442
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "picocolors@1.1.1",
+          "Name": "picocolors",
+          "Identifier": {
+            "PURL": "pkg:npm/picocolors@1.1.1",
+            "UID": "5fc53dbd0dfcac41"
+          },
+          "Version": "1.1.1",
+          "Licenses": [
+            "ISC"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4560,
+              "EndLine": 4565
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "picomatch@4.0.5",
+          "Name": "picomatch",
+          "Identifier": {
+            "PURL": "pkg:npm/picomatch@4.0.5",
+            "UID": "7a8173113526a7c6"
+          },
+          "Version": "4.0.5",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 5144,
+              "EndLine": 5155
+            },
+            {
+              "StartLine": 5542,
+              "EndLine": 5554
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "picomatch@4.0.7",
+          "Name": "picomatch",
+          "Identifier": {
+            "PURL": "pkg:npm/picomatch@4.0.7",
+            "UID": "694861a4f57b307f"
+          },
+          "Version": "4.0.7",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 5440,
+              "EndLine": 5451
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "prop-types@15.8.1",
+          "Name": "prop-types",
+          "Identifier": {
+            "PURL": "pkg:npm/prop-types@15.8.1",
+            "UID": "c79004fdac82135b"
+          },
+          "Version": "15.8.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "loose-envify@1.4.0",
+            "object-assign@4.1.1",
+            "react-is@16.13.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4671,
+              "EndLine": 4681
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "react-easy-swipe@0.0.21",
+          "Name": "react-easy-swipe",
+          "Identifier": {
+            "PURL": "pkg:npm/react-easy-swipe@0.0.21",
+            "UID": "199475e6c5231280"
+          },
+          "Version": "0.0.21",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "prop-types@15.8.1"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4734,
+              "EndLine": 4745
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "react-is@16.13.1",
+          "Name": "react-is",
+          "Identifier": {
+            "PURL": "pkg:npm/react-is@16.13.1",
+            "UID": "f5995af88d2d50b8"
+          },
+          "Version": "16.13.1",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4755,
+              "EndLine": 4760
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "react-router@6.30.6",
+          "Name": "react-router",
+          "Identifier": {
+            "PURL": "pkg:npm/react-router@6.30.6",
+            "UID": "33640f18309f8dd5"
+          },
+          "Version": "6.30.6",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@remix-run/router@1.23.4",
+            "react@19.1.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4807,
+              "EndLine": 4821
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "rollup@4.68.2",
+          "Name": "rollup",
+          "Identifier": {
+            "PURL": "pkg:npm/rollup@4.68.2",
+            "UID": "7637eb3c8ee7bfe"
+          },
+          "Version": "4.68.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@rollup/rollup-android-arm-eabi@4.68.2",
+            "@rollup/rollup-android-arm64@4.68.2",
+            "@rollup/rollup-android-x64@4.68.2",
+            "@rollup/rollup-darwin-arm64@4.68.2",
+            "@rollup/rollup-darwin-x64@4.68.2",
+            "@rollup/rollup-freebsd-arm64@4.68.2",
+            "@rollup/rollup-freebsd-x64@4.68.2",
+            "@rollup/rollup-linux-arm-gnueabihf@4.68.2",
+            "@rollup/rollup-linux-arm-musleabihf@4.68.2",
+            "@rollup/rollup-linux-arm64-gnu@4.68.2",
+            "@rollup/rollup-linux-arm64-musl@4.68.2",
+            "@rollup/rollup-linux-loong64-gnu@4.68.2",
+            "@rollup/rollup-linux-loong64-musl@4.68.2",
+            "@rollup/rollup-linux-ppc64-gnu@4.68.2",
+            "@rollup/rollup-linux-ppc64-musl@4.68.2",
+            "@rollup/rollup-linux-riscv64-gnu@4.68.2",
+            "@rollup/rollup-linux-riscv64-musl@4.68.2",
+            "@rollup/rollup-linux-s390x-gnu@4.68.2",
+            "@rollup/rollup-linux-x64-gnu@4.68.2",
+            "@rollup/rollup-linux-x64-musl@4.68.2",
+            "@rollup/rollup-openbsd-x64@4.68.2",
+            "@rollup/rollup-openharmony-arm64@4.68.2",
+            "@rollup/rollup-win32-arm64-msvc@4.68.2",
+            "@rollup/rollup-win32-ia32-msvc@4.68.2",
+            "@rollup/rollup-win32-x64-gnu@4.68.2",
+            "@rollup/rollup-win32-x64-msvc@4.68.2",
+            "@types/estree@1.0.10",
+            "fsevents@2.3.3"
+          ],
+          "Locations": [
+            {
+              "StartLine": 4870,
+              "EndLine": 4914
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "scheduler@0.26.0",
+          "Name": "scheduler",
+          "Identifier": {
+            "PURL": "pkg:npm/scheduler@0.26.0",
+            "UID": "34ce501c58410df3"
+          },
+          "Version": "0.26.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4952,
+              "EndLine": 4957
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "source-map-js@1.2.2",
+          "Name": "source-map-js",
+          "Identifier": {
+            "PURL": "pkg:npm/source-map-js@1.2.2",
+            "UID": "afd38840e100dd4d"
+          },
+          "Version": "1.2.2",
+          "Licenses": [
+            "BSD-3-Clause"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 4998,
+              "EndLine": 5006
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "tapable@2.2.2",
+          "Name": "tapable",
+          "Identifier": {
+            "PURL": "pkg:npm/tapable@2.2.2",
+            "UID": "7232e94221c66f7"
+          },
+          "Version": "2.2.2",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 5060,
+              "EndLine": 5068
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "tar@7.5.22",
+          "Name": "tar",
+          "Identifier": {
+            "PURL": "pkg:npm/tar@7.5.22",
+            "UID": "a9b7640fc58eee58"
+          },
+          "Version": "7.5.22",
+          "Licenses": [
+            "BlueOak-1.0.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "@isaacs/fs-minipass@4.0.1",
+            "chownr@3.0.0",
+            "minipass@7.1.2",
+            "minizlib@3.1.0",
+            "yallist@5.0.0"
+          ],
+          "Locations": [
+            {
+              "StartLine": 5069,
+              "EndLine": 5084
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "tinyglobby@0.2.17",
+          "Name": "tinyglobby",
+          "Identifier": {
+            "PURL": "pkg:npm/tinyglobby@0.2.17",
+            "UID": "913225e9167ae68c"
+          },
+          "Version": "0.2.17",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "DependsOn": [
+            "fdir@6.5.0",
+            "picomatch@4.0.5"
+          ],
+          "Locations": [
+            {
+              "StartLine": 5111,
+              "EndLine": 5126
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "tslib@2.8.0",
+          "Name": "tslib",
+          "Identifier": {
+            "PURL": "pkg:npm/tslib@2.8.0",
+            "UID": "7e07aa654a90e356"
+          },
+          "Version": "2.8.0",
+          "Licenses": [
+            "0BSD"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 2179,
+              "EndLine": 2184
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "tslib@2.8.1",
+          "Name": "tslib",
+          "Identifier": {
+            "PURL": "pkg:npm/tslib@2.8.1",
+            "UID": "d39abe2380638e2d"
+          },
+          "Version": "2.8.1",
+          "Licenses": [
+            "0BSD"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 5238,
+              "EndLine": 5243
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "undici-types@6.21.0",
+          "Name": "undici-types",
+          "Identifier": {
+            "PURL": "pkg:npm/undici-types@6.21.0",
+            "UID": "640a5ad6eb264769"
+          },
+          "Version": "6.21.0",
+          "Licenses": [
+            "MIT"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 5304,
+              "EndLine": 5310
+            }
+          ],
+          "AnalyzedBy": "npm"
+        },
+        {
+          "ID": "yallist@5.0.0",
+          "Name": "yallist",
+          "Identifier": {
+            "PURL": "pkg:npm/yallist@5.0.0",
+            "UID": "6cfc2482a65b18f8"
+          },
+          "Version": "5.0.0",
+          "Licenses": [
+            "BlueOak-1.0.0"
+          ],
+          "Indirect": true,
+          "Relationship": "indirect",
+          "Locations": [
+            {
+              "StartLine": 5085,
+              "EndLine": 5093
+            }
+          ],
+          "AnalyzedBy": "npm"
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2026-53666",
+          "VendorIDs": [
+            "GHSA-337j-9hxr-rhxg"
+          ],
+          "PkgID": "react-router@6.30.6",
+          "PkgName": "react-router",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/react-router@6.30.6",
+            "UID": "33640f18309f8dd5"
+          },
+          "InstalledVersion": "6.30.6",
+          "FixedVersion": "7.18.0",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-53666",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:1ced0a5d9d84453efcc898f1bf0addf8ac16e0f177c5043c01a4e6c0f04219c5",
+          "Title": "react-router: React Router: Information disclosure via client-side constructor execution",
+          "Description": "React Router is a router for React. In versions 6.4.0 through 7.17.0, if application code was written in a way that allows attacker-supplied input to overwrite certain aspects of errors caught by the SSR process, then it was possible for an attacker to trigger unexpected constructor execution on the client, which would in turn trigger an outbound network request. This is only possible with very specific (and unlikely) application-layer code. Note that this does not impact an application if it is using Declarative Mode. It only impacts Framework Mode and Data Mode applications that perform manual SSR/hydration. This issue has been fixed in version 7.18.0.",
+          "Severity": "MEDIUM",
+          "CweIDs": [
+            "CWE-470"
+          ],
+          "VendorSeverity": {
+            "ghsa": 2,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-53666",
+            "https://github.com/remix-run/react-router",
+            "https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v7180",
+            "https://github.com/remix-run/react-router/commit/9d22943fd46c8ae4b08236425fa3549e10e9ad1a",
+            "https://github.com/remix-run/react-router/pull/15175",
+            "https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0",
+            "https://github.com/remix-run/react-router/security/advisories/GHSA-337j-9hxr-rhxg",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-53666",
+            "https://www.cve.org/CVERecord?id=CVE-2026-53666"
+          ],
+          "PublishedDate": "2026-07-27T22:17:30.937Z",
+          "LastModifiedDate": "2026-10-24T13:10:00.147Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-53669",
+          "VendorIDs": [
+            "GHSA-wrjc-x8rr-h8h6"
+          ],
+          "PkgID": "react-router@6.30.6",
+          "PkgName": "react-router",
+          "PkgIdentifier": {
+            "PURL": "pkg:npm/react-router@6.30.6",
+            "UID": "33640f18309f8dd5"
+          },
+          "InstalledVersion": "6.30.6",
+          "FixedVersion": "7.18.0",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-53669",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory npm",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Anpm"
+          },
+          "Fingerprint": "sha256:ae71694105b489c3aa4012ee3ad9ab0a19236da7136d91c6f4d53d70b724a6f3",
+          "Title": "react-router: React Router: Open Redirect vulnerability via backslashes in navigation components",
+          "Description": "React Router is a router for React. Versions 6.0.0 through 7.17.0 are vulnerable to Open Redirtect through use of backslashes in \u003cLink\u003e and useNavigate. This issue is a follow up to CVE-2025-68470 and has been fixed in version 7.18.0.",
+          "Severity": "MEDIUM",
+          "CweIDs": [
+            "CWE-601"
+          ],
+          "VendorSeverity": {
+            "ghsa": 2,
+            "nvd": 2,
+            "redhat": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V40Vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:L/VA:N/SC:L/SI:L/SA:N",
+              "V40Score": 5.1
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+              "V3Score": 6.1
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+              "V3Score": 5.4
+            }
+          },
+          "References": [
+            "http://github.com/remix-run/react-router/pull/15176",
+            "https://access.redhat.com/security/cve/CVE-2026-53669",
+            "https://github.com/remix-run/react-router",
+            "https://github.com/remix-run/react-router/blob/main/CHANGELOG.md#v7180",
+            "https://github.com/remix-run/react-router/pull/15176",
+            "https://github.com/remix-run/react-router/releases/tag/react-router@7.18.0",
+            "https://github.com/remix-run/react-router/security/advisories/GHSA-wrjc-x8rr-h8h6",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-53669",
+            "https://www.cve.org/CVERecord?id=CVE-2026-53669"
+          ],
+          "PublishedDate": "2026-07-27T22:17:31.377Z",
+          "LastModifiedDate": "2026-10-24T13:10:00.147Z"
+        }
+      ]
+    },
+    {
+      "Target": "workers/requirements.txt",
+      "Class": "lang-pkgs",
+      "Type": "pip",
+      "Packages": [
+        {
+          "Name": "beautifulsoup4",
+          "Identifier": {
+            "PURL": "pkg:pypi/beautifulsoup4@4.12.3",
+            "UID": "49d840841fd04776"
+          },
+          "Version": "4.12.3",
+          "Locations": [
+            {
+              "StartLine": 2,
+              "EndLine": 2
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "redis",
+          "Identifier": {
+            "PURL": "pkg:pypi/redis@5.0.8",
+            "UID": "a0d4c7e45f49ad0f"
+          },
+          "Version": "5.0.8",
+          "Locations": [
+            {
+              "StartLine": 3,
+              "EndLine": 3
+            }
+          ],
+          "AnalyzedBy": "pip"
+        },
+        {
+          "Name": "requests",
+          "Identifier": {
+            "PURL": "pkg:pypi/requests@2.32.3",
+            "UID": "1d9c529ae50a7b84"
+          },
+          "Version": "2.32.3",
+          "Locations": [
+            {
+              "StartLine": 1,
+              "EndLine": 1
+            }
+          ],
+          "AnalyzedBy": "pip"
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2024-47081",
+          "VendorIDs": [
+            "GHSA-9hjg-9r4m-mvj7"
+          ],
+          "PkgName": "requests",
+          "PkgIdentifier": {
+            "PURL": "pkg:pypi/requests@2.32.3",
+            "UID": "1d9c529ae50a7b84"
+          },
+          "InstalledVersion": "2.32.3",
+          "FixedVersion": "2.32.4",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2024-47081",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory pip",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Apip"
+          },
+          "Fingerprint": "sha256:edcb8ec8cac108844f7c231402564e77cbe7a02cf07a57ac4f228a488c51a5e9",
+          "Title": "requests: Requests vulnerable to .netrc credentials leak via malicious URLs",
+          "Description": "Requests is a HTTP library. Due to a URL parsing issue, Requests releases prior to 2.32.4 may leak .netrc credentials to third parties for specific maliciously-crafted URLs. Users should upgrade to version 2.32.4 to receive a fix. For older versions of Requests, use of the .netrc file can be disabled with `trust_env=False` on one's Requests Session.",
+          "Severity": "MEDIUM",
+          "CweIDs": [
+            "CWE-522"
+          ],
+          "VendorSeverity": {
+            "alma": 2,
+            "amazon": 2,
+            "azure": 2,
+            "cbl-mariner": 2,
+            "ghsa": 2,
+            "oracle-oval": 2,
+            "photon": 2,
+            "redhat": 2,
+            "rocky": 2,
+            "ubuntu": 2
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+              "V3Score": 5.3
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+              "V3Score": 5.3
+            }
+          },
+          "References": [
+            "http://seclists.org/fulldisclosure/2025/Jun/2",
+            "http://www.openwall.com/lists/oss-security/2025/06/03/11",
+            "http://www.openwall.com/lists/oss-security/2025/06/03/9",
+            "http://www.openwall.com/lists/oss-security/2025/06/04/1",
+            "http://www.openwall.com/lists/oss-security/2025/06/04/6",
+            "https://access.redhat.com/errata/RHSA-2025:12519",
+            "https://access.redhat.com/errata/RHSA-2025:13604",
+            "https://access.redhat.com/security/cve/CVE-2024-47081",
+            "https://bugzilla.redhat.com/2371272",
+            "https://bugzilla.redhat.com/show_bug.cgi?id=2371272",
+            "https://creativecommons.org/licenses/by/4.0/",
+            "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-47081",
+            "https://errata.almalinux.org/9/ALSA-2025-12519.html",
+            "https://errata.rockylinux.org/RLSA-2025:13604",
+            "https://github.com/advisories/GHSA-9hjg-9r4m-mvj7",
+            "https://github.com/psf/requests",
+            "https://github.com/psf/requests/commit/96ba401c1296ab1dda74a2365ef36d88f7d144ef",
+            "https://github.com/psf/requests/pull/6965",
+            "https://github.com/psf/requests/releases/tag/v2.32.4",
+            "https://github.com/psf/requests/security/advisories/GHSA-9hjg-9r4m-mvj7",
+            "https://github.com/pypa/advisory-database/tree/main/vulns/requests/PYSEC-2026-1872.yaml",
+            "https://linux.oracle.com/cve/CVE-2024-47081.html",
+            "https://linux.oracle.com/errata/ELSA-2025-14999.html",
+            "https://nvd.nist.gov/vuln/detail/CVE-2024-47081",
+            "https://pypi.org/project/requests",
+            "https://requests.readthedocs.io/en/latest/api/#requests.Session.trust_env",
+            "https://seclists.org/fulldisclosure/2025/Jun/2",
+            "https://ubuntu.com/security/notices/USN-7568-1",
+            "https://ubuntu.com/security/notices/USN-7762-1",
+            "https://www.cve.org/CVERecord?id=CVE-2024-47081",
+            "https://www.openwall.com/lists/oss-security/2025/06/03/9"
+          ],
+          "PublishedDate": "2025-06-09T18:15:24.983Z",
+          "LastModifiedDate": "2026-06-17T07:56:30.697Z"
+        },
+        {
+          "VulnerabilityID": "CVE-2026-25645",
+          "VendorIDs": [
+            "GHSA-gc5v-m9x4-r6x2"
+          ],
+          "PkgName": "requests",
+          "PkgIdentifier": {
+            "PURL": "pkg:pypi/requests@2.32.3",
+            "UID": "1d9c529ae50a7b84"
+          },
+          "InstalledVersion": "2.32.3",
+          "FixedVersion": "2.33.0",
+          "Status": "fixed",
+          "SeveritySource": "ghsa",
+          "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-25645",
+          "DataSource": {
+            "ID": "ghsa",
+            "Name": "GitHub Security Advisory pip",
+            "URL": "https://github.com/advisories?query=type%3Areviewed+ecosystem%3Apip"
+          },
+          "Fingerprint": "sha256:861fc33638e4660ab13a6eed7ef61f9eef7637b50f9f6667c5cc049e8d009b3b",
+          "Title": "requests: Requests: Security bypass due to predictable temporary file creation",
+          "Description": "Requests is a HTTP library. Prior to version 2.33.0, the `requests.utils.extract_zipped_paths()` utility function uses a predictable filename when extracting files from zip archives into the system temporary directory. If the target file already exists, it is reused without validation. A local attacker with write access to the temp directory could pre-create a malicious file that would be loaded in place of the legitimate one. Standard usage of the Requests library is not affected by this vulnerability. Only applications that call `extract_zipped_paths()` directly are impacted. Starting in version 2.33.0, the library extracts files to a non-deterministic location. If developers are unable to upgrade, they can set `TMPDIR` in their environment to a directory with restricted write access.",
+          "Severity": "MEDIUM",
+          "CweIDs": [
+            "CWE-377"
+          ],
+          "VendorSeverity": {
+            "azure": 2,
+            "ghsa": 2,
+            "nvd": 2,
+            "photon": 2,
+            "redhat": 2,
+            "ubuntu": 1
+          },
+          "CVSS": {
+            "ghsa": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:N/I:H/A:N",
+              "V3Score": 4.4
+            },
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+              "V3Score": 5.5
+            },
+            "redhat": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:H/A:N",
+              "V3Score": 4.7
+            }
+          },
+          "References": [
+            "https://access.redhat.com/security/cve/CVE-2026-25645",
+            "https://github.com/psf/requests",
+            "https://github.com/psf/requests/commit/66d21cb07bd6255b1280291c4fafb71803cdb3b7",
+            "https://github.com/psf/requests/releases/tag/v2.33.0",
+            "https://github.com/psf/requests/security/advisories/GHSA-gc5v-m9x4-r6x2",
+            "https://nvd.nist.gov/vuln/detail/CVE-2026-25645",
+            "https://ubuntu.com/security/notices/USN-8825-1",
+            "https://www.cve.org/CVERecord?id=CVE-2026-25645"
+          ],
+          "PublishedDate": "2026-03-25T17:16:52.97Z",
+          "LastModifiedDate": "2026-06-17T10:25:00.443Z"
+        }
+      ]
+    },
+    {
+      "Target": "backend/scripts/load/compose/Dockerfile",
+      "Class": "config",
+      "Type": "dockerfile",
+      "MisconfSummary": {
+        "Successes": 25,
+        "Failures": 2
+      },
+      "Misconfigurations": [
+        {
+          "Type": "Dockerfile Security Check",
+          "ID": "DS-0002",
+          "Title": "Image user should not be 'root'",
+          "Description": "Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.",
+          "Message": "Specify at least 1 USER command in Dockerfile with non-root user as argument",
+          "Namespace": "builtin.dockerfile.DS002",
+          "Query": "data.builtin.dockerfile.DS002.deny",
+          "Resolution": "Add 'USER \u003cnon root user name\u003e' line to the Dockerfile",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/ds-0002",
+          "References": [
+            "https://docs.docker.com/develop/develop-images/dockerfile_best-practices/",
+            "https://avd.aquasec.com/misconfig/ds-0002"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Dockerfile",
+            "Service": "general"
+          }
+        },
+        {
+          "Type": "Dockerfile Security Check",
+          "ID": "DS-0026",
+          "Title": "No HEALTHCHECK defined",
+          "Description": "You should add HEALTHCHECK instruction in your docker container images to perform the health check on running containers.",
+          "Message": "Add HEALTHCHECK instruction in your Dockerfile",
+          "Namespace": "builtin.dockerfile.DS026",
+          "Query": "data.builtin.dockerfile.DS026.deny",
+          "Resolution": "Add HEALTHCHECK instruction in Dockerfile",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/ds-0026",
+          "References": [
+            "https://blog.aquasec.com/docker-security-best-practices",
+            "https://avd.aquasec.com/misconfig/ds-0026"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Provider": "Dockerfile",
+            "Service": "general"
+          }
+        }
+      ]
+    },
+    {
+      "Target": "pipeline/infra/s3-buckets.yaml",
+      "Class": "config",
+      "Type": "cloudformation",
+      "MisconfSummary": {
+        "Successes": 31,
+        "Failures": 3
+      },
+      "Misconfigurations": [
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0089",
+          "Title": "S3 Bucket Logging",
+          "Description": "Ensures S3 bucket logging is enabled for S3 buckets",
+          "Message": "Bucket has logging disabled",
+          "Namespace": "builtin.aws.s3.aws0089",
+          "Query": "data.builtin.aws.s3.aws0089.deny",
+          "Resolution": "Add a logging block to the resource to enable access logging",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0089",
+          "References": [
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html",
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-server-access-logging.html",
+            "https://avd.aquasec.com/misconfig/aws-0089"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "pipeline/infra/s3-buckets.yaml:11-42",
+            "Provider": "AWS",
+            "Service": "s3",
+            "StartLine": 11,
+            "EndLine": 42,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 11,
+                  "Content": "  MedicoordRawBucket:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mMedicoordRawBucket\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 12,
+                  "Content": "    Type: AWS::S3::Bucket",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::S3::Bucket",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 14,
+                  "Content": "      BucketName: medicoord-raw-ingestion",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mBucketName\u001b[0m: medicoord-raw-ingestion",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 15,
+                  "Content": "      ",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      ",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "      # ── EventBridge integration ──────────────────────────────────",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;239m# ── EventBridge integration ──────────────────────────────────",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "      # Publishes all object-level events (PUT, DELETE, etc.) to the",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;239m# Publishes all object-level events (PUT, DELETE, etc.) to the",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "      # default EventBridge bus. This replaces the manual console",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;239m# default EventBridge bus. This replaces the manual console",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "      # toggle we enabled during the test. Without this, no processor",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;239m# toggle we enabled during the test. Without this, no processor",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 20,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0090",
+          "Title": "S3 Data should be versioned",
+          "Description": "Versioning in Amazon S3 is a means of keeping multiple variants of an object in the same bucket.\n\nYou can use the S3 Versioning feature to preserve, retrieve, and restore every version of every object stored in your buckets.\n\nWith versioning you can recover more easily from both unintended user actions and application failures.\n\nWhen you enable versioning, also keep in mind the potential costs of storing noncurrent versions of objects. To help manage those costs, consider setting up an S3 Lifecycle configuration.\n",
+          "Message": "Bucket does not have versioning enabled",
+          "Namespace": "builtin.aws.s3.aws0090",
+          "Query": "data.builtin.aws.s3.aws0090.deny",
+          "Resolution": "Enable versioning to protect against accidental/malicious removal or modification",
+          "Severity": "MEDIUM",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0090",
+          "References": [
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/Versioning.html",
+            "https://aws.amazon.com/blogs/storage/reduce-storage-costs-with-fewer-noncurrent-versions-using-amazon-s3-lifecycle/",
+            "https://avd.aquasec.com/misconfig/aws-0090"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "pipeline/infra/s3-buckets.yaml:11-42",
+            "Provider": "AWS",
+            "Service": "s3",
+            "StartLine": 11,
+            "EndLine": 42,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 11,
+                  "Content": "  MedicoordRawBucket:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mMedicoordRawBucket\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 12,
+                  "Content": "    Type: AWS::S3::Bucket",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::S3::Bucket",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 14,
+                  "Content": "      BucketName: medicoord-raw-ingestion",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mBucketName\u001b[0m: medicoord-raw-ingestion",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 15,
+                  "Content": "      ",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      ",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "      # ── EventBridge integration ──────────────────────────────────",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;239m# ── EventBridge integration ──────────────────────────────────",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "      # Publishes all object-level events (PUT, DELETE, etc.) to the",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;239m# Publishes all object-level events (PUT, DELETE, etc.) to the",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "      # default EventBridge bus. This replaces the manual console",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;239m# default EventBridge bus. This replaces the manual console",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "      # toggle we enabled during the test. Without this, no processor",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;239m# toggle we enabled during the test. Without this, no processor",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 20,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0132",
+          "Title": "S3 encryption should use Customer Managed Keys",
+          "Description": "Encryption using AWS keys provides protection for your S3 buckets. To gain greater control over encryption, such as key rotation, access policies, and auditability, use customer managed keys (CMKs) with SSE-KMS.\nNote that SSE-KMS is not supported for S3 server access logging destination buckets; in such cases, use SSE-S3 instead.\n",
+          "Message": "Bucket does not encrypt data with a customer managed key.",
+          "Namespace": "builtin.aws.s3.aws0132",
+          "Query": "data.builtin.aws.s3.aws0132.deny",
+          "Resolution": "Use SSE-KMS with a customer managed key (CMK)",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0132",
+          "References": [
+            "https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-encryption.html",
+            "https://avd.aquasec.com/misconfig/aws-0132"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "pipeline/infra/s3-buckets.yaml:11-42",
+            "Provider": "AWS",
+            "Service": "s3",
+            "StartLine": 11,
+            "EndLine": 42,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 11,
+                  "Content": "  MedicoordRawBucket:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mMedicoordRawBucket\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 12,
+                  "Content": "    Type: AWS::S3::Bucket",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::S3::Bucket",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 13,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 14,
+                  "Content": "      BucketName: medicoord-raw-ingestion",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mBucketName\u001b[0m: medicoord-raw-ingestion",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 15,
+                  "Content": "      ",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      ",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 16,
+                  "Content": "      # ── EventBridge integration ──────────────────────────────────",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;239m# ── EventBridge integration ──────────────────────────────────",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 17,
+                  "Content": "      # Publishes all object-level events (PUT, DELETE, etc.) to the",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;239m# Publishes all object-level events (PUT, DELETE, etc.) to the",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 18,
+                  "Content": "      # default EventBridge bus. This replaces the manual console",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;239m# default EventBridge bus. This replaces the manual console",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 19,
+                  "Content": "      # toggle we enabled during the test. Without this, no processor",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;239m# toggle we enabled during the test. Without this, no processor",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 20,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "Target": "pipeline/infra/template.yaml",
+      "Class": "config",
+      "Type": "cloudformation",
+      "MisconfSummary": {
+        "Successes": 32,
+        "Failures": 6
+      },
+      "Misconfigurations": [
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0125",
+          "Title": "SAM Function must have X-Ray tracing enabled",
+          "Description": "X-Ray tracing enables end-to-end debugging and analysis of the function.\n",
+          "Message": "X-Ray tracing is not enabled",
+          "Namespace": "builtin.aws.sam.aws0125",
+          "Query": "data.builtin.aws.sam.aws0125.deny",
+          "Resolution": "Enable tracing",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0125",
+          "References": [
+            "https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-tracing",
+            "https://avd.aquasec.com/misconfig/aws-0125"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "pipeline/infra/template.yaml:203-221",
+            "Provider": "AWS",
+            "Service": "sam",
+            "StartLine": 203,
+            "EndLine": 221,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 203,
+                  "Content": "  ErWaitScraper:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mErWaitScraper\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 204,
+                  "Content": "    Type: AWS::Serverless::Function",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::Serverless::Function",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 205,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 206,
+                  "Content": "      FunctionName: medicoord-er-wait-scraper",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mFunctionName\u001b[0m: medicoord-er-wait-scraper",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 207,
+                  "Content": "      CodeUri: ../functions/er-wait-scraper/",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mCodeUri\u001b[0m: ../functions/er-wait-scraper/",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 208,
+                  "Content": "      Handler: handler.lambda_handler",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mHandler\u001b[0m: handler.lambda_handler",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 209,
+                  "Content": "      Role: !GetAtt IngestionRole.Arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRole\u001b[0m: !GetAtt IngestionRole.Arn",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 210,
+                  "Content": "      Layers:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mLayers\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 211,
+                  "Content": "        - !Ref RequestsLayer",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - !Ref RequestsLayer",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 212,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0125",
+          "Title": "SAM Function must have X-Ray tracing enabled",
+          "Description": "X-Ray tracing enables end-to-end debugging and analysis of the function.\n",
+          "Message": "X-Ray tracing is not enabled",
+          "Namespace": "builtin.aws.sam.aws0125",
+          "Query": "data.builtin.aws.sam.aws0125.deny",
+          "Resolution": "Enable tracing",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0125",
+          "References": [
+            "https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-tracing",
+            "https://avd.aquasec.com/misconfig/aws-0125"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "pipeline/infra/template.yaml:223-241",
+            "Provider": "AWS",
+            "Service": "sam",
+            "StartLine": 223,
+            "EndLine": 241,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 223,
+                  "Content": "  OpenDataSync:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mOpenDataSync\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 224,
+                  "Content": "    Type: AWS::Serverless::Function",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::Serverless::Function",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 225,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 226,
+                  "Content": "      FunctionName: medicoord-open-data-sync",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mFunctionName\u001b[0m: medicoord-open-data-sync",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 227,
+                  "Content": "      CodeUri: ../functions/open-data-sync/",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mCodeUri\u001b[0m: ../functions/open-data-sync/",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 228,
+                  "Content": "      Handler: handler.lambda_handler",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mHandler\u001b[0m: handler.lambda_handler",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 229,
+                  "Content": "      Role: !GetAtt IngestionRole.Arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRole\u001b[0m: !GetAtt IngestionRole.Arn",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 230,
+                  "Content": "      Layers:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mLayers\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 231,
+                  "Content": "        - !Ref RequestsLayer",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - !Ref RequestsLayer",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 232,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0125",
+          "Title": "SAM Function must have X-Ray tracing enabled",
+          "Description": "X-Ray tracing enables end-to-end debugging and analysis of the function.\n",
+          "Message": "X-Ray tracing is not enabled",
+          "Namespace": "builtin.aws.sam.aws0125",
+          "Query": "data.builtin.aws.sam.aws0125.deny",
+          "Resolution": "Enable tracing",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0125",
+          "References": [
+            "https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-tracing",
+            "https://avd.aquasec.com/misconfig/aws-0125"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "pipeline/infra/template.yaml:245-253",
+            "Provider": "AWS",
+            "Service": "sam",
+            "StartLine": 245,
+            "EndLine": 253,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 245,
+                  "Content": "  PlacesProcessor:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mPlacesProcessor\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 246,
+                  "Content": "    Type: AWS::Serverless::Function",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::Serverless::Function",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 247,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 248,
+                  "Content": "      FunctionName: medicoord-places-processor",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mFunctionName\u001b[0m: medicoord-places-processor",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 249,
+                  "Content": "      CodeUri: ../functions/places-processor/",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mCodeUri\u001b[0m: ../functions/places-processor/",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 250,
+                  "Content": "      Handler: handler.lambda_handler",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mHandler\u001b[0m: handler.lambda_handler",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 251,
+                  "Content": "      Role: !GetAtt ProcessorRole.Arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRole\u001b[0m: !GetAtt ProcessorRole.Arn",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 252,
+                  "Content": "      Layers:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mLayers\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 253,
+                  "Content": "        - !Ref RequestsLayer",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "        - !Ref RequestsLayer",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0125",
+          "Title": "SAM Function must have X-Ray tracing enabled",
+          "Description": "X-Ray tracing enables end-to-end debugging and analysis of the function.\n",
+          "Message": "X-Ray tracing is not enabled",
+          "Namespace": "builtin.aws.sam.aws0125",
+          "Query": "data.builtin.aws.sam.aws0125.deny",
+          "Resolution": "Enable tracing",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0125",
+          "References": [
+            "https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-tracing",
+            "https://avd.aquasec.com/misconfig/aws-0125"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "pipeline/infra/template.yaml:255-261",
+            "Provider": "AWS",
+            "Service": "sam",
+            "StartLine": 255,
+            "EndLine": 261,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 255,
+                  "Content": "  ErWaitProcessor:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mErWaitProcessor\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 256,
+                  "Content": "    Type: AWS::Serverless::Function",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::Serverless::Function",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 257,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 258,
+                  "Content": "      FunctionName: medicoord-er-wait-processor",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mFunctionName\u001b[0m: medicoord-er-wait-processor",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 259,
+                  "Content": "      CodeUri: ../functions/er-wait-processor/",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mCodeUri\u001b[0m: ../functions/er-wait-processor/",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 260,
+                  "Content": "      Handler: handler.lambda_handler",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mHandler\u001b[0m: handler.lambda_handler",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 261,
+                  "Content": "      Role: !GetAtt ProcessorRole.Arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRole\u001b[0m: !GetAtt ProcessorRole.Arn",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0125",
+          "Title": "SAM Function must have X-Ray tracing enabled",
+          "Description": "X-Ray tracing enables end-to-end debugging and analysis of the function.\n",
+          "Message": "X-Ray tracing is not enabled",
+          "Namespace": "builtin.aws.sam.aws0125",
+          "Query": "data.builtin.aws.sam.aws0125.deny",
+          "Resolution": "Enable tracing",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0125",
+          "References": [
+            "https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-tracing",
+            "https://avd.aquasec.com/misconfig/aws-0125"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "pipeline/infra/template.yaml:263-269",
+            "Provider": "AWS",
+            "Service": "sam",
+            "StartLine": 263,
+            "EndLine": 269,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 263,
+                  "Content": "  OpenDataProcessor:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mOpenDataProcessor\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 264,
+                  "Content": "    Type: AWS::Serverless::Function",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::Serverless::Function",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 265,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 266,
+                  "Content": "      FunctionName: medicoord-open-data-processor",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mFunctionName\u001b[0m: medicoord-open-data-processor",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 267,
+                  "Content": "      CodeUri: ../functions/open-data-processor/",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mCodeUri\u001b[0m: ../functions/open-data-processor/",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 268,
+                  "Content": "      Handler: handler.lambda_handler",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mHandler\u001b[0m: handler.lambda_handler",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 269,
+                  "Content": "      Role: !GetAtt ProcessorRole.Arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRole\u001b[0m: !GetAtt ProcessorRole.Arn",
+                  "FirstCause": false,
+                  "LastCause": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Type": "CloudFormation Security Check",
+          "ID": "AWS-0125",
+          "Title": "SAM Function must have X-Ray tracing enabled",
+          "Description": "X-Ray tracing enables end-to-end debugging and analysis of the function.\n",
+          "Message": "X-Ray tracing is not enabled",
+          "Namespace": "builtin.aws.sam.aws0125",
+          "Query": "data.builtin.aws.sam.aws0125.deny",
+          "Resolution": "Enable tracing",
+          "Severity": "LOW",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws-0125",
+          "References": [
+            "https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html#sam-function-tracing",
+            "https://avd.aquasec.com/misconfig/aws-0125"
+          ],
+          "Status": "FAIL",
+          "CauseMetadata": {
+            "Resource": "pipeline/infra/template.yaml:276-290",
+            "Provider": "AWS",
+            "Service": "sam",
+            "StartLine": 276,
+            "EndLine": 290,
+            "Code": {
+              "Lines": [
+                {
+                  "Number": 276,
+                  "Content": "  DbtRunner:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "  \u001b[38;5;33mDbtRunner\u001b[0m:",
+                  "FirstCause": true,
+                  "LastCause": false
+                },
+                {
+                  "Number": 277,
+                  "Content": "    Type: AWS::Serverless::Function",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mType\u001b[0m: AWS::Serverless::Function",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 278,
+                  "Content": "    Properties:",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "    \u001b[38;5;33mProperties\u001b[0m:",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 279,
+                  "Content": "      FunctionName: medicoord-dbt-runner",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mFunctionName\u001b[0m: medicoord-dbt-runner",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 280,
+                  "Content": "      CodeUri: ../functions/dbt-runner/",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mCodeUri\u001b[0m: ../functions/dbt-runner/",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 281,
+                  "Content": "      Handler: handler.lambda_handler",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mHandler\u001b[0m: handler.lambda_handler",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 282,
+                  "Content": "      Role: !GetAtt DbtRunnerRole.Arn",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mRole\u001b[0m: !GetAtt DbtRunnerRole.Arn",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 283,
+                  "Content": "      Timeout: 600",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "      \u001b[38;5;33mTimeout\u001b[0m: \u001b[38;5;37m600",
+                  "FirstCause": false,
+                  "LastCause": false
+                },
+                {
+                  "Number": 284,
+                  "Content": "      MemorySize: 512",
+                  "IsCause": true,
+                  "Annotation": "",
+                  "Truncated": false,
+                  "Highlighted": "\u001b[0m      \u001b[38;5;33mMemorySize\u001b[0m: \u001b[38;5;37m512",
+                  "FirstCause": false,
+                  "LastCause": true
+                },
+                {
+                  "Number": 285,
+                  "Content": "",
+                  "IsCause": false,
+                  "Annotation": "",
+                  "Truncated": true,
+                  "FirstCause": false,
+                  "LastCause": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

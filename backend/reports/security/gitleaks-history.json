@@ -1,0 +1,22 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 13,
+  "EndLine": 13,
+  "StartColumn": 2,
+  "EndColumn": 64,
+  "Match": "API_KEY    = \"REDACTED\"",
+  "Secret": "REDACTED",
+  "File": "scripts/get_place_details.py",
+  "SymlinkFile": "",
+  "Commit": "43c40a64b138140a4eb0f23cc7a3ffe910a5d790",
+  "Entropy": 4.561641,
+  "Author": "Maester-khris",
+  "Email": "ndevjoel@gmail.com",
+  "Date": "2026-08-03T15:39:05Z",
+  "Message": "untracked files on feat/symptom-understanding-v2: afcd8bd Merge branch 'feat/symptom-understanding-v2-snomed-kg' into feat/symptom-understanding-v2",
+  "Tags": [],
+  "Fingerprint": "43c40a64b138140a4eb0f23cc7a3ffe910a5d790:scripts/get_place_details.py:generic-api-key:13"
+ }
+]

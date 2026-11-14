@@ -1,5 +1,7 @@
 # Token Budget per LLM Provider (Layer 4): Implementation Plan
 
+> **Status 2026-11-08 (Sprint 23 step 2):** partly superseded by `2026-11-08-eval-hardening-guards.md`. The provider's own 429 cooldown is replaced by the per-provider circuit breaker (`llm/breaker.py`), and token accounting now happens in one place (the agent's call helper). Still not built: the tokens-per-minute bucket (Tasks 2 to 4 below); it would be a decorator between `Instrumented` and `Breaker`. Task 1 (turning on the chain) is unaffected.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A chat turn moves to the next LLM provider before the current one refuses it, and the answer to an emergent triage is never refused by our own budget.

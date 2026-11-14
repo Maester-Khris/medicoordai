@@ -853,4 +853,138 @@ def score_recall(candidates, expected_complaint):
       { text: "Explicitly not re-run: Track B's v2 numbers predate the ranking fix validated by the Track A re-run above and have not been independently re-verified against it — stated directly rather than silently assumed unaffected.", bold: [] },
     ],
   },
+  {
+    slug: 'semantic-retrieval-graph-v3-vs-no-graph-baseline',
+    navSection: 'ai-models',
+    category: 'Symptom-Understanding Evaluation',
+    accent: 'blue',
+    icon: ChartLineUp,
+    tags: ['#SemanticSearch', '#Embeddings', '#ONNX', '#Evals', '#NegativeResult'],
+    title: 'Semantic Retrieval Fixed the Lookup, Not the Triage: Graph v3 Against a No-Graph Baseline',
+    readTimeMinutes: 10,
+    publishedDate: '2026-11-13',
+    author: 'MediCoord Core Platform Team',
+    summary:
+      "The August evaluation ended on one finding: neither retrieval backend did semantic matching, so both scored 0/10 on lay language. Graph v3 adds an embedding step to the graph and lifts retrieval from 4% to 83–93% hit@5 on lay messages. Measured end to end under a stricter, paired evaluation, it did not make triage safer: v3 under-triaged 29.6% of lay-language conversations against 22.2% with no graph at all. Production stays on the no-graph path, and this post publishes the negative result.",
+    background:
+      "Case study 'Symptom-Understanding Retrieval: CTAS Lookup + SNOMED Knowledge Graph' explains why a graph grounding step exists and how the GRAPH_RAG_PROVIDER switch works. Case study 'Fair Retrieval Evaluation' showed that both the static lookup (v1) and the SNOMED graph (v2) retrieve by literal substring containment, and both scored 0/10 on a vocabulary-neutral control set. Two things changed since then. The v2 graph was deleted when its free hosting tier paused, so its August numbers are kept for reference only. And the August posts left an open question: wording was proven to drive retrieval, but whether it also drives end-to-end triage had never been measured. This post answers that question and tests the fix.",
+    problem:
+      "Patients describe symptoms in their own words: 'my chest feels tight and heavy', not 'chest pain, cardiac features'. A lookup built on substring matching only fires when the patient happens to use the table's wording; on 150 author-written lay messages it found the right complaint 4% of the time. The August evaluation could not settle whether that mattered for triage either. It was one run of 27 conversations per leg, with no confidence intervals, on the original exam-style wording only, so a three-point gap between legs could have been noise. Fixing retrieval without first fixing the measurement would have produced a number nobody could trust.",
+    problemHighlights: [
+      {
+        heading: 'Substring Matching Misses How Patients Talk',
+        body: 'On 150 author-written lay messages, the substring lookup found the right complaint 4% of the time. Lay phrasing rarely contains the clinical term verbatim.',
+        accent: 'danger',
+      },
+      {
+        heading: 'The August Eval Could Not Separate Signal From Noise',
+        body: 'One run, 27 conversations per leg, no intervals, original wording only. Later we measured that identical re-runs move a leg by about 5 points, larger than most of the August gaps.',
+        accent: 'info',
+      },
+    ],
+    alternativesConsidered: [
+      {
+        title: "Keep extending the alias table with lay phrases",
+        body: 'Tested directly: adding 1,487 generated lay phrases to the substring lookup roughly doubled its hit rate, to about 10–17%. Verbatim matching is the ceiling, not the vocabulary size.',
+      },
+      {
+        title: 'pgvector in the application database',
+        body: 'Deferred. The index is about 30–60 MB of vectors over a few thousand target strings, small enough to hold in the API process as one matrix. A database round trip on every chat turn buys nothing at that size.',
+      },
+      {
+        title: 'SapBERT, as the design brief recommended',
+        body: 'Measured before choosing. On lay sentences SapBERT and S-PubMedBert-MS-MARCO reached roughly 50–75% hit@5, below both BioLORD-2023 and bge-small. Models trained to align clinical synonyms do not automatically handle everyday phrasing.',
+      },
+      {
+        title: 'Index the full SNOMED subtree under each complaint',
+        body: 'Rejected after measuring it. Adding descendants down to depth 2 lowered hit rates for every model: complaints with thousands of descendant terms win by volume (a hub effect). v3 indexes depth 1 by default and depth 0 for catch-all complaints.',
+      },
+    ],
+    approach:
+      "The work had two halves, done in this order. First, freeze the evaluation. We wrote a lay-language version of the 27 clinician-reviewed vignettes: same case, same gold severity, everyday wording, each line checked clinically, and frozen before v3 was designed so it could not be written in v3's vocabulary. Each vignette runs 3 times per leg (81 conversations), legs are compared pairwise with McNemar's exact test and a paired bootstrap, and a run manifest pins the model, temperatures, prompt hashes and checklist hash so a resumed run cannot silently change conditions. The line in the sand was written before any paid run: if v3 does not beat the no-graph leg beyond the paired interval on the lay set, the no-graph path stays the production default and the negative result is published. Second, build v3. The graph was rebuilt small and bounded around the 154 curated complaint anchors, with a reviewed lay-description layer stored next to the SNOMED terms. A semantic candidate path embeds the current message with an ONNX int8 model, searches an in-process vector index, and abstains when the best complaint is not clearly ahead. The existing lexical lookup stays: a long exact match still outranks any semantic hit, and if the embedder is slow or failing, a deadline, a circuit breaker and a bounded queue drop the turn back to lexical-only. Severity stays the LLM's decision in every leg; the graph only supplies context.",
+    approachEmphasis: ['The line in the sand was written before any paid run', 'abstains when the best complaint is not clearly ahead'],
+    codeSamples: [
+      {
+        filename: 'semantic_provider.py',
+        language: 'python',
+        content: `# Lexical pass — always runs.
+lexical = super()._gather_candidates(user_message, all_text)
+
+# Re-weight lexical hits: long = strong, short = weak evidence.
+scores: dict[str, float] = {}
+for concept_id, length in lexical.items():
+    if length >= LEXICAL_PRECEDENCE_MIN_LEN:
+        scores[concept_id] = 1000.0 + length
+    else:
+        scores[concept_id] = length / 1000.0
+
+# Semantic pass — query with the CURRENT message only.
+result: CandidateResult = source.candidates(user_message)
+if result.skipped is None and result.candidates:
+    sem_scores = anchor_scores(result.candidates)
+    decision = decide(sem_scores, settings.score_threshold, settings.gap_margin)`,
+      },
+      {
+        filename: 'abstention.py',
+        language: 'python',
+        content: `def decide(scores: Mapping[str, float], threshold: float, margin: float) -> Decision:
+    """Semantic search always returns *something*. Accept the top complaint
+    only if it is close enough AND clearly ahead of the runner-up."""
+    if not scores:
+        return Decision(False, "no_candidates")
+    ranked = sorted(scores.values(), reverse=True)
+    if ranked[0] < threshold:
+        return Decision(False, "low_score")
+    if len(ranked) > 1 and ranked[0] - ranked[1] < margin:
+        return Decision(False, "small_gap")
+    return Decision(True, "ok")`,
+      },
+    ],
+    diagramSteps: [
+      { title: 'Message In', desc: 'The current chat message reaches the provider. History is never passed to the embedder.', icon: 'ti ti-message-chatbot' },
+      { title: 'Lexical Pass', desc: 'Substring lookup against SNOMED and alias terms. A long exact match outranks anything semantic.', icon: 'ti ti-text-recognition' },
+      { title: 'Semantic Pass', desc: 'ONNX int8 embedding, in-process vector search, abstain on a low score or a small gap. Deadline, breaker and bounded queue fall back to lexical-only.', icon: 'ti ti-vector' },
+      { title: 'Context, Never a Verdict', desc: 'Matched red flags and follow-up questions go into the prompt. The LLM still decides severity.', icon: 'ti ti-brain' },
+    ],
+    lessonsLearned: [
+      {
+        title: 'A retrieval metric is not an outcome metric',
+        body: 'Retrieval hit@5 went from 4% to 83–93% on lay messages. Under-triage did not improve, and accuracy dropped by about 5 points. Finding the right complaint and asking the right questions about it are different problems; v3 solved the first.',
+      },
+      {
+        title: 'Measure your noise floor before reading a gap',
+        body: 'A replay of the same lay set with identical settings moved the no-graph leg by 5 points. Most of the August gaps between legs were smaller than that. Repeats and paired intervals are what turned this into a result instead of an anecdote.',
+      },
+      {
+        title: 'Writing the decision rule first made the negative result easy to publish',
+        body: 'Because the line in the sand existed before the paid run, there was nothing to argue about when v3 lost: production stays on the no-graph path, and the write-up says so.',
+      },
+      {
+        title: 'Trust the model ranking more than the absolute levels',
+        body: 'The retrieval queries are synthetic (author-written, or LLM-written and then filtered by a blind labeler). BioLORD over bge-small over SapBERT held on every set; the exact percentages are likely optimistic for real guest messages.',
+      },
+    ],
+    tradeoff:
+      "Keeping the no-graph path as the default is not free. Without a graph doing part of the understanding, every guest's symptom text goes to the hosted model, and there is no data processing agreement with the model host yet. Matching the no-graph leg on safety and on the questions asked is the condition for moving part of that work off the model, and v3 does not meet it today. v3 is built and measured, off in production. Between the two embedding models there is a second tradeoff: bge-small embeds a message in about 3 ms with about 115 MB of memory and a 34 MB model file, the realistic choice on a 1 vCPU box, but misses the 75% hit@5 screen on all four query sets. BioLORD-2023 passes the screen but takes 19–31 ms, about 600 MB of memory and a 418 MB file, and needs SNOMED/UMLS licence compliance. Open questions: whether the model host matters (the August runs used Groq, these used Ollama Cloud, and no host check was run), and why v3 misses the vignettes it misses. An early, unquantified reading is that generic red flags plus a patient's 'no' answers get treated as reassurance and pull severity down.",
+    resultOrdered: false,
+    result: [
+      { text: 'Retrieval, BioLORD-2023: gold complaint in the top 5 for 92.7%, 87.7%, 82.7% and 84.4% of messages on four query sets of 104 to 365 messages (top 1: 70.7%, 54.5%, 37.5%, 49.3%). Only the top 5 is reliable.', bold: ['92.7%', '82.7%'] },
+      { text: 'Retrieval, bge-small: 69 to 81% top 5 (36 to 56% top 1) on the same sets, below the 75% screen on all four. Substring matching scored 4% on the 150 author-written messages.', bold: ['69 to 81%', '4%'] },
+      { text: 'Under-triage, lay wording, 81 conversations per leg: no graph 22.2%, static lookup 27.2%, v3 29.6%. Accuracy: 69.1%, 64.2%, 64.2%.', bold: ['22.2%', '27.2%', '29.6%'] },
+      { text: 'Under-triage, original wording: no graph 23.5%, static lookup 25.9%, v3 28.4% (accuracy 69.1%, 66.7%, 65.4%). August, one run on original wording: no graph 22.2%, static 37.0%, v2 22.2%.', bold: ['23.5%', '25.9%', '28.4%'] },
+      { text: 'Paired v3 minus no graph on the lay set: 7.4 points more under-triage, 95% interval [−14.8, −1.2] on the paired difference, exact McNemar p = 0.25. No evidence the graph helps, not proof it harms.', bold: ['7.4 points', 'p = 0.25'] },
+      { text: 'Replay of the lay set with identical settings: 27.2%, 30.9%, 32.1%. The no-graph leg moved 5 points between identical runs, so smaller gaps are noise.', bold: ['5 points'] },
+      { text: 'Elicitation coverage (share of patient-answerable checklist facts the chat drew out): no graph 35.5%, static 33.9%, v3 32.6%; v3 minus no graph −2.9 points [−11.7, +3.1]. The graph does not get the chat to ask for more of what a clinician needs.', bold: ['35.5%', '32.6%'] },
+      { text: 'Decision: v3 does not beat the no-graph leg beyond the paired interval, so the no-graph path stays the production default.', bold: ['stays the production default'] },
+    ],
+    methodologyOrdered: true,
+    methodology: [
+      { text: '27 clinician-reviewed Ontario CTAS vignettes in two wordings (original and lay), 3 repeats each: 81 conversations per leg per wording. Legs: no graph, static lookup, v3.', bold: ['81 conversations'] },
+      { text: 'System under test: gpt-oss-120b on Ollama Cloud. Simulated patient: claude-haiku-4-5. Severity and under-triage are scored in code against the gold label; LLM judges were off for the paid run.', bold: [] },
+      { text: 'Paired comparison on shared vignettes: McNemar exact test on per-vignette under-triage and a paired bootstrap interval on the rate difference. A run manifest pins model, temperatures, prompt hashes and checklist hash, and is enforced on resume.', bold: [] },
+      { text: 'Retrieval: 154 complaint anchors; four query sets of 104 to 365 messages, author-written or LLM-written with the complaint name hidden and kept only if a blind labeler agreed. Synthetic, not real guest messages.', bold: [] },
+      { text: 'Elicitation coverage was scored afterwards on the saved lay conversations by gpt-4o-mini. The second-judge agreement check was misconfigured, so judge reliability is unproven. About $0.70 spent on judging.', bold: [] },
+      { text: 'Not run: a check on the original Groq host, and the live provider fallback chain. One full run plus one replay of the lay set; no further repeats.', bold: [] },
+    ],
+  },
 ]

@@ -1,0 +1,54 @@
+{
+  "opening_message": "My five-year-old girl has a fever and a rash.",
+  "disclosure_items": [
+    {
+      "feature_id": "fever",
+      "category": "chief_complaint",
+      "first_person_phrasing": "Her temperature is 38.7 degrees Celsius.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "appearance",
+      "category": "exam",
+      "first_person_phrasing": "She seems worn out.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "itchy_rash",
+      "category": "chief_complaint",
+      "first_person_phrasing": "She has an itchy rash, red spots on her hands and feet.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "sore_mouth",
+      "category": "chief_complaint",
+      "first_person_phrasing": "She has little sores like canker sores on her tongue and inside her cheeks.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "swallowing_breathing",
+      "category": "chief_complaint",
+      "first_person_phrasing": "She can swallow and breathe fine.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse",
+      "category": "vitals",
+      "first_person_phrasing": "Her pulse is 90.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respirations",
+      "category": "vitals",
+      "first_person_phrasing": "She's breathing 20 times a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "The top number of her blood pressure is 100.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

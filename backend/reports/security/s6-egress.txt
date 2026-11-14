@@ -1,0 +1,19 @@
+PASS /routes call succeeded (routing path exercised)  [200]
+INFO turns ok: 3; captured model requests: 5; other provider requests: 2 ['/v1/routing']
+PASS model requests were captured  [5]
+PASS no guest id in any model request (headers + body)  [0/5 contain it]
+PASS no session id in any model request (headers + body)  [0/5 contain it]
+PASS no client IP in any model request (headers + body)  [0/5 contain it]
+PASS no latitude in any model request (headers + body)  [0/5 contain it]
+PASS no longitude in any model request (headers + body)  [0/5 contain it]
+PASS no user agent in any model request (headers + body)  [0/5 contain it]
+FINDING typed name reaches the model provider unredacted in 5/5 requests
+FINDING typed phone reaches the model provider unredacted in 5/5 requests
+FINDING typed email reaches the model provider unredacted in 5/5 requests
+FINDING typed street reaches the model provider unredacted in 5/5 requests
+INFO facility name/address (public data) in 4 model requests
+PASS no guest id in routing-provider requests
+PASS no client IP in routing-provider requests
+INFO coordinates in routing requests (by design): 2 of 2
+
+10/10 pass

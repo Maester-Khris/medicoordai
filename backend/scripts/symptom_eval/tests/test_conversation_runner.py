@@ -17,8 +17,10 @@ class _ScriptedSystem:
     def __init__(self, results: list[SystemTurnResult]):
         self._results = results
         self.calls: list[tuple[str, list[dict]]] = []
+        self.conversation_ids: list[str | None] = []
 
-    def respond(self, patient_message, history):
+    def respond(self, patient_message, history, conversation_id=None):
+        self.conversation_ids.append(conversation_id)
         self.calls.append((patient_message, list(history)))
         return self._results[len(self.calls) - 1]
 
@@ -35,6 +37,24 @@ class _ScriptedSimulator:
 
 
 class TestRunVignetteConversation:
+    def test_each_turn_keeps_the_matched_complaint_and_the_surfaced_red_flags(self):
+        system = _ScriptedSystem([
+            SystemTurnResult(
+                "Any fainting?", None, None, True,
+                surfaced_red_flag_indicators=["Shock"], surfaced_followup_questions=["Are you feeling faint?"],
+                complaint_name="Chest pain (cardiac features)",
+            ),
+            SystemTurnResult("Go to the ER.", "emergent", "reasoning", False),
+        ])
+
+        transcript = run_vignette_conversation(
+            VIGNETTE, _ScriptedSimulator(["Yes."]), system, conversation_id="conv-1"
+        )
+
+        assert transcript.turns[0].complaint_name == "Chest pain (cardiac features)"
+        assert transcript.turns[0].surfaced_red_flag_indicators == ["Shock"]
+        assert transcript.turns[1].complaint_name is None
+
     def test_stops_at_first_triage_result(self):
         system = _ScriptedSystem([
             SystemTurnResult("How long?", None, None, False),
@@ -42,7 +62,7 @@ class TestRunVignetteConversation:
         ])
         simulator = _ScriptedSimulator(["An hour."])
 
-        transcript = run_vignette_conversation(VIGNETTE, simulator, system)
+        transcript = run_vignette_conversation(VIGNETTE, simulator, system, conversation_id="conv-1")
 
         assert transcript.final_severity == "emergent"
         assert len(transcript.turns) == 2
@@ -57,10 +77,39 @@ class TestRunVignetteConversation:
         ])
         simulator = _ScriptedSimulator(["An hour."])
 
-        run_vignette_conversation(VIGNETTE, simulator, system)
+        run_vignette_conversation(VIGNETTE, simulator, system, conversation_id="conv-1")
 
         second_call_history = system.calls[1][1]
         assert second_call_history == [
             {"role": "user", "content": "I feel dizzy."},
             {"role": "assistant", "content": "How long?"},
         ]
+
+
+class TestConversationId:
+    def test_every_turn_of_a_conversation_carries_the_same_id(self):
+        system = _ScriptedSystem([
+            SystemTurnResult("How long?", None, None, False),
+            SystemTurnResult("Go to the ER.", "emergent", "reasoning", False),
+        ])
+
+        run_vignette_conversation(VIGNETTE, _ScriptedSimulator(["An hour."]), system, conversation_id="conv-1")
+
+        assert system.conversation_ids == ["conv-1", "conv-1"]
+
+    def test_a_turn_records_whether_the_cap_was_reached(self):
+        system = _ScriptedSystem([SystemTurnResult("Go to the ER.", "emergent", "reasoning", False, cap_reached=True)])
+
+        transcript = run_vignette_conversation(VIGNETTE, _ScriptedSimulator([]), system, conversation_id="conv-1")
+
+        assert transcript.turns[0].cap_reached is True
+
+    def test_a_turn_records_the_tokens_it_used(self):
+        system = _ScriptedSystem([
+            SystemTurnResult("How long?", None, None, False, tokens_used=900),
+            SystemTurnResult("Go to the ER.", "emergent", "reasoning", False, tokens_used=1500),
+        ])
+
+        transcript = run_vignette_conversation(VIGNETTE, _ScriptedSimulator(["An hour."]), system, conversation_id="conv-1")
+
+        assert [turn.tokens_used for turn in transcript.turns] == [900, 1500]

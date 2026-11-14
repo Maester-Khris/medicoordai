@@ -1,0 +1,26 @@
+### T3 no GROQ_API_KEY (provider key removed)
+http=200 0.03s I'm having trouble processing your request right now. If this is an emergency, call 911. For other health help, call 211.
+### T2 provider dead (connection refused), 7 turns: does the breaker open and what does the guest see?
+http=200 0.31s I'm having trouble processing your request right now. If this is an emergency, call 911. For other health help, call 211.
+http=200 0.02s I'm having trouble processing your request right now. If this is an emergency, call 911. For other health help, call 211.
+http=200 0.22s I'm having trouble processing your request right now. If this is an emergency, call 911. For other health help, call 211.
+http=200 0.14s I'm having trouble processing your request right now. If this is an emergency, call 911. For other health help, call 211.
+http=200 0.17s I'm having trouble processing your request right now. If this is an emergency, call 911. For other health help, call 211.
+http=200 0.01s I'm having trouble processing your request right now. If this is an emergency, call 911. For other health help, call 211.
+http=200 0.01s I'm having trouble processing your request right now. If this is an emergency, call 911. For other health help, call 211.
+llm_call_duration_seconds_bucket{le="0.25",outcome="circuit_open",provider="groq"} 2.0
+llm_call_duration_seconds_bucket{le="0.5",outcome="circuit_open",provider="groq"} 2.0
+llm_call_duration_seconds_bucket{le="1.0",outcome="circuit_open",provider="groq"} 2.0
+llm_call_duration_seconds_bucket{le="2.0",outcome="circuit_open",provider="groq"} 2.0
+llm_call_duration_seconds_bucket{le="3.0",outcome="circuit_open",provider="groq"} 2.0
+llm_call_duration_seconds_bucket{le="5.0",outcome="circuit_open",provider="groq"} 2.0
+llm_call_duration_seconds_bucket{le="8.0",outcome="circuit_open",provider="groq"} 2.0
+llm_call_duration_seconds_bucket{le="13.0",outcome="circuit_open",provider="groq"} 2.0
+### T4 MAX_TURNS_IN_FLIGHT=1 with slow mock, 4 concurrent turns
+http=429 0.01s http=429 0.01s http=429 0.01s None
+None
+None
+http=200 0.11s Based on what you described, this looks emergent. Please call 211 or search online for nearby care.
+
+### T1 (not captured above): GRAPH_RAG_PROVIDER=semantick (typo) -> API starts, /health ok, provider silently becomes off (graph/factory.py falls through to NullGraphProvider; no warning logged).
+### Unit level (not live): 31 existing breaker/reload tests pass (tests/graph/test_semantic_candidates.py). The semantic path was NOT run live: no model or index on this machine.

@@ -168,7 +168,7 @@ def test_seed_red_flags_writes_are_merge_on_key_not_create():
     # CREATE for RedFlag or FollowupQuestion nodes.
     source = inspect.getsource(seed_red_flags)
     assert "MERGE (anchor)-[:HAS_RED_FLAG]->(rf:RedFlag {anchor_id: row.anchor_id, indicator: row.indicator})" in source
-    assert "MERGE (q:FollowupQuestion {text:" in source
+    assert "MERGE (q:FollowupQuestion {anchor_id: row.anchor_id, text: row.followup_question})" in source
     assert "CREATE (rf:RedFlag" not in source
     assert "CREATE (q:FollowupQuestion" not in source
 
@@ -194,3 +194,37 @@ def test_seed_pilot_clusters_merges_cluster_and_part_of_edges():
     assert session.run.call_count == len(PILOT_CLUSTERS) * 2
     first_call_query = session.run.call_args_list[0][0][0]
     assert "MERGE (cluster:RedFlagCluster" in first_call_query
+
+
+def _run_seed_capturing_cypher(monkeypatch, rows):
+    from unittest.mock import MagicMock
+    session = MagicMock()
+    driver = MagicMock()
+    driver.session.return_value.__enter__.return_value = session
+    monkeypatch.setattr(seed_red_flags.GraphDatabase, "driver", lambda *a, **k: driver)
+    monkeypatch.setattr(seed_red_flags, "load_red_flag_lookup", lambda path: {})
+    monkeypatch.setattr(seed_red_flags, "build_rows", lambda mappings, lookup: rows)
+    seed_red_flags.seed("bolt://x", ("u", "p"))
+    return [(c.args[0], c.kwargs) for c in session.run.call_args_list]
+
+
+def test_followup_question_merge_key_includes_anchor_id(monkeypatch):
+    calls = _run_seed_capturing_cypher(monkeypatch, [{"anchor_id": "1", "indicator": "i", "followup_question": "q?"}])
+    merge = next(c for c, _ in calls if "UNWIND" in c)
+    assert "MERGE (q:FollowupQuestion {anchor_id: row.anchor_id, text: row.followup_question})" in merge
+    assert "MERGE (q:FollowupQuestion {text:" not in merge
+
+
+def test_constraint_is_composite_on_anchor_id_and_text(monkeypatch):
+    calls = _run_seed_capturing_cypher(monkeypatch, [])
+    constraints = [c for c, _ in calls if "CONSTRAINT" in c]
+    assert constraints == ["CREATE CONSTRAINT IF NOT EXISTS FOR (q:FollowupQuestion) REQUIRE (q.anchor_id, q.text) IS UNIQUE"]
+
+
+def test_same_text_on_two_anchors_creates_two_questions(monkeypatch):
+    rows = [{"anchor_id": a, "indicator": "Shock", "followup_question": "Are you faint?"} for a in ("1", "2")]
+    calls = _run_seed_capturing_cypher(monkeypatch, rows)
+    (merge, params), = [(c, k) for c, k in calls if "UNWIND" in c]
+    # the key is (anchor_id, text), so two rows with the same text and different anchors are two distinct nodes
+    assert [r["anchor_id"] for r in params["rows"]] == ["1", "2"]
+    assert "{anchor_id: row.anchor_id, text: row.followup_question}" in merge

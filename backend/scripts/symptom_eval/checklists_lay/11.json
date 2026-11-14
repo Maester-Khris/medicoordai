@@ -1,0 +1,54 @@
+{
+  "opening_message": "My daughter has been having a seizure for over half an hour!",
+  "disclosure_items": [
+    {
+      "feature_id": "seizure_history",
+      "category": "history",
+      "first_person_phrasing": "She has a diagnosed seizure disorder.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "superior_response",
+      "category": "history",
+      "first_person_phrasing": "We gave her Ativan under her tongue at home and it did nothing.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "initial_pulse",
+      "category": "vitals",
+      "first_person_phrasing": "Her pulse was 120 at the start.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "initial_respirations",
+      "category": "vitals",
+      "first_person_phrasing": "At first she was breathing 20 times a minute and it sounded noisy.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "post_seizure_pulse",
+      "category": "vitals",
+      "first_person_phrasing": "After the seizure stopped her pulse was 115.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "post_seizure_respirations",
+      "category": "vitals",
+      "first_person_phrasing": "After it stopped she was breathing 16 times a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "o2_saturation",
+      "category": "vitals",
+      "first_person_phrasing": "Her oxygen was 99% while she was on a high dose of oxygen.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "neurologic_response",
+      "category": "exam",
+      "first_person_phrasing": "After the seizure she could tell where the pain was and reached toward it.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}
