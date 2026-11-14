@@ -3,7 +3,7 @@ name: Eval gate
 # Runs only on a PR that carries the `run-eval` label. It makes live calls to Groq (free tier), so it is
 # never run on every push. The gate protects the production (no-graph) path: seven cases that were right on
 # every recorded baseline run must still be right. It catches gross breaks (a prompt, parser or provider
-# change), not subtle drift. Design: CHANGELOG.md, Sprint 23 step 7.
+# change), not subtle drift. Design: CHANGELOG.md, Sprint 23, item 6.
 
 on:
   pull_request:

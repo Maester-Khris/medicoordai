@@ -108,6 +108,12 @@ v3 minus `off`: -2.9 points (95% interval [-11.7, +3.1]). All comparisons includ
 - Production keeps the no-graph path as default until v3 beats it beyond the paired interval.
 - Open: whether the host matters (no Groq check was run), and why v3 misses some vignettes. Early reading: generic red flags plus patient "no" answers get used as reassurance, lowering severity (not yet quantified).
 
+### CI regression gate
+
+A label-triggered check (`run-eval` on a PR, `.github/workflows/eval-gate.yml`) protects the production no-graph path. It does not measure quality: it fails when a case that was reliably right is now wrong. It runs 7 sentinel cases of the lay set once, on Groq's free tier, and fails if an emergent sentinel is under-triaged, if 2 or more other sentinels differ from the baseline, or if a sentinel is missing.
+
+Calibrated on that setup (30 conversations of the no-graph leg): accuracy 73.3%, under-triage 23.3%, in line with the table above. Three cases that held on the Ollama baseline did not hold on Groq (one urgent, two emergent under-triaged), so they are reported but cannot fail the gate: only 5 emergent cases are protected, and why those two under-triage on Groq is not investigated. One run is a sample, and the gate has not run in CI yet.
+
 ---
 
 ## Security
