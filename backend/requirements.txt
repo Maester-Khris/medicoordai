@@ -14,7 +14,7 @@ pytest==9.*
 pytest-asyncio==1.*
 groq>=0.13.0
 anthropic==0.40.*
-deepeval>=2.0
+deepeval==4.3.*
 openai>=2,<3
 neo4j==6.*
 sqlalchemy==2.*
