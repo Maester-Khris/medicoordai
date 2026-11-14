@@ -130,6 +130,13 @@ class CheckpointStore:
         return confusion_rows, coverages, gains
 
 
+MAX_CONSECUTIVE_FAILURES = 3  # a quota error repeats for every remaining case: stop rather than burn through them
+
+
+class TooManyFailures(RuntimeError):
+    """Consecutive conversations failed; the cause is probably the provider, not one case."""
+
+
 def run_leg(
     provider: str,
     vignettes: list[Vignette],
@@ -140,22 +147,36 @@ def run_leg(
     checkpoint: CheckpointStore | None = None,
     variant: str = "original",
     repeats: int = 1,
+    on_failure: Callable[[str, Exception], None] | None = None,
 ) -> AblationLegResult:
+    """With `on_failure`, a conversation that raises is reported and skipped (not checkpointed, so a resume
+    reruns it); without it the first error stops the run, as paid runs want."""
     system = system_factory(provider)
     if checkpoint is not None:
         confusion_rows, coverage_results, gain_results = checkpoint.rows_for(variant, provider)
     else:
         confusion_rows, coverage_results, gain_results = [], [], []
 
+    consecutive_failures = 0
     for vignette in vignettes:
         for repeat in range(repeats):
             if checkpoint is not None and checkpoint.has(variant, provider, vignette.case_id, repeat):
                 continue
 
-            transcript = run_vignette_conversation(
-                vignette, simulator, system,
-                conversation_id=f"{variant}:{provider}:{vignette.case_id}:{repeat}",
-            )
+            conversation_id = f"{variant}:{provider}:{vignette.case_id}:{repeat}"
+            try:
+                transcript = run_vignette_conversation(vignette, simulator, system, conversation_id=conversation_id)
+            except Exception as error:
+                if on_failure is None:
+                    raise
+                on_failure(conversation_id, error)
+                consecutive_failures += 1
+                if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                    raise TooManyFailures(
+                        f"{consecutive_failures} conversations failed in a row (last: {type(error).__name__})"
+                    ) from error
+                continue
+            consecutive_failures = 0
             row = confusion_matrix.score_vignette(vignette, transcript)
             coverage = (
                 elicitation_coverage.score_vignette(vignette, transcript, feature_judge)
@@ -208,11 +229,12 @@ def run_ablation(
     checkpoint: CheckpointStore | None = None,
     variant: str = "original",
     repeats: int = 1,
+    on_failure: Callable[[str, Exception], None] | None = None,
 ) -> list[AblationLegResult]:
     return [
         run_leg(
             provider, vignettes, system_factory, simulator, feature_judge, rubric_judge,
-            checkpoint=checkpoint, variant=variant, repeats=repeats,
+            checkpoint=checkpoint, variant=variant, repeats=repeats, on_failure=on_failure,
         )
         for provider in providers
     ]

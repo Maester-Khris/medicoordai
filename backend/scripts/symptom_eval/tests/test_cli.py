@@ -286,3 +286,67 @@ def test_a_semantic_leg_without_a_readable_index_fails_before_any_spend(monkeypa
     monkeypatch.setenv("SEMANTIC_INDEX_DIR", str(tmp_path / "missing"))
     with pytest.raises(ValueError, match="manifest"):
         cli.build_manifest(**kwargs)
+
+
+def test_cases_filter_runs_only_the_named_vignettes(tmp_path):
+    _run(tmp_path, _ManifestWatchingSystem(str(tmp_path / "checkpoint.jsonl")),
+         variant="lay", limit=None, cases=("1", "2"))
+
+    entries = CheckpointStore(str(tmp_path / "checkpoint.jsonl")).entries_for("lay", "off")
+    assert {e["case_id"] for e in entries} == {"1", "2"}
+
+
+def test_an_unknown_case_id_is_refused_before_any_call(tmp_path):
+    system = _ManifestWatchingSystem(str(tmp_path / "checkpoint.jsonl"))
+
+    with pytest.raises(SystemExit, match="999"):
+        _run(tmp_path, system, variant="lay", limit=None, cases=("1", "999"))
+
+    assert system.manifest_existed_at_first_call is None
+
+
+def test_a_paced_run_still_completes(tmp_path):
+    _run(tmp_path, _ManifestWatchingSystem(str(tmp_path / "checkpoint.jsonl")), min_gap_s=0.001)
+
+    assert CheckpointStore(str(tmp_path / "checkpoint.jsonl")).entries_for("original", "off")
+
+
+def test_parser_reads_cases_and_the_gap():
+    args = cli.build_parser().parse_args(["run-ablation", "--cases", "1,2,5", "--min-gap-s", "20"])
+
+    assert (args.cases, args.min_gap_s) == ("1,2,5", 20.0)
+
+
+class _FailsOnCase:
+    """Raises on every turn of one case; answers emergent for the rest."""
+
+    def __init__(self, case_id):
+        self._case_id = case_id
+
+    def respond(self, patient_message, history, conversation_id=None):
+        if conversation_id.split(":")[2] == self._case_id:
+            raise RuntimeError("tool_use_failed")
+        return SystemTurnResult("classified", "emergent", "why", False)
+
+
+def test_skip_failed_finishes_the_run_reports_the_skipped_case_and_leaves_it_out_of_the_checkpoint(tmp_path, capsys):
+    _run(tmp_path, _FailsOnCase("2"), variant="lay", limit=None, cases=("1", "2", "5"), skip_failed=True)
+
+    entries = CheckpointStore(str(tmp_path / "checkpoint.jsonl")).entries_for("lay", "off")
+    assert {e["case_id"] for e in entries} == {"1", "5"}
+    assert "lay:off:2:0" in capsys.readouterr().out
+
+
+def test_without_skip_failed_a_failing_case_still_stops_the_run(tmp_path):
+    with pytest.raises(RuntimeError, match="tool_use_failed"):
+        _run(tmp_path, _FailsOnCase("2"), variant="lay", limit=None, cases=("1", "2", "5"))
+
+
+def test_skip_failed_stops_with_a_clear_message_when_every_conversation_fails(tmp_path):
+    with pytest.raises(SystemExit, match="in a row"):
+        _run(tmp_path, _FailsOnCase("1"), variant="lay", limit=None, cases=("1",), repeats=3, skip_failed=True)
+
+
+def test_parser_reads_skip_failed():
+    assert cli.build_parser().parse_args(["run-ablation", "--skip-failed"]).skip_failed is True
+    assert cli.build_parser().parse_args(["run-ablation"]).skip_failed is False

@@ -62,3 +62,19 @@ class TestGroqClientDoesNotRetryABadRequest:
                 ))
 
         assert mock_create.call_count == 1
+
+
+class TestGroqClientModelChoice:
+    def test_an_explicit_model_overrides_the_environment(self, monkeypatch):
+        from llm.groq_client import GroqClient
+
+        monkeypatch.setenv("GROQ_MODEL", "openai/gpt-oss-120b")
+
+        assert GroqClient(model="qwen/qwen3.8-27b").model_name == "qwen/qwen3.8-27b"
+
+    def test_without_an_explicit_model_the_environment_still_decides(self, monkeypatch):
+        from llm.groq_client import GroqClient
+
+        monkeypatch.setenv("GROQ_MODEL", "openai/gpt-oss-20b")
+
+        assert GroqClient().model_name == "openai/gpt-oss-20b"

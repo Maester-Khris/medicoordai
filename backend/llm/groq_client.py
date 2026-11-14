@@ -7,7 +7,7 @@ from .limits import connection_limits
 
 class GroqClient(BaseLLMClient):
 
-    def __init__(self, max_retries: int | None = None) -> None:
+    def __init__(self, max_retries: int | None = None, model: str | None = None) -> None:
         api_key = os.environ.get("GROQ_API_KEY")
         if not api_key:
             raise RuntimeError("GROQ_API_KEY is not set")
@@ -23,7 +23,7 @@ class GroqClient(BaseLLMClient):
         self._client = AsyncGroq(**options)
         # llama-3.3-70b-versatile was shut down by Groq 2026-08-16; openai/gpt-oss-120b
         # is Groq's official migration target and supports tool calling.
-        self._model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+        self._model = model or os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 
     @property
     def model_name(self) -> str:

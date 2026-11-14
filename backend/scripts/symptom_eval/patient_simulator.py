@@ -6,10 +6,12 @@ role only needs BaseLLMClient.chat(), no new LLM wrapper (design §5: Claude
 is fixed for this role regardless of GRAPH_RAG_PROVIDER/LLM_PROVIDER, so the
 simulator is never the same model instance as the system under test).
 """
+import os
 from abc import ABC, abstractmethod
 
 from llm.anthropic_client import AnthropicClient
 from llm.base import BaseLLMClient, LLMMessage
+from llm.groq_client import GroqClient
 from llm.sync import run_sync
 from scripts.symptom_eval.domain import ConversationTurn, Vignette
 
@@ -61,3 +63,25 @@ class AnthropicPatientSimulator(PatientSimulatorPort):
 
         resp = run_sync(self._client.chat(messages=messages, tools=None, temperature=SIMULATOR_TEMPERATURE))
         return resp.content or "I'm not sure."
+
+
+# The default patient on Groq: a different model family from the system under test (gpt-oss-120b),
+# so the patient is never the same model answering itself. Measured clean: no reasoning in the reply.
+DEFAULT_GROQ_SIMULATOR_MODEL = "qwen/qwen3.8-27b"
+
+
+def simulator_from_env() -> "AnthropicPatientSimulator":
+    """EVAL_SIMULATOR_PROVIDER: anthropic (default, claude-haiku-4-5) or groq (EVAL_SIMULATOR_MODEL).
+
+    The class name is historical: it plays the patient with whatever chat client it is given.
+    """
+    provider = os.environ.get("EVAL_SIMULATOR_PROVIDER", "anthropic").strip().lower()
+    if provider == "anthropic":
+        return AnthropicPatientSimulator()
+    if provider == "groq":
+        model = os.environ.get("EVAL_SIMULATOR_MODEL", DEFAULT_GROQ_SIMULATOR_MODEL)
+        system_model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+        if model == system_model:
+            raise ValueError(f"The simulator and the system under test are the same model ({model}).")
+        return AnthropicPatientSimulator(client=GroqClient(model=model))
+    raise ValueError(f"EVAL_SIMULATOR_PROVIDER must be 'anthropic' or 'groq', got {provider!r}")

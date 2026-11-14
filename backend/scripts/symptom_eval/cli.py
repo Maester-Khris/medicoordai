@@ -19,7 +19,7 @@ import json
 import os
 import subprocess
 import tempfile
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
 from typing import Callable
 
@@ -31,17 +31,18 @@ from config import (
 )
 from llm.prompts import build_system_prompt
 from llm.retry import BASE_DELAY_SECONDS
-from scripts.symptom_eval.ablation import AblationLegResult, CheckpointStore, run_ablation
+from scripts.symptom_eval.ablation import AblationLegResult, CheckpointStore, TooManyFailures, run_ablation
 from scripts.symptom_eval.checklist_extractor import OpenAIChecklistExtractor
 from scripts.symptom_eval.compare_legs import compare_legs, format_comparison
 from scripts.symptom_eval.dry_run import DRY_RUN_MODEL, FakeSimulator, FakeSystem
 from scripts.symptom_eval.elicitation_coverage import DeepEvalFeaturePresenceJudge, FeaturePresenceJudgePort
 from scripts.symptom_eval.information_gain import DeepEvalRubricJudge, RubricJudgePort
+from scripts.symptom_eval.pacing import Pacer, PacedSystem
 from scripts.symptom_eval.patient_simulator import (
     SIMULATOR_SYSTEM_PROMPT,
     SIMULATOR_TEMPERATURE,
-    AnthropicPatientSimulator,
     PatientSimulatorPort,
+    simulator_from_env,
 )
 from scripts.symptom_eval.run_manifest import (
     ManifestMismatch,
@@ -86,7 +87,7 @@ class RunDependencies:
 
 
 def live_dependencies() -> RunDependencies:
-    simulator = AnthropicPatientSimulator()
+    simulator = simulator_from_env()
     return RunDependencies(
         system_factory=lambda provider: LiveLLMAgentAdapter(graph_rag_provider=provider),
         simulator=simulator,
@@ -208,6 +209,9 @@ def run_ablation_command(
     dependencies: RunDependencies | None = None,
     dry_run: bool = False,
     adopt_legacy_checkpoint: bool = False,
+    cases: tuple[str, ...] | None = None,
+    min_gap_s: float = 0.0,
+    skip_failed: bool = False,
 ) -> None:
     label = "DRY RUN " if dry_run else ""
     if dry_run:
@@ -221,6 +225,12 @@ def run_ablation_command(
     vignettes = load_all_vignettes(variant=variant)
     if limit:
         vignettes = vignettes[:limit]
+    if cases:
+        known = {v.case_id for v in vignettes}
+        unknown = [c for c in cases if c not in known]
+        if unknown:
+            raise SystemExit(f"Unknown case id(s) for variant {variant!r}: {', '.join(unknown)}")
+        vignettes = [v for v in vignettes if v.case_id in cases]
     if not vignettes:
         raise SystemExit(
             "No vignettes with authored checklists found — run "
@@ -230,6 +240,9 @@ def run_ablation_command(
     os.makedirs(results_dir, exist_ok=True)
     checkpoint_path = checkpoint_path or os.path.join(results_dir, "checkpoint.jsonl")
     dependencies = dependencies or live_dependencies()
+    if min_gap_s > 0:
+        pacer, make_system = Pacer(min_gap_s), dependencies.system_factory
+        dependencies = replace(dependencies, system_factory=lambda provider: PacedSystem(make_system(provider), pacer))
 
     # The manifest goes to disk before the first LLM call, and a resume under a
     # different configuration stops here rather than mixing two runs.
@@ -249,17 +262,27 @@ def run_ablation_command(
         print(f"{label}Resuming from checkpoint {checkpoint_path} — {already_done} vignette-legs already recorded")
 
     feature_judge, rubric_judge = build_judges(judges)
-    legs = run_ablation(
-        vignettes=vignettes,
-        system_factory=dependencies.system_factory,
-        simulator=dependencies.simulator,
-        feature_judge=feature_judge,
-        rubric_judge=rubric_judge,
-        providers=providers,
-        checkpoint=checkpoint,
-        variant=variant,
-        repeats=repeats,
-    )
+    skipped: list[str] = []
+
+    def report_failure(conversation_id: str, error: Exception) -> None:
+        skipped.append(conversation_id)
+        print(f"{label}SKIPPED {conversation_id}: {type(error).__name__}: {str(error)[:200]}")
+
+    try:
+        legs = run_ablation(
+            vignettes=vignettes,
+            system_factory=dependencies.system_factory,
+            simulator=dependencies.simulator,
+            feature_judge=feature_judge,
+            rubric_judge=rubric_judge,
+            providers=providers,
+            checkpoint=checkpoint,
+            variant=variant,
+            repeats=repeats,
+            on_failure=report_failure if skip_failed else None,
+        )
+    except TooManyFailures as error:
+        raise SystemExit(f"{error}. Stopped; rerun with the same checkpoint to resume.") from error
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     path = os.path.join(results_dir, f"ablation_results_{stamp}.json")
@@ -269,6 +292,8 @@ def run_ablation_command(
     for leg in legs:
         print(f"{label}{leg.provider}: {leg.confusion_matrix}")
     print(f"{label}Full results written to {path}")
+    if skipped:
+        print(f"{label}{len(skipped)} conversation(s) skipped, not in the checkpoint: {', '.join(skipped)}")
 
 
 def _is_under(path: str, directory: str) -> bool:
@@ -331,6 +356,15 @@ def build_parser() -> argparse.ArgumentParser:
                             help="Continue a checkpoint that has results but no manifest, certifying it with "
                                  "today's configuration. Off by default: its true configuration is unknown.")
     run_parser.add_argument("--seed", type=int, default=BOOTSTRAP_SEED, help="Bootstrap seed, recorded in the manifest.")
+    run_parser.add_argument("--cases", type=str, default=None,
+                            help="Comma-separated case ids to run (for example 1,2,5); default is every vignette.")
+    run_parser.add_argument("--min-gap-s", type=float, default=0.0,
+                            help="Minimum seconds between the system's turns, to stay under a provider's "
+                                 "tokens-per-minute limit (Groq free tier: about 20).")
+    run_parser.add_argument("--skip-failed", action="store_true",
+                            help="Report and skip a conversation whose provider call fails instead of stopping "
+                                 "the run (for CI). Skipped ones stay out of the checkpoint; 3 failures in a row "
+                                 "still stop it. Off by default: paid runs fail loudly.")
 
     compare_parser = subparsers.add_parser("compare-legs")
     compare_parser.add_argument("--checkpoint", type=str, required=True)
@@ -353,6 +387,8 @@ def main() -> None:
                 args.limit, args.checkpoint, tuple(p.strip() for p in args.providers.split(",")),
                 variant=args.variant, repeats=args.repeats, judges=not args.no_judges, seed=args.seed,
                 dry_run=args.dry_run, adopt_legacy_checkpoint=args.adopt_legacy_checkpoint,
+                cases=tuple(c.strip() for c in args.cases.split(",")) if args.cases else None,
+                min_gap_s=args.min_gap_s, skip_failed=args.skip_failed,
             )
         except (ManifestMismatch, UnmanifestedCheckpoint) as error:
             raise SystemExit(str(error)) from error

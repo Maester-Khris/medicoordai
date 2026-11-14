@@ -6,7 +6,9 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
-from scripts.symptom_eval.ablation import CheckpointStore, run_ablation, run_leg
+from scripts.symptom_eval.ablation import (
+    MAX_CONSECUTIVE_FAILURES, CheckpointStore, TooManyFailures, run_ablation, run_leg,
+)
 from scripts.symptom_eval.domain import Vignette
 from scripts.symptom_eval.system_under_test import SystemTurnResult
 
@@ -69,6 +71,60 @@ class TestRunAblation:
             assert leg.confusion_matrix["count"] == 2
             assert len(leg.elicitation_coverage) == 2
             assert len(leg.information_gain) == 2
+
+
+class _FlakySystem:
+    """Raises on the conversations whose id ends with a listed 'case:repeat'."""
+
+    def __init__(self, fail_on):
+        self._fail_on = fail_on
+
+    def respond(self, patient_message, history, conversation_id=None):
+        if conversation_id.rsplit(":", 2)[-2:] in [f.split(":") for f in self._fail_on]:
+            raise RuntimeError("tool_use_failed")
+        return SystemTurnResult("classified", "emergent", "why", False)
+
+
+def _run_flaky(fail_on, vignettes=VIGNETTES, repeats=1, checkpoint=None, on_failure=None):
+    return run_leg(
+        "off", vignettes, lambda provider: _FlakySystem(fail_on), _FakeSimulator(), None, None,
+        checkpoint=checkpoint, repeats=repeats, on_failure=on_failure,
+    )
+
+
+class TestSkipFailedConversations:
+    def test_a_failed_conversation_is_reported_and_left_out_while_the_others_are_recorded(self, tmp_path):
+        failures = []
+        checkpoint = CheckpointStore(str(tmp_path / "ck.jsonl"))
+
+        leg = _run_flaky(["1:0"], checkpoint=checkpoint, on_failure=lambda cid, err: failures.append((cid, err)))
+
+        assert leg.confusion_matrix["count"] == 1
+        assert [cid for cid, _ in failures] == ["original:off:1:0"]
+        assert isinstance(failures[0][1], RuntimeError)
+        assert not checkpoint.has("original", "off", "1", 0)  # a resume reruns it
+        assert checkpoint.has("original", "off", "2", 0)
+
+    def test_without_a_handler_the_first_error_still_stops_the_run(self):
+        with pytest.raises(RuntimeError, match="tool_use_failed"):
+            _run_flaky(["1:0"])
+
+    def test_the_run_aborts_after_consecutive_failures(self):
+        everything = [f"1:{r}" for r in range(MAX_CONSECUTIVE_FAILURES + 2)]
+        calls = []
+
+        with pytest.raises(TooManyFailures):
+            _run_flaky(everything, vignettes=VIGNETTES[:1], repeats=MAX_CONSECUTIVE_FAILURES + 2,
+                       on_failure=lambda cid, err: calls.append(cid))
+
+        assert len(calls) == MAX_CONSECUTIVE_FAILURES
+
+    def test_a_success_resets_the_consecutive_count(self):
+        pattern = ["1:0", "1:1", "1:3", "1:4"]  # fail, fail, ok, fail, fail: never 3 in a row
+
+        leg = _run_flaky(pattern, vignettes=VIGNETTES[:1], repeats=5, on_failure=lambda cid, err: None)
+
+        assert leg.confusion_matrix["count"] == 1
 
 
 class TestCheckpointStore:
