@@ -125,6 +125,7 @@ If push fails, report the error and stop — do not attempt to force push.
 ```bash
 gh pr create \
   --base preview \
+  --label run-eval \
   --head <CURRENT_BRANCH> \
   --title "<type>(<scope>): <pr message>" \
   --body "Sprint close: <pr message>
@@ -146,6 +147,8 @@ git log preview..<CURRENT_BRANCH> --oneline
 - [ ] No hardcoded secrets
 - [ ] Ready for preview deployment"
 ```
+
+`--label run-eval` is always attached: it starts the CI eval gate (`.github/workflows/eval-gate.yml`, Groq free tier). The label must already exist on the repo; if `gh pr create` fails because it does not, stop and report instead of dropping the flag. Never add it with `gh pr edit` (broken on this repo); for an existing PR use `gh api repos/{owner}/{repo}/issues/<n>/labels -f 'labels[]=run-eval'`.
 
 The `--title` uses the same conventional commit format as the commit message.
 The `--body` bullet points are generated from `git log preview..<CURRENT_BRANCH> --oneline`

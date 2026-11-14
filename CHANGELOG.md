@@ -25,9 +25,10 @@ Sprints are listed newest first, by the date each started (or, where a section h
 
 ### Deferred
 
-- **Triage:** the token cap value (agentic-update sprint); RedFlagCluster review (next v3 effort); why v3 misses some vignettes (early reading, not quantified: generic red flags plus patient "no" answers used as reassurance); case 21 and 22 on Groq; whether the model host matters.
+- **To the agentic-conversation sprint (W3, Nov 16 to 22):** the token cap value, set from the measured mean (about 5.2k tokens) and max (about 11k); a retry budget (about 10% of traffic, no retry after the first streamed token); prompt-cache pinning to one provider; a nightly gate run on the production config; enforcing the groundedness and emergency-mismatch checks (replace an ungrounded reply with the template) together with fixing the "call 211" before "call 911 now" wording, so the prompt hashes are re-baselined once; a deliberate off switch (`MAX_TURNS_IN_FLIGHT=0` currently means unlimited); the elicitation-judge protocol (labelled sample, then the expensive judge) before coverage numbers are quoted again.
+- **Triage:** RedFlagCluster review (next v3 effort); why v3 misses some vignettes (early reading, not quantified: generic red flags plus patient "no" answers used as reassurance); case 21 and 22 on Groq; whether the model host matters.
 - **Dropped on purpose:** Railway ops and the one-hour load test (Task 16, `off` stays default); the judge validity fix, information gain, absence-as-reassurance counting and the red-flag content audit.
-- **Security, open:** typed text (names, phones, addresses) reaches the model provider unredacted, with no PII detector (Medium); groundedness and emergency-mismatch checks only log (Medium; plan: replace an ungrounded reply with the template); forged closing tags can replace the reply text with a code word while the structured result stays correct (Medium-low); `medicoordai-staging` shares production's database, Redis and keys (Medium); no instant kill switch, and `MAX_TURNS_IN_FLIGHT=0` means unlimited; the reply can say "call 211" before "call 911 now" (Low); guests can nudge load-aware ranking counters (Low).
+- **Security, open:** typed text (names, phones, addresses) reaches the model provider unredacted, with no PII detector (Medium); forged closing tags can replace the reply text with a code word while the structured result stays correct (Medium-low); `medicoordai-staging` shares production's database, Redis and keys (Medium); guests can nudge load-aware ranking counters (Low).
 - **Known earlier:** anon-writable Supabase tables (fixed at the Postgres move); `/facilities/nearby` broken.
 - **Owner actions:** merge and deploy this branch (the 3 High security fixes reach production only then); set `SEMANTIC_MODEL_SHA256` before turning the semantic path on; drop the local stash holding an old key; add the `GROQ_API_KEY` repository secret and the `run-eval` label for the CI gate (it also reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; the first CI run may show more missing variables); replace the invalid Anthropic keys in Doppler `dev_personal` and `eval`.
 - **Tooling:** `rescore` (elicitation coverage on saved conversations) is built but not committed.
@@ -44,6 +45,7 @@ Sprints are listed newest first, by the date each started (or, where a section h
 - Embedding comparison and lay descriptions: `backend/scripts/embedding_eval/README.md`.
 - Results (retrieval, triage, elicitation coverage, security): README sections "Symptom Understanding" and "Security". Not repeated here.
 - Security review: `docs/security/2026-11-12-security-review.md`.
+- Items deferred to a sprint not yet planned: `artifacts/2026-11-14-sprint23-deferred-backlog.md` (local, untracked).
 
 ---
 
