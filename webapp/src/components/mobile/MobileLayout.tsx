@@ -2,7 +2,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useConfig } from "../../hooks/useConfig"
 import { FALLBACK_NOTICE, requestLocation, resolveDemoCoords } from "../../lib/demoLocation"
-import { motion, AnimatePresence } from 'motion/react'
 import type {
   Facility,
   Message,
@@ -15,9 +14,10 @@ import { MobileTopBar } from './MobileTopBar'
 import { DrawerMenu } from './DrawerMenu'
 import { BottomNavBar, type MobileTab } from './BottomNavBar'
 import { BottomSheet } from './BottomSheet'
-import { StreamingLogStrip } from './StreamingLogStrip'
 import { FacilityCardPanel } from './FacilityCardPanel'
 import { useAuth } from '../../auth/useAuth'
+import { useSheetGeometry } from '../../hooks/useSheetGeometry'
+import { stateForTab, tabForState, type SheetState } from '../../lib/sheetState'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useTriageState } from '../../hooks/useTriageState'
 import { useNextActions } from '../../hooks/useNextActions'
@@ -47,11 +47,6 @@ function stripToolNarration(content: string): string {
     .trim()
 }
 
-const STATE_2_LOGS = [
-  { tag: 'ROUTE', message: 'OPTIMAL PATH VIA NEAREST FACILITY' },
-  { tag: 'CAPAC', message: 'WALK-IN AVAILABILITY: HIGH (EST. WAIT = 30 MIN)' },
-]
-
 const FALLBACK_STARTERS = ['I have a fever', 'Chest pain', 'Sore throat', 'Dizziness']
 
 export function MobileLayout({
@@ -75,12 +70,21 @@ export function MobileLayout({
   const [progressStage, setProgressStage] = useState<ProgressStage>('idle')
 
   // Nav
-  const [activeTab, setActiveTab] = useState<MobileTab>('map')
+  const [sheetState, setSheetState] = useState<SheetState>('peek')
+  const geometry = useSheetGeometry()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   // Mode derived from triage state
   const mode = triage.active ? 'recommendation' : 'browse'
   const isBusy = busyUntil !== null
+  // While the keyboard is up the sheet is full, so the thread and the input stay above it.
+  const effectiveState: SheetState = geometry.keyboardOpen ? 'full' : sheetState
+  const emergentResult = triage.active && triage.severity === 'emergent'
+  const heights: Record<SheetState, number> = {
+    peek: Math.min(geometry.peek + (emergentResult ? 56 : 0), geometry.half - 1), // + the Call 911 strip
+    half: geometry.half,
+    full: geometry.full,
+  }
 
   // Reset on user logout
   useEffect(() => {
@@ -107,6 +111,7 @@ export function MobileLayout({
     const text = (starter ?? omniValue).trim()
     if (!text || !user || busyUntil !== null) return
     setOmniValue('')
+    setSheetState('full')
 
     let coords = geo.coords
     if (!coords) coords = await requestLocation(geo.requestOnce, config)
@@ -168,12 +173,7 @@ export function MobileLayout({
     }
   }, [omniValue, user, geo, activeSessionId, createSession, sendMessage, handleApplyTriage, config, busyUntil])
 
-  const handleTabChange = useCallback((tab: MobileTab) => {
-    setActiveTab(tab)
-    if ((tab === 'chat' || tab === 'triage') && mode === 'recommendation') {
-      handleNewConversation()
-    }
-  }, [mode, handleNewConversation])
+  const handleTabChange = useCallback((tab: MobileTab) => setSheetState(stateForTab(tab)), [])
 
   const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
   const feedback = isGuest && activeSessionId && lastAssistant
@@ -215,59 +215,36 @@ export function MobileLayout({
         onMenuOpen={() => setIsDrawerOpen(true)}
       />
 
-      {/* State 1: BottomSheet (browse mode) */}
-      <AnimatePresence>
-        {mode === 'browse' && (
-          <motion.div
-            key="bottomsheet"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 30 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            style={{ position: 'fixed', inset: 0, zIndex: 20, pointerEvents: 'none' }}
-          >
-            <div style={{ pointerEvents: 'auto' }}>
-              <BottomSheet
-                messages={messages}
-                omniValue={omniValue}
-                onOmniChange={setOmniValue}
-                onSend={() => { void handleSend() }}
-                inputDisabled={!user || isBusy}
-                onChipSelect={v => { void handleSend(v) }}
-                progressStage={progressStage}
-                locationNotice={usingFallbackLocation ? FALLBACK_NOTICE : null}
-                starterPrompts={config.starter_prompts.length > 0 ? config.starter_prompts : FALLBACK_STARTERS}
-                busyText={isBusy ? busyMessage(busyUntil, Date.now()) : null}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* State 2: StreamingLogStrip + FacilityCardPanel (recommendation mode) */}
-      <AnimatePresence>
-        {mode === 'recommendation' && (
-          <motion.div
-            key="state2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            style={{ position: 'fixed', bottom: 64, left: 0, right: 0, zIndex: 20 }}
-          >
-            <StreamingLogStrip logs={STATE_2_LOGS} />
-            <FacilityCardPanel
-              feedback={feedback}
-              triage={triage}
-              onModeChange={mode => { void changeMode(mode) }}
-              onGetDirections={(name, lat, lng) => getDirections(name, lat, lng)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <BottomSheet
+        state={effectiveState}
+        onStateChange={setSheetState}
+        heights={heights}
+        bottomOffset={geometry.bottomOffset}
+        messages={messages}
+        resultSlot={triage.active ? (
+          <FacilityCardPanel
+            feedback={feedback}
+            triage={triage}
+            onModeChange={mode => { void changeMode(mode) }}
+            onGetDirections={(name, lat, lng) => getDirections(name, lat, lng)}
+          />
+        ) : null}
+        showEmergencyStrip={triage.active && triage.severity === 'emergent'}
+        hasConversation={messages.length > 0 || triage.active}
+        onNewConversation={handleNewConversation}
+        omniValue={omniValue}
+        onOmniChange={setOmniValue}
+        onSend={() => { void handleSend() }}
+        inputDisabled={!user || isBusy}
+        onChipSelect={v => { void handleSend(v) }}
+        progressStage={progressStage}
+        locationNotice={usingFallbackLocation ? FALLBACK_NOTICE : null}
+        starterPrompts={config.starter_prompts.length > 0 ? config.starter_prompts : FALLBACK_STARTERS}
+        busyText={isBusy ? busyMessage(busyUntil, Date.now()) : null}
+      />
 
       {/* Fixed bottom nav */}
-      <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />
+      <BottomNavBar activeTab={tabForState(effectiveState)} onTabChange={handleTabChange} />
 
       {/* Drawer menu */}
       <DrawerMenu isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />

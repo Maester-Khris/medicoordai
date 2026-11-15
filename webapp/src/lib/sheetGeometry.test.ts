@@ -8,10 +8,10 @@ describe("sheetGeometry, keyboard closed", () => {
     [568, 448, 224, 440], // 320x568
     [640, 520, 260, 512], // 360x640
     [844, 724, 362, 716], // 390x844
-    [375, 255, 160, 247], // 667x375 landscape: half has a 160 floor
+    [375, 255, 176, 247], // 667x375 landscape: half has a 176 floor
   ])("height %i", (h, free, half, full) => {
     const g = sheetGeometry({ innerHeight: h, vvHeight: h, vvOffsetTop: 0 })
-    expect(g).toMatchObject({ keyboardOpen: false, bottomOffset: 64, free, peek: 96, half, full })
+    expect(g).toMatchObject({ keyboardOpen: false, bottomOffset: 64, free, peek: 104, half, full })
   })
 
   it("keeps peek < half < full and the sheet below the 56 px top bar", () => {

@@ -5,6 +5,8 @@ interface EmergencyCallProps {
   variant: "primary" | "link"
   // Injected for tests; defaults to the device's pointer type.
   touch?: boolean
+  // Called when the panel opens (the sheet uses it to make room).
+  onOpen?: () => void
 }
 
 function isTouchDevice(): boolean {
@@ -36,13 +38,15 @@ const LINK_STYLE = {
 
 // LEGAL: runs only from a tap or key press. On touch devices the link opens the dialer;
 // the user still has to press call. On web it shows the template panel only.
-export function EmergencyCall({ variant, touch }: EmergencyCallProps) {
+export function EmergencyCall({ variant, touch, onOpen }: EmergencyCallProps) {
   const [open, setOpen] = useState(false)
   const titleRef = useRef<HTMLParagraphElement>(null)
   const isTouch = touch ?? isTouchDevice()
   const label = variant === "primary" ? EMERGENCY_COPY.button : EMERGENCY_COPY.headerLink
   const style = variant === "primary" ? PRIMARY_STYLE : LINK_STYLE
   const className = "flex items-center justify-center w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+
+  const reveal = () => { setOpen(true); onOpen?.() }
 
   useEffect(() => {
     if (open) titleRef.current?.focus()
@@ -51,9 +55,9 @@ export function EmergencyCall({ variant, touch }: EmergencyCallProps) {
   return (
     <div className="flex flex-col gap-2">
       {isTouch ? (
-        <a href="tel:911" onClick={() => setOpen(true)} className={className} style={style}>{label}</a>
+        <a href="tel:911" onClick={reveal} className={className} style={style}>{label}</a>
       ) : (
-        <button type="button" onClick={() => setOpen(true)} className={className} style={style}>{label}</button>
+        <button type="button" onClick={reveal} className={className} style={style}>{label}</button>
       )}
       {open && (
         <div

@@ -1,19 +1,26 @@
 // webapp/src/components/mobile/BottomSheet.tsx
-import { useRef, useCallback, useState } from 'react'
-import { motion, useMotionValue, animate, type PanInfo } from 'motion/react'
+import { useEffect, useRef, type ReactNode } from 'react'
+import { motion, type PanInfo } from 'motion/react'
 import type { Message } from '@shared/types'
 import { OmniInputBox } from './OmniInputBox'
 import { SuggestionChips } from './SuggestionChips'
-
 import { EmergencyCall } from '../EmergencyCall'
 import { MedicalNotice } from '../MedicalNotice'
+import { snapState, tapHandle, type SheetState } from '../../lib/sheetState'
 
-const COLLAPSED_H = 220
-const BOTTOM_NAV_H = 64
 const SPRING = { type: 'spring' as const, stiffness: 300, damping: 28 }
+const HANDLE_H = 44
 
 interface BottomSheetProps {
+  state: SheetState
+  onStateChange: (state: SheetState) => void
+  heights: Record<SheetState, number>
+  bottomOffset: number
   messages: Message[]
+  resultSlot: ReactNode
+  showEmergencyStrip: boolean
+  hasConversation: boolean
+  onNewConversation: () => void
   omniValue: string
   onOmniChange: (v: string) => void
   onSend: () => void
@@ -25,12 +32,12 @@ interface BottomSheetProps {
   starterPrompts: string[]
 }
 
-function MessageBubble({ msg }: { msg: Message }) {
+function MessageBubble({ msg, isLastAssistant }: { msg: Message; isLastAssistant: boolean }) {
   const isUser = msg.role === 'user'
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`} data-last-assistant={isLastAssistant ? '' : undefined}>
       <div
-        className="max-w-[80%] px-3 py-2 text-[14px] leading-relaxed break-words"
+        className="max-w-[85%] px-3 py-2 text-[14px] leading-relaxed break-words"
         style={{
           background: isUser ? 'rgba(72,246,193,0.15)' : 'rgba(10,29,39,1)',
           border: isUser
@@ -46,61 +53,57 @@ function MessageBubble({ msg }: { msg: Message }) {
   )
 }
 
+const STATUS_TEXT = {
+  idle: 'Ready to assist you',
+  complete: 'Ready to assist you',
+  typing: 'Sending...',
+  analyzing: 'Analyzing symptoms...',
+} as const
+
 export function BottomSheet({
-  messages,
-  omniValue,
-  onOmniChange,
-  onSend,
-  inputDisabled,
-  onChipSelect,
-  progressStage,
-  locationNotice,
-  busyText,
-  starterPrompts,
+  state, onStateChange, heights, bottomOffset,
+  messages, resultSlot, showEmergencyStrip, hasConversation, onNewConversation,
+  omniValue, onOmniChange, onSend, inputDisabled, onChipSelect,
+  progressStage, locationNotice, busyText, starterPrompts,
 }: BottomSheetProps) {
-  const expandedH = Math.round(window.innerHeight * 0.85)
-  const slideOffset = expandedH - COLLAPSED_H // y when collapsed
-
-  const y = useMotionValue(slideOffset)
-  const [isExpanded, setIsExpanded] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const height = heights[state]
 
-  const snapTo = useCallback(
-    (expanded: boolean) => {
-      setIsExpanded(expanded)
-      animate(y, expanded ? 0 : slideOffset, SPRING)
-    },
-    [y, slideOffset]
-  )
+  // Newest message (or result) always in view.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    // With a result on screen, start at the reply (its 911 line and notice), not below it.
+    const reply = resultSlot ? el.querySelector<HTMLElement>('[data-last-assistant]') : null
+    if (reply) el.scrollTop = Math.max(0, reply.offsetTop - el.offsetTop - 8)
+    else el.scrollTop = el.scrollHeight
+  }, [messages.length, resultSlot, state, height])
 
-  const handleDragEnd = useCallback(
-    (_: unknown, info: PanInfo) => {
-      const threshold = slideOffset * 0.35
-      if (info.offset.y < -threshold || info.velocity.y < -300) {
-        snapTo(true)
-      } else if (info.offset.y > threshold || info.velocity.y > 300) {
-        snapTo(false)
-      } else {
-        snapTo(isExpanded)
-      }
-    },
-    [isExpanded, slideOffset, snapTo]
-  )
+  const lastAssistantId = [...messages].reverse().find(m => m.role === 'assistant')?.id
+
+  const handlePanEnd = (_: unknown, info: PanInfo) => {
+    // Dragging up (negative y) makes the sheet taller.
+    onStateChange(snapState({ visible: height - info.offset.y, velocityY: info.velocity.y, current: state, heights }))
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowUp' && state !== 'full') onStateChange(state === 'peek' ? 'half' : 'full')
+    else if (e.key === 'ArrowDown' && state !== 'peek') onStateChange(state === 'full' ? 'half' : 'peek')
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStateChange(tapHandle(state)) }
+  }
 
   return (
-    <motion.div
-      drag="y"
-      dragConstraints={{ top: 0, bottom: slideOffset }}
-      dragElastic={0.05}
-      onDragEnd={handleDragEnd}
+    <motion.section
+      aria-label="AI Health Assistant"
+      initial={false}
+      animate={{ height }}
+      transition={SPRING}
       style={{
-        y,
         position: 'fixed',
-        bottom: BOTTOM_NAV_H,
+        bottom: bottomOffset,
         left: 0,
         right: 0,
-        height: expandedH,
-        background: 'rgba(10,29,39,0.92)',
+        background: 'rgba(10,29,39,0.96)',
         backdropFilter: 'blur(16px)',
         borderTop: '1px solid rgba(28,70,89,0.50)',
         borderRadius: '24px 24px 0 0',
@@ -110,94 +113,64 @@ export function BottomSheet({
         overflow: 'hidden',
       }}
     >
-      {/* Drag handle */}
-      <div
-        className="flex-none flex items-center justify-center pt-3 pb-2 select-none"
-        style={{ touchAction: 'none', cursor: 'grab' }}
+      {/* Handle strip: drag, tap or arrow keys. Also carries the medical notice so it shows in every state. */}
+      <motion.div
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label="Resize chat panel"
+        aria-valuetext={state}
+        tabIndex={0}
+        onPanEnd={handlePanEnd}
+        onTap={() => onStateChange(tapHandle(state))}
+        onKeyDown={handleKeyDown}
+        className="flex-none flex flex-col items-center justify-center select-none focus-visible:outline focus-visible:outline-2"
+        style={{ height: HANDLE_H, touchAction: 'none', cursor: 'grab' }}
       >
-        <div
-          className="rounded-full"
-          style={{ width: 36, height: 4, background: 'rgba(28,70,89,1)' }}
-        />
-      </div>
-
-      {/* Header */}
-      <div className="flex-none flex items-center justify-between px-4 mb-1">
-        <span
-          className="font-semibold text-[15px]"
-          style={{ color: '#E2F1F5', fontFamily: 'var(--font-sans)' }}
-        >
-          AI Health Assistant
-        </span>
-        <span
-          className="text-[18px] animate-pulse"
-          style={{ color: '#48F6C1' }}
-          aria-hidden="true"
-        >
-          ●
-        </span>
-      </div>
-
-      {/* Subtitle */}
-      <div className="flex-none px-4 mb-3">
-        <span
-          className="font-mono text-[10px] tracking-widest"
-          style={{ color: '#85A4B1' }}
-        >
-          {progressStage === 'idle' || progressStage === 'complete'
-            ? 'READY TO ASSIST YOU'
-            : progressStage === 'typing'
-            ? 'SENDING...'
-            : 'ANALYZING SYMPTOMS...'}
-        </span>
-      </div>
-
-      <div className="flex-none px-4"><EmergencyCall variant="link" /></div>
-
-      {/* Message thread (expanded only) */}
-      {isExpanded && messages.length > 0 && (
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto px-4 pb-3 flex flex-col gap-3 min-h-0"
-        >
-          {messages.map(msg => (
-            <MessageBubble key={msg.id} msg={msg} />
-          ))}
-        </div>
-      )}
-
-
-      {/* Suggestion chips */}
-      <div className="flex-none px-4 mb-3">
-        <SuggestionChips chips={starterPrompts} onSelect={onChipSelect} disabled={inputDisabled} />
-      </div>
-
-      {busyText && (
-        <div role="status" data-testid="busy-banner" className="flex-none px-4 mb-2 text-[12px]" style={{ color: '#E2F1F5' }}>
-          {busyText}
-        </div>
-      )}
-
-      {/* Omni input */}
-      <div className="flex-none px-4 mb-2">
-        <OmniInputBox
-          value={omniValue}
-          onChange={onOmniChange}
-          onSend={onSend}
-          disabled={inputDisabled}
-        />
-      </div>
-
-      {/* Security badge */}
-      <div className="flex-none px-4 pb-3 text-center">
-        <span
-          className="font-mono text-[9px]"
-          style={{ color: 'rgba(133,164,177,0.60)' }}
-        >
-          {locationNotice ?? <>🔒 SECURE &amp; CONFIDENTIAL · LOCATION SYNCED</>}
-        </span>
+        <div className="rounded-full" style={{ width: 36, height: 4, background: 'rgba(133,164,177,0.6)' }} />
         <MedicalNotice />
+      </motion.div>
+
+      {/* Thread area (clipped away in peek) */}
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="font-semibold text-[15px]" style={{ color: '#E2F1F5' }}>AI Health Assistant</p>
+            <p role="status" aria-live="polite" className="text-[12px]" style={{ color: '#85A4B1' }}>
+              {STATUS_TEXT[progressStage]}
+            </p>
+          </div>
+          {hasConversation && (
+            <button
+              type="button"
+              onClick={onNewConversation}
+              className="flex-none text-[13px] font-semibold rounded-lg px-3"
+              style={{ minHeight: 44, border: '1px solid rgba(28,70,89,0.65)', background: 'transparent', color: '#48F6C1', cursor: 'pointer' }}
+            >
+              New conversation
+            </button>
+          )}
+        </div>
+        {!showEmergencyStrip && <EmergencyCall variant="link" />}
+        {messages.map(msg => <MessageBubble key={msg.id} msg={msg} isLastAssistant={msg.id === lastAssistantId} />)}
+        {resultSlot}
+        {messages.length === 0 && (
+          <SuggestionChips chips={starterPrompts} onSelect={onChipSelect} disabled={inputDisabled} />
+        )}
       </div>
-    </motion.div>
+
+      {/* Footer: pinned to the bottom of the sheet, above the keyboard */}
+      <div className="flex-none px-4 pb-2 flex flex-col gap-2">
+        {showEmergencyStrip && <EmergencyCall variant="primary" onOpen={() => onStateChange('full')} />}
+        {busyText && (
+          <div role="status" data-testid="busy-banner" className="text-[12px]" style={{ color: '#E2F1F5' }}>
+            {busyText}
+          </div>
+        )}
+        <OmniInputBox value={omniValue} onChange={onOmniChange} onSend={onSend} disabled={inputDisabled} />
+        {locationNotice && (
+          <p className="text-[12px] text-center" style={{ color: '#85A4B1' }}>{locationNotice}</p>
+        )}
+      </div>
+    </motion.section>
   )
 }

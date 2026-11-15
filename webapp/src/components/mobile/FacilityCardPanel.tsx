@@ -1,10 +1,8 @@
 // webapp/src/components/mobile/FacilityCardPanel.tsx
 import { useState } from 'react'
-import { motion } from 'motion/react'
 import { MapPin } from '@phosphor-icons/react'
 import type { TravelModeKey, TriageUIState } from '@shared/types'
 import { DIRECTIONS_UNAVAILABLE } from '../../lib/directions'
-import { EmergencyCall } from '../EmergencyCall'
 import { TransitModeGrid } from './TransitModeGrid'
 import { FeedbackControl } from '../triage/FeedbackControl'
 
@@ -40,28 +38,21 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
   const facility = triage.recommendedFacility
   const recommendedRoute = triage.routes.find(r => r.facilityId === triage.recommendedFacilityId)
 
-  if (!facility || !triage.active) return null
+  if (!triage.active) return null
+  if (!facility) {
+    return (
+      <div data-testid="no-facility" className="rounded-xl p-3 text-[14px]" style={{ background: 'rgba(10,29,39,1)', border: '1px solid rgba(28,70,89,0.40)', color: '#E2F1F5' }}>
+        We could not find a facility near you.{triage.severity === 'emergent' ? ' Call 911 or go to the nearest emergency department.' : ''}
+      </div>
+    )
+  }
 
   const etaColor = SECONDARY_ETA_COLOR[triage.severity ?? 'routine'] ?? '#00D2FF'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 28 }}
-      style={{
-        background: 'rgba(10,29,39,0.92)',
-        backdropFilter: 'blur(16px)',
-        borderTop: '1px solid rgba(28,70,89,0.40)',
-        overflowY: 'auto',
-        maxHeight: '55dvh',
-      }}
-    >
+    <div data-testid="result-card" className="rounded-xl" style={{ background: 'rgba(10,29,39,1)', border: '1px solid rgba(28,70,89,0.40)' }}>
       {/* Primary facility card */}
       <div className="px-4 pt-4 pb-3">
-        {triage.severity === 'emergent' && (
-          <div className="mb-3"><EmergencyCall variant="primary" /></div>
-        )}
         {/* Header row */}
         <div className="flex items-center gap-3">
           {/* Monogram avatar */}
@@ -100,16 +91,6 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
             </span>
           </div>
 
-          {/* Open status */}
-          <div className="flex-none flex items-center gap-1">
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-pulse"
-              style={{ background: '#48F6C1' }}
-            />
-            <span className="font-mono text-[10px] font-bold" style={{ color: '#48F6C1' }}>
-              OPEN
-            </span>
-          </div>
         </div>
 
         {/* Address row */}
@@ -230,6 +211,6 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
           })}
         </>
       )}
-    </motion.div>
+    </div>
   )
 }
