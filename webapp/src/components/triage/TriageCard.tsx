@@ -1,10 +1,11 @@
+import { useState } from "react"
 import type { TravelModeKey, TriageUIState } from "../../../../shared/types"
 import { useNextActions } from "../../hooks/useNextActions"
+import { DIRECTIONS_UNAVAILABLE } from "../../lib/directions"
 import { SEVERITY_LABEL } from "../../lib/severityLabels"
 
 interface TriageCardProps {
   triage: TriageUIState
-  emergencyContactPhone: string | null
   onModeChange: (mode: TravelModeKey) => void
   onSelectFacility: (facilityId: string) => void | Promise<void>
 }
@@ -62,9 +63,11 @@ function getCategoryLabel(category: string): string {
 
 import { useConfig } from "../../hooks/useConfig"
 
-export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSelectFacility }: TriageCardProps) {
+export function TriageCard({ triage, onModeChange, onSelectFacility }: TriageCardProps) {
   const config = useConfig()
-  const { call911, messageEmergencyContact, getDirections, saveRecommendation } = useNextActions(triage.severity)
+  const { call911, getDirections } = useNextActions()
+  const [directionsFailed, setDirectionsFailed] = useState(false)
+  const openMaps = (name: string, lat: number, lng: number) => setDirectionsFailed(!getDirections(name, lat, lng))
 
   if (!triage.active || !triage.severity) return null
 
@@ -271,7 +274,7 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
             {/* Directions CTA — all non-emergent severities */}
             {triage.severity !== "emergent" && (
               <button
-                onClick={() => getDirections(recommended.name, recommended.lat, recommended.lng)}
+                onClick={() => openMaps(recommended.name, recommended.lat, recommended.lng)}
                 className="w-full flex items-center justify-center gap-2 font-bold transition-all active:scale-[0.98]"
                 style={{
                   height: 40,
@@ -319,33 +322,17 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
               </svg>
               Call 911 immediately
             </button>
-            <div className="grid grid-cols-2 gap-2">
-              {emergencyContactPhone && (
-                <GhostButton onClick={() => messageEmergencyContact(emergencyContactPhone)} label="Alert contact" />
-              )}
-              {recommended && (
-                <GhostButton
-                  onClick={() => getDirections(recommended.name, recommended.lat, recommended.lng)}
-                  label="ER directions"
-                />
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Urgent: secondary row */}
-        {triage.severity === "urgent" && (
-          <div className="grid grid-cols-2 gap-2">
-            {emergencyContactPhone && (
-              <GhostButton onClick={() => messageEmergencyContact(emergencyContactPhone)} label="Alert contact" />
+            {recommended && (
+              <GhostButton
+                onClick={() => openMaps(recommended.name, recommended.lat, recommended.lng)}
+                label="ER directions"
+              />
             )}
-            <GhostButton onClick={saveRecommendation} label="Save facility" icon={<BookmarkIcon />} />
           </div>
         )}
 
-        {/* Moderate / routine: save only */}
-        {(triage.severity === "moderate" || triage.severity === "routine") && (
-          <GhostButton onClick={saveRecommendation} label="Save facility" icon={<BookmarkIcon />} fullWidth />
+        {directionsFailed && (
+          <p role="status" style={{ fontSize: 12, color: "#F59E0B" }}>{DIRECTIONS_UNAVAILABLE}</p>
         )}
 
         {/* Secondary facilities stack */}
@@ -445,22 +432,18 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
 function GhostButton({
   onClick,
   label,
-  icon,
-  fullWidth,
 }: {
   onClick: () => void
   label: string
-  icon?: React.ReactNode
-  fullWidth?: boolean
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center gap-1.5 font-semibold transition-all active:scale-[0.98] ${fullWidth ? "w-full" : ""}`}
+      className="w-full flex items-center justify-center gap-1.5 font-semibold transition-all active:scale-[0.98]"
       style={{
-        height: 34,
-        borderRadius: 7,
-        fontSize: 11,
+        height: 44,
+        borderRadius: 8,
+        fontSize: 13,
         cursor: "pointer",
         background: "transparent",
         color: "#85A4B1",
@@ -475,16 +458,7 @@ function GhostButton({
         ;(e.currentTarget as HTMLElement).style.borderColor = "rgba(28,70,89,0.55)"
       }}
     >
-      {icon}
       {label}
     </button>
-  )
-}
-
-function BookmarkIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   )
 }

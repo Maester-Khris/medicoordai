@@ -1,13 +1,15 @@
 // webapp/src/components/mobile/FacilityCardPanel.tsx
+import { useState } from 'react'
 import { motion } from 'motion/react'
 import { MapPin } from '@phosphor-icons/react'
 import type { TravelModeKey, TriageUIState } from '@shared/types'
+import { DIRECTIONS_UNAVAILABLE } from '../../lib/directions'
 import { TransitModeGrid } from './TransitModeGrid'
 import { FeedbackControl } from '../triage/FeedbackControl'
 
 interface FacilityCardPanelProps {
   triage: TriageUIState
-  onGetDirections: (name: string, lat: number, lng: number) => void
+  onGetDirections: (name: string, lat: number, lng: number) => boolean
   onModeChange: (mode: TravelModeKey) => void
   feedback: { sessionId: string; messageId: string } | null
 }
@@ -33,6 +35,7 @@ const SECONDARY_ETA_COLOR: Record<string, string> = {
 }
 
 export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedback }: FacilityCardPanelProps) {
+  const [directionsFailed, setDirectionsFailed] = useState(false)
   const facility = triage.recommendedFacility
   const recommendedRoute = triage.routes.find(r => r.facilityId === triage.recommendedFacilityId)
 
@@ -143,7 +146,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
 
         {/* CTA button */}
         <button
-          onClick={() => onGetDirections(facility.name, facility.lat, facility.lng)}
+          onClick={() => setDirectionsFailed(!onGetDirections(facility.name, facility.lat, facility.lng))}
           className="w-full mt-3 flex items-center justify-center gap-2 font-bold text-[14px] active:scale-[0.97] transition-transform border-none cursor-pointer"
           style={{
             height: 48,
@@ -155,6 +158,9 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
         >
           Get Directions →
         </button>
+        {directionsFailed && (
+          <p role="status" className="mt-2 text-[12px]" style={{ color: '#F59E0B' }}>{DIRECTIONS_UNAVAILABLE}</p>
+        )}
         {feedback && <FeedbackControl sessionId={feedback.sessionId} messageId={feedback.messageId} />}
       </div>
 
@@ -214,12 +220,6 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
                       {nearbyRoute.etaMinutes} MIN
                     </span>
                   )}
-                  <span
-                    className="text-[12px] font-sans cursor-pointer"
-                    style={{ color: '#35A7C4' }}
-                  >
-                    Save
-                  </span>
                 </div>
               </div>
             )

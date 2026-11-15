@@ -65,7 +65,7 @@ export function MobileLayout({
   const [usingFallbackLocation, setUsingFallbackLocation] = useState(false)
   const geo = useGeolocation()
   const { triage, applyTriageResult, changeMode, reset: triageReset } = useTriageState()
-  const { getDirections } = useNextActions(triage.severity)
+  const { getDirections } = useNextActions()
 
   // Chat state (previously in AiAssistantTab)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)

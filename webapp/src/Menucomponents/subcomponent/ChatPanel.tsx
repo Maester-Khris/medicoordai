@@ -366,7 +366,6 @@ export function ChatPanel({
                     <div className="mt-1 max-w-[80%]">
                       <TriageCard
                         triage={triage}
-                        emergencyContactPhone={profile?.emergency_contact_phone ?? null}
                         onModeChange={onModeChange}
                         onSelectFacility={onSelectFacility}
                       />
