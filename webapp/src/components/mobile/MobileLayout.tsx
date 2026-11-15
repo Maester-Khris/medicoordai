@@ -8,7 +8,6 @@ import type {
   Message,
   Session,
   ConversationsCache,
-  ChatMessageResponse,
   TriageResult,
 } from '@shared/types'
 import { MapPanel } from '../map'
@@ -22,6 +21,8 @@ import { useAuth } from '../../auth/useAuth'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useTriageState } from '../../hooks/useTriageState'
 import { useNextActions } from '../../hooks/useNextActions'
+import type { SendResult } from '../../hooks/useConversations'
+import { failureMessage } from '../../lib/sendFailure'
 import { busyMessage } from '../../lib/busy'
 
 interface MobileLayoutProps {
@@ -32,7 +33,7 @@ interface MobileLayoutProps {
     sessionId: string,
     content: string,
     coords?: { lat: number; lng: number } | null
-  ) => Promise<ChatMessageResponse | null>
+  ) => Promise<SendResult>
   createSession: (firstMessage: string) => Promise<Session | null>
   loadOlderMessages: (sessionId: string, beforeId: string) => Promise<Message[]>
   busyUntil: number | null
@@ -117,7 +118,11 @@ export function MobileLayout({
     let sid = activeSessionId
     if (!sid) {
       const session = await createSession(text)
-      if (!session) return
+      if (!session) {
+        setOmniValue(text)
+        setMessages(prev => [...prev, failureMessage('', user.id)])
+        return
+      }
       sid = session.id
       setActiveSessionId(sid)
     }
@@ -134,7 +139,15 @@ export function MobileLayout({
     setProgressStage('typing')
 
     const response = await sendMessage(sid, text, coords)
-    if (response) {
+    if (response === 'busy' || response === 'failed') {
+      // Keep the text for a retry; the busy banner already explains a busy answer.
+      setMessages(prev => {
+        const kept = prev.filter(m => m.id !== optimisticMsg.id)
+        return response === 'failed' ? [...kept, failureMessage(sid, user.id)] : kept
+      })
+      setOmniValue(text)
+      setProgressStage('idle')
+    } else {
       const cleaned = {
         ...response.assistant_message,
         content: stripToolNarration(response.assistant_message.content),
@@ -152,8 +165,6 @@ export function MobileLayout({
       } else {
         setProgressStage('idle')
       }
-    } else {
-      setProgressStage('idle')
     }
   }, [omniValue, user, geo, activeSessionId, createSession, sendMessage, handleApplyTriage, config, busyUntil])
 

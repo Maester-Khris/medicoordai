@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { busyMessage, EMERGENCY_LINE, MAX_AUTO_RETRIES, nextBusyStep } from "./busy"
+import { busyMessage, EMERGENCY_LINE, SEND_FAILED_MESSAGE, MAX_AUTO_RETRIES, nextBusyStep } from "./busy"
 
 describe("busyMessage", () => {
   it("rounds a long wait up to whole minutes", () => {
@@ -47,5 +47,12 @@ describe("nextBusyStep", () => {
 
   it("treats a missing or zero wait as one second", () => {
     expect(nextBusyStep(0, 0)).toEqual({ kind: "retry", waitMs: 1_000 })
+  })
+})
+
+describe("SEND_FAILED_MESSAGE", () => {
+  it("tells the user to retry and carries the 911 line", () => {
+    expect(SEND_FAILED_MESSAGE).toBe(
+      "Something went wrong sending that. Your message was not lost: you can send it again. If this is an emergency, call 911.")
   })
 })

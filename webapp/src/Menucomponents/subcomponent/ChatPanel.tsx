@@ -1,8 +1,10 @@
+import type { SendResult } from "../../hooks/useConversations"
+import { failureMessage } from "../../lib/sendFailure"
 import { EmergencyCall } from "../../components/EmergencyCall"
 import { FeedbackControl } from "../../components/triage/FeedbackControl"
 import { useAuth } from "../../auth/useAuth"
 import { useState, useRef, useEffect, useCallback } from "react"
-import type { Message, Session, ConversationsCache, ChatMessageResponse, TriageResult, TriageUIState, TravelModeKey } from "@shared/types"
+import type { Message, Session, ConversationsCache, TriageResult, TriageUIState, TravelModeKey } from "@shared/types"
 import { TriageCard } from "../../components/triage/TriageCard"
 import { ToolCallProgress } from "../../components/triage/ToolCallProgress"
 import type { GeolocationPermission } from "../../hooks/useGeolocation"
@@ -32,7 +34,7 @@ type ProgressStage = "idle" | "typing" | "analyzing" | "locating" | "complete"
 interface ChatPanelProps {
   user: AuthUser | null
   cache: ConversationsCache | null
-  sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<ChatMessageResponse | null>
+  sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<SendResult>
   createSession: (firstMessage: string) => Promise<Session | null>
   loadOlderMessages: (sessionId: string, beforeId: string) => Promise<Message[]>
   geo: GeoProps
@@ -140,7 +142,11 @@ export function ChatPanel({
     let sid = activeSessionId
     if (!sid) {
       const session = await createSession(text)
-      if (!session) return
+      if (!session) {
+        setContent(text)
+        setLocalMessages(prev => [...prev, failureMessage(activeSessionId ?? "", user.id)])
+        return
+      }
       sid = session.id
       setActiveSessionId(sid)
     }
@@ -158,7 +164,15 @@ export function ChatPanel({
     setProgressStage("typing")
     const response = await sendMessage(sid, text, coords)
 
-    if (response) {
+    if (response === "busy" || response === "failed") {
+      // Keep the text for a retry; show the failure (the busy banner already explains a busy answer).
+      setLocalMessages(prev => {
+        const kept = prev.filter(m => m.id !== optimisticUserMsg.id)
+        return response === "failed" ? [...kept, failureMessage(sid, user.id)] : kept
+      })
+      setContent(text)
+      setProgressStage("idle")
+    } else {
       const cleanedAssistant = {
         ...response.assistant_message,
         content: stripToolNarration(response.assistant_message.content),
@@ -176,8 +190,6 @@ export function ChatPanel({
       } else {
         setProgressStage("idle")
       }
-    } else {
-      setProgressStage("idle")
     }
   }
 

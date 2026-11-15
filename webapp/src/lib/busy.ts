@@ -26,3 +26,5 @@ export function busyMessage(busyUntil: number, now: number): string {
   const minutes = Math.max(1, Math.ceil((busyUntil - now) / 60_000))
   return `MediCoord is busy right now. Try again in about ${minutes} minute${minutes === 1 ? "" : "s"}. ${EMERGENCY_LINE}`
 }
+
+export const SEND_FAILED_MESSAGE = `Something went wrong sending that. Your message was not lost: you can send it again. ${EMERGENCY_LINE}`
