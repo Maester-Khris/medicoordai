@@ -1,6 +1,7 @@
 // webapp/src/components/mobile/MobileTopBar.tsx
 import { ListIcon } from '@phosphor-icons/react'
 import type { Severity } from '@shared/types'
+import { SEVERITY_LABEL } from '../../lib/severityLabels'
 
 export type MobileMode = 'browse' | 'recommendation'
 
@@ -11,10 +12,10 @@ interface MobileTopBarProps {
 }
 
 const SEVERITY_CHIP: Record<Severity, { border: string; bg: string; text: string; label: string }> = {
-  routine:  { border: 'rgba(0,210,255,0.6)',   bg: 'rgba(0,210,255,0.10)',   text: '#00D2FF', label: 'ROUTINE · ESI 5'    },
-  moderate: { border: 'rgba(0,210,255,0.6)',   bg: 'rgba(0,210,255,0.10)',   text: '#00D2FF', label: 'NON-URGENT · ESI 4' },
-  urgent:   { border: 'rgba(245,158,11,0.6)',  bg: 'rgba(245,158,11,0.10)',  text: '#F59E0B', label: 'URGENT · ESI 3'     },
-  emergent: { border: 'rgba(255,123,147,0.6)', bg: 'rgba(255,123,147,0.10)', text: '#FF7B93', label: 'EMERGENT · ESI 1'   },
+  routine:  { border: 'rgba(0,210,255,0.6)',   bg: 'rgba(0,210,255,0.10)',   text: '#00D2FF', label: SEVERITY_LABEL.routine    },
+  moderate: { border: 'rgba(0,210,255,0.6)',   bg: 'rgba(0,210,255,0.10)',   text: '#00D2FF', label: SEVERITY_LABEL.moderate },
+  urgent:   { border: 'rgba(245,158,11,0.6)',  bg: 'rgba(245,158,11,0.10)',  text: '#F59E0B', label: SEVERITY_LABEL.urgent     },
+  emergent: { border: 'rgba(255,123,147,0.6)', bg: 'rgba(255,123,147,0.10)', text: '#FF7B93', label: SEVERITY_LABEL.emergent   },
 }
 
 export function MobileTopBar({ mode, severity, onMenuOpen }: MobileTopBarProps) {

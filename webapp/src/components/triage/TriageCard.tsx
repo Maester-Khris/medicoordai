@@ -1,5 +1,6 @@
 import type { TravelModeKey, TriageUIState } from "../../../../shared/types"
 import { useNextActions } from "../../hooks/useNextActions"
+import { SEVERITY_LABEL } from "../../lib/severityLabels"
 
 interface TriageCardProps {
   triage: TriageUIState
@@ -17,28 +18,28 @@ const MODE_CHIPS: { key: TravelModeKey; emoji: string; label: string }[] = [
 
 const SEV_CONFIG: Record<string, { label: string; color: string; borderColor: string; bgColor: string; glowColor: string }> = {
   emergent: {
-    label: "EMERGENT — ESI 1-2",
+    label: SEVERITY_LABEL.emergent,
     color: "#FF7B93",
     borderColor: "rgba(255,123,147,0.35)",
     bgColor: "rgba(255,123,147,0.08)",
     glowColor: "rgba(255,123,147,0.1)",
   },
   urgent: {
-    label: "URGENT — ESI 3",
+    label: SEVERITY_LABEL.urgent,
     color: "#F59E0B",
     borderColor: "rgba(245,158,11,0.35)",
     bgColor: "rgba(245,158,11,0.08)",
     glowColor: "rgba(245,158,11,0.08)",
   },
   moderate: {
-    label: "MODERATE — ESI 3",
+    label: SEVERITY_LABEL.moderate,
     color: "#35A7C4",
     borderColor: "rgba(53,167,196,0.35)",
     bgColor: "rgba(53,167,196,0.08)",
     glowColor: "rgba(53,167,196,0.08)",
   },
   routine: {
-    label: "NON-URGENT — ESI 4-5",
+    label: SEVERITY_LABEL.routine,
     color: "#00D2FF",
     borderColor: "rgba(0,210,255,0.35)",
     bgColor: "rgba(0,210,255,0.08)",

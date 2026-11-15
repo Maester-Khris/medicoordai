@@ -713,7 +713,7 @@ export default function LandingPage() {
                       <div className="border-t border-[#1C4659]/40 pt-2 flex justify-between items-center text-white font-bold">
                         <span>Composite Score:</span>
                         <span className="px-2 py-0.5 rounded bg-[#FF7B93]/20 border border-[#FF7B93]/40">
-                          ESI LEVEL 2
+                          EMERGENT
                         </span>
                       </div>
                     </div>
