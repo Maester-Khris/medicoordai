@@ -8,6 +8,7 @@ import type {
   Session,
   ConversationsCache,
   TriageResult,
+  TravelModeKey,
 } from '@shared/types'
 import { MapPanel } from '../map'
 import { MobileTopBar } from './MobileTopBar'
@@ -175,6 +176,8 @@ export function MobileLayout({
     }
   }, [omniValue, user, geo, activeSessionId, createSession, sendMessage, handleApplyTriage, config, busyUntil])
 
+  const handleModeChange = useCallback((mode: TravelModeKey) => { void changeMode(mode) }, [changeMode])
+
   const handleShowOnMap = useCallback((facilityId: string) => {
     setHighlightedFacilityId(facilityId)
     setSheetState('peek')
@@ -211,7 +214,7 @@ export function MobileLayout({
           verticalLegend
           sizeVersion={0}
           onClear={handleNewConversation}
-          onModeChange={mode => { void changeMode(mode) }}
+          onModeChange={handleModeChange}
           highlightedFacilityId={highlightedFacilityId}
         />
       </div>
@@ -233,7 +236,7 @@ export function MobileLayout({
           <FacilityCardPanel
             feedback={feedback}
             triage={triage}
-            onModeChange={mode => { void changeMode(mode) }}
+            onModeChange={handleModeChange}
             onGetDirections={(name, lat, lng) => getDirections(name, lat, lng)}
           />
         ) : null}

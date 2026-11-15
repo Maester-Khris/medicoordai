@@ -1,5 +1,5 @@
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { memo, useEffect, useState, useRef, useMemo } from 'react'
 import { MapContainer, TileLayer, Marker, Tooltip, Popup, CircleMarker } from 'react-leaflet'
 import { useMapEvents } from 'react-leaflet'
 import type { Facility, TravelModeKey, TriageUIState } from '../../../../shared/types'
@@ -42,7 +42,8 @@ const CHIP_LABEL: Record<CategoryFilter, string> = {
   residential: 'Residential',
 }
 
-export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange, highlightedFacilityId = null }: MapPanelProps) {
+// memo: the mobile layout re-renders on every keystroke; without it every marker icon is rebuilt each time.
+export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange, highlightedFacilityId = null }: MapPanelProps) {
   const config = useConfig()
   const isMobile = useBreakpoint()
   const pinnedIdRef = useRef<string | null>(null)
@@ -643,7 +644,7 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
       <FacilityLegend verticalLegend={verticalLegend} />
     </div>
   )
-}
+})
 
 function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
   useMapEvents({
