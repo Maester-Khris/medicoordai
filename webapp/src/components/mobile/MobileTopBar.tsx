@@ -8,6 +8,7 @@ export type MobileMode = 'browse' | 'recommendation'
 interface MobileTopBarProps {
   mode: MobileMode
   severity: Severity | null
+  // Guests have no menu: it only held a link out of the app.
   onMenuOpen?: () => void
 }
 
@@ -33,20 +34,24 @@ export function MobileTopBar({ mode, severity, onMenuOpen }: MobileTopBarProps) 
         borderBottom: '1px solid rgba(28,70,89,0.40)',
       }}
     >
-      {/* Left — hamburger + wordmark as a single tap target */}
-      <button
-        onClick={onMenuOpen}
-        className="flex items-center gap-2 bg-transparent border-none p-0 cursor-pointer"
-        aria-label="Open menu"
-      >
-        <ListIcon size={20} color="#48F6C1" weight="bold" />
-        <span
-          className="font-bold text-[16px]"
-          style={{ color: '#E2F1F5', fontFamily: 'var(--font-sans)' }}
+      {/* Left: menu button for signed-in users, plain wordmark for guests */}
+      {onMenuOpen ? (
+        <button
+          onClick={onMenuOpen}
+          className="flex items-center gap-2 bg-transparent border-none p-0 cursor-pointer"
+          style={{ minHeight: 44 }}
+          aria-label="Open menu"
         >
+          <ListIcon size={20} color="#48F6C1" weight="bold" />
+          <span className="font-bold text-[16px]" style={{ color: '#E2F1F5', fontFamily: 'var(--font-sans)' }}>
+            MediCoordAI
+          </span>
+        </button>
+      ) : (
+        <span className="font-bold text-[16px]" style={{ color: '#E2F1F5', fontFamily: 'var(--font-sans)' }}>
           MediCoordAI
         </span>
-      </button>
+      )}
 
       {/* Right — ONLINE pill (State 1) or Severity Chip (State 2) */}
       {mode === 'browse' ? (

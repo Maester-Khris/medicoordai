@@ -212,7 +212,7 @@ export function MobileLayout({
       <MobileTopBar
         mode={mode}
         severity={triage.severity}
-        onMenuOpen={() => setIsDrawerOpen(true)}
+        onMenuOpen={isGuest ? undefined : () => setIsDrawerOpen(true)}
       />
 
       <BottomSheet
@@ -247,7 +247,7 @@ export function MobileLayout({
       <BottomNavBar activeTab={tabForState(effectiveState)} onTabChange={handleTabChange} />
 
       {/* Drawer menu */}
-      <DrawerMenu isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+      {!isGuest && <DrawerMenu isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />}
     </div>
   )
 }
