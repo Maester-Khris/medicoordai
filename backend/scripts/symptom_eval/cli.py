@@ -327,6 +327,67 @@ def compare_legs_command(
     print(format_comparison(comparison))
 
 
+PRIMARY_COMPARISON = ("off", "neo4j_semantic", "coverage_answerable")
+JUDGE_MODEL_FOR_RESCORE = "gpt-4o-mini"
+AGREEMENT_MODEL = "gpt-4.1-mini"
+
+
+def rescore_command(
+    checkpoint_path: str, variant: str, out_path: str, *, workers: int = 8, cache_path: str | None = None,
+    agreement_per_class: int = 0, seed: int = BOOTSTRAP_SEED,
+    judge_factory: Callable[[], FeaturePresenceJudgePort] | None = None,
+    second_judge_factory: Callable[[], FeaturePresenceJudgePort] | None = None,
+) -> dict:
+    """Judge saved conversations for elicitation coverage; no system or simulator calls.
+    The judge factories are injectable so tests run without a provider."""
+    from scripts.symptom_eval import rescore
+
+    judge_factory = judge_factory or DeepEvalFeaturePresenceJudge
+    store = CheckpointStore(checkpoint_path)
+    providers = sorted({provider for (v, provider) in store.entries if v == variant})
+    entries = [e for p in providers for e in store.entries_for(variant, p)]
+    vignettes = {v.case_id: v for v in load_all_vignettes(variant=variant)}
+    cache = rescore.VerdictCache(cache_path, salt=JUDGE_MODEL_FOR_RESCORE)
+    results = rescore.rescore_entries(vignettes, entries, judge_factory, workers=workers, cache=cache)
+
+    legs = {
+        p: {
+            "n": sum(1 for r in results if r.provider == p),
+            "coverage_all": _mean([r.coverage_all for r in results if r.provider == p]),
+            "coverage_answerable": _mean([r.coverage_answerable for r in results if r.provider == p]),
+        }
+        for p in providers
+    }
+    comparisons = []
+    for a, b in (("off", "static"), ("off", "neo4j_semantic"), ("static", "neo4j_semantic")):
+        if a in legs and b in legs:
+            for metric in ("coverage_answerable", "coverage_all"):
+                c = rescore.compare_coverage(results, a, b, metric, seed)
+                comparisons.append({**asdict(c), "primary": (a, b, metric) == PRIMARY_COMPARISON})
+    agreement = None
+    if agreement_per_class > 0:
+        second = (second_judge_factory or (lambda: DeepEvalFeaturePresenceJudge(model=AGREEMENT_MODEL)))()
+        agreement = {**asdict(rescore.judge_agreement(cache, second, agreement_per_class, seed)),
+                     "second_model": AGREEMENT_MODEL}
+    report = {
+        "checkpoint": checkpoint_path, "variant": variant, "judge_model": JUDGE_MODEL_FOR_RESCORE, "seed": seed,
+        "legs": legs, "comparisons": comparisons, "agreement": agreement,
+        "entries": [
+            {"provider": r.provider, "case_id": r.case_id, "repeat": r.repeat,
+             "coverage_all": r.coverage_all, "coverage_answerable": r.coverage_answerable,
+             "verdicts": [asdict(v) | {"elicited": v.elicited} for v in r.verdicts]}
+            for r in results
+        ],
+    }
+    with open(out_path, "w") as f:
+        json.dump(report, f, indent=1)
+    return report
+
+
+def _mean(values: list[float]) -> float:
+    return sum(values) / len(values) if values else 0.0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -373,6 +434,18 @@ def build_parser() -> argparse.ArgumentParser:
     compare_parser.add_argument("--b", type=str, required=True, dest="leg_b")
     compare_parser.add_argument("--seed", type=int, default=None,
                                 help="Bootstrap seed (default: the one recorded in the checkpoint's manifest).")
+    rescore_parser = subparsers.add_parser(
+        "rescore", help="Judge saved conversations for elicitation coverage (OpenAI judge calls; no system calls).")
+    rescore_parser.add_argument("--checkpoint", type=str, required=True)
+    rescore_parser.add_argument("--variant", choices=VARIANTS, default="lay")
+    rescore_parser.add_argument("--out", type=str, required=True)
+    rescore_parser.add_argument("--workers", type=int, default=8)
+    rescore_parser.add_argument("--cache", type=str, default=None,
+                                help="JSONL file of judge verdicts; a rerun only pays for new (fact, text) pairs.")
+    rescore_parser.add_argument("--agreement-per-class", type=int, default=0,
+                                help="Verdicts per class (present, absent) a second judge re-judges, to report how "
+                                     "far the first judge can be trusted. 0 = off.")
+    rescore_parser.add_argument("--seed", type=int, default=BOOTSTRAP_SEED)
     return parser
 
 
@@ -392,6 +465,10 @@ def main() -> None:
             )
         except (ManifestMismatch, UnmanifestedCheckpoint) as error:
             raise SystemExit(str(error)) from error
+    elif args.command == "rescore":
+        report = rescore_command(args.checkpoint, args.variant, args.out, workers=args.workers,
+                                 cache_path=args.cache, agreement_per_class=args.agreement_per_class, seed=args.seed)
+        print(json.dumps({k: report[k] for k in ("legs", "comparisons", "agreement")}, indent=1))
     elif args.command == "compare-legs":
         compare_legs_command(args.checkpoint, args.variant, args.leg_a, args.leg_b, args.seed)
 
