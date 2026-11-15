@@ -501,8 +501,8 @@ export default function LandingPage() {
 
           {/* Right Column: Hero Animation Loop Canvas (Increased Height & Seamless Blending) */}
           <div className="lg:col-span-7 flex justify-center items-center relative min-h-[500px] lg:min-h-[640px] w-full">
-            <div className="relative w-full h-[540px] lg:h-[620px] rounded-2xl overflow-hidden">
-              <HeroMap3D pageColor="#061219" />
+            <div className="relative w-full h-[540px] lg:h-[620px]">
+              <HeroMap3D />
             </div>
           </div>
 

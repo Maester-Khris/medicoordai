@@ -4,17 +4,13 @@ import './HeroMap3D.css'
 import { startHeroMap } from './boot'
 import { ARIA_LABEL } from './config'
 
-interface HeroMap3DProps {
-  /** Colour of the page behind the panel; the left and bottom edges fade into it. */
-  pageColor?: string
-}
-
 /**
  * Live 3D map of downtown Toronto for the landing hero: extruded buildings, a sample route to the
- * nearest emergency room and a facility chip. MapLibre loads in its own chunk after mount; with no
- * WebGL, or if the tiles fail, a static drawing is shown instead. All distances and waits are sample values.
+ * nearest emergency room and a facility chip. Framed as a product-preview card with a crisp border
+ * and subtle glow. MapLibre loads in its own chunk after mount; with no WebGL, or if the tiles
+ * fail, a static drawing is shown instead. All distances and waits are sample values.
  */
-export function HeroMap3D({ pageColor = '#061219' }: HeroMap3DProps) {
+export function HeroMap3D() {
   const rootRef = useRef<HTMLElement>(null)
   const mapRef = useRef<HTMLDivElement>(null)
   const fallbackRef = useRef<HTMLDivElement>(null)
@@ -28,8 +24,8 @@ export function HeroMap3D({ pageColor = '#061219' }: HeroMap3DProps) {
     const fallbackSvg = fallbackSvgRef.current
     const toggleBtn = toggleRef.current
     if (!root || !mapEl || !fallbackEl || !fallbackSvg || !toggleBtn) return
-    return startHeroMap({ root, mapEl, fallbackEl, fallbackSvg, toggleBtn }, pageColor)
-  }, [pageColor])
+    return startHeroMap({ root, mapEl, fallbackEl, fallbackSvg, toggleBtn })
+  }, [])
 
   return (
     <section ref={rootRef} className="hero-map is-paused" role="group" aria-label={ARIA_LABEL}>
@@ -54,8 +50,6 @@ export function HeroMap3D({ pageColor = '#061219' }: HeroMap3DProps) {
         />
         <span className="hero-map__fallback-credit">Static illustration, not a live map</span>
       </div>
-
-      <div className="hero-map__fade" aria-hidden="true" />
     </section>
   )
 }

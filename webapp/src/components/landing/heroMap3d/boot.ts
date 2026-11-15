@@ -28,7 +28,7 @@ function webglAvailable(): boolean {
  * Starts the hero map inside the given elements and returns a disposer. Safe to call twice in a row
  * (React StrictMode): the disposer stops everything the call started.
  */
-export function startHeroMap(refs: HeroMapRefs, pageColor: string): () => void {
+export function startHeroMap(refs: HeroMapRefs): () => void {
   const { root, mapEl, fallbackEl, fallbackSvg, toggleBtn } = refs
   const P = CONFIG.PALETTE
   const disposers: Array<() => void> = []
@@ -36,7 +36,6 @@ export function startHeroMap(refs: HeroMapRefs, pageColor: string): () => void {
 
   // One palette for everything: the map style reads CONFIG.PALETTE directly, the CSS reads these variables.
   const cssVars: Record<string, string> = {
-    '--hm-page': pageColor,
     '--hm-haze': P.page,
     '--hm-ground': P.ground,
     '--hm-route': P.route,
