@@ -67,7 +67,7 @@ export function MobileTopBar({ mode, severity, onMenuOpen }: MobileTopBarProps) 
             style={{ background: '#48F6C1' }}
           />
           <span
-            className="font-mono text-[10px] font-bold tracking-widest"
+            className="font-mono text-[12px] font-bold tracking-widest"
             style={{ color: '#48F6C1' }}
           >
             ONLINE
@@ -85,7 +85,7 @@ export function MobileTopBar({ mode, severity, onMenuOpen }: MobileTopBarProps) 
             }}
           >
             <span
-              className="font-mono text-[10px] font-bold tracking-widest"
+              className="font-mono text-[12px] font-bold tracking-widest"
               style={{ color: chip.text }}
             >
               {chip.label}

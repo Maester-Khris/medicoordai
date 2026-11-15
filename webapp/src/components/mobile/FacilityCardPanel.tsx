@@ -81,7 +81,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
               {facility.name}
             </p>
             <span
-              className="inline-block mt-1 px-2 py-0.5 rounded-full font-mono text-[9px] uppercase tracking-wide"
+              className="inline-block mt-1 px-2 py-0.5 rounded-full font-mono text-[12px] uppercase tracking-wide"
               style={{
                 background: 'rgba(28,70,89,0.50)',
                 color: '#85A4B1',
@@ -96,7 +96,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
         {/* Address row */}
         <div className="flex items-center gap-1.5 mt-2">
           <MapPin size={12} color="#35A7C4" />
-          <span className="font-mono text-[10px]" style={{ color: '#85A4B1' }}>
+          <span className="font-mono text-[12px]" style={{ color: '#85A4B1' }}>
             {capitalizeAddress(facility.address)}
           </span>
         </div>
@@ -120,7 +120,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
               background: "rgba(245, 158, 11, 0.1)",
               border: "1px solid rgba(245, 158, 11, 0.3)",
               color: "#F59E0B",
-              fontSize: 11,
+              fontSize: 12,
               lineHeight: 1.4,
               fontFamily: "var(--font-mono)",
             }}
@@ -136,8 +136,9 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
           style={{
             height: 48,
             borderRadius: 12,
-            background: '#48F6C1',
-            color: '#061219',
+            background: triage.severity === 'emergent' ? 'transparent' : '#48F6C1',
+            border: triage.severity === 'emergent' ? '1px solid #48F6C1' : 'none',
+            color: triage.severity === 'emergent' ? '#48F6C1' : '#061219',
             fontFamily: 'var(--font-sans)',
           }}
         >
@@ -153,7 +154,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
       {triage.nearbyFacilities.length > 0 && (
         <>
           <p
-            className="font-mono text-[9px] uppercase tracking-widest px-4 pt-3 pb-2"
+            className="font-mono text-[12px] uppercase tracking-widest px-4 pt-3 pb-2"
             style={{ color: '#85A4B1' }}
           >
             OTHER NEARBY OPTIONS
@@ -171,7 +172,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
               >
                 {/* Icon */}
                 <div
-                  className="flex-none flex items-center justify-center rounded-lg font-bold text-[10px]"
+                  className="flex-none flex items-center justify-center rounded-lg font-bold text-[12px]"
                   style={{
                     width: 32, height: 32,
                     background: 'rgba(28,70,89,0.40)',
@@ -190,7 +191,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
                   >
                     {nearby.name}
                   </p>
-                  <p className="font-mono text-[9px]" style={{ color: '#85A4B1' }}>
+                  <p className="font-mono text-[12px]" style={{ color: '#85A4B1' }}>
                     {nearby.category}
                   </p>
                 </div>
@@ -199,7 +200,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
                 <div className="flex-none flex items-center gap-2">
                   {nearbyRoute && (
                     <span
-                      className="font-mono text-[11px] font-bold"
+                      className="font-mono text-[12px] font-bold"
                       style={{ color: etaColor }}
                     >
                       {nearbyRoute.etaMinutes} MIN

@@ -118,7 +118,7 @@ function AppInner() {
       {waitAsOfLabel && (
         <div
           data-testid="wait-as-of"
-          className="fixed left-2 bottom-1 z-[400] text-[10px] font-mono pointer-events-none"
+          className="fixed left-2 bottom-1 z-[400] text-[12px] font-mono pointer-events-none"
           style={{ color: "#7AA0B0" }}
         >
           {waitAsOfLabel}
