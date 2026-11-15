@@ -50,6 +50,8 @@ export function HeroMap3D() {
         />
         <span className="hero-map__fallback-credit">Static illustration, not a live map</span>
       </div>
+
+      <div className="hero-map__vignette" aria-hidden="true" />
     </section>
   )
 }

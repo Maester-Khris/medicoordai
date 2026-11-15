@@ -57,6 +57,15 @@
   );
 }
 
+/* Edge vignette: soft darkening at the edges settles the eye on the middle and pulls the light map toward the dark page. */
+.hero-map__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 46%, transparent 52%, rgba(6, 18, 25, 0.42) 100%);
+}
+
 /* pause / play: the app's dark pill */
 .hero-map__toggle {
   position: absolute;
