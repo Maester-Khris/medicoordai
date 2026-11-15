@@ -6,6 +6,7 @@ import { useAuth } from '../auth/useAuth'
 import { useConfig } from '../hooks/useConfig'
 import { useDocumentHead } from '../hooks/useDocumentHead'
 import { loadAnalytics } from '../lib/analytics'
+import { HeroMap3D } from '../components/landing/heroMap3d/HeroMap3D'
 import {
   MagnifyingGlass,
   Command,
@@ -13,12 +14,8 @@ import {
   Sparkle,
   ArrowRight,
   MapPin,
-  ShieldCheck,
   Check,
   Info,
-  Car,
-  Bicycle,
-  User,
   CaretDown,
   CaretUp,
   Stethoscope,
@@ -86,39 +83,6 @@ const FAQ_ITEMS = [
   }
 ] as const
 
-// Facility Coordinates (matching the generated base_map_canvas.png landmarks)
-const HOSPITAL_PIN = { left: '28%', top: '50%' }
-const CLINIC_PIN = { left: '58%', top: '51%' }
-const LAB_PIN = { left: '81%', top: '54%' }
-
-// Path coordinates for travelers (as percentages)
-const CAR_PATH = [
-  { left: '10', top: '92' },
-  { left: '22', top: '78' },
-  { left: '28', top: '70' },
-  { left: '28', top: '50' }
-]
-
-const BIKE_PATH = [
-  { left: '48', top: '92' },
-  { left: '48', top: '72' },
-  { left: '58', top: '60' },
-  { left: '58', top: '51' }
-]
-
-const JOGGER_PATH = [
-  { left: '92', top: '90' },
-  { left: '81', top: '79' },
-  { left: '81', top: '54' }
-]
-
-const FAMILY_PATH = [
-  { left: '64', top: '22' },
-  { left: '64', top: '40' },
-  { left: '58', top: '46' },
-  { left: '58', top: '51' }
-]
-
 type CookieSettings = { zoom: boolean; history: boolean; analytics: boolean }
 const COOKIE_CONSENT_KEY = 'medicoord_cookie_consent'
 
@@ -136,32 +100,6 @@ function persistConsent(settings: CookieSettings) {
     localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(settings))
   } catch {
     // localStorage unavailable (private browsing, etc.) — consent just won't persist across reloads
-  }
-}
-
-// Path interpolation function
-function interpolatePath(path: { left: string; top: string }[], progress: number) {
-  if (progress <= 0) return path[0]
-  if (progress >= 1) return path[path.length - 1]
-  
-  const totalSegments = path.length - 1
-  const segment = Math.floor(progress * totalSegments)
-  const segmentProgress = (progress * totalSegments) - segment
-  
-  const start = path[segment]
-  const end = path[segment + 1]
-  
-  const startLeft = parseFloat(start.left)
-  const endLeft = parseFloat(end.left)
-  const startTop = parseFloat(start.top)
-  const endTop = parseFloat(end.top)
-  
-  const currentLeft = startLeft + (endLeft - startLeft) * segmentProgress
-  const currentTop = startTop + (endTop - startTop) * segmentProgress
-  
-  return {
-    left: `${currentLeft}%`,
-    top: `${currentTop}%`
   }
 }
 
@@ -202,17 +140,7 @@ export default function LandingPage() {
     if (cookieSettings.analytics) loadAnalytics()
   }, [cookieSettings.analytics])
 
-  // Animation timeline state (0 to 12 seconds)
-  const [time, setTime] = useState(0)
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-  // CENTRAL TIMELINE FOR HERO MAP LOOP (0s - 12s)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime((prev) => (prev + 0.05) % 12)
-    }, 50)
-    return () => clearInterval(interval)
-  }, [])
 
   // Cycling placeholder text when not typing or searching
   useEffect(() => {
@@ -325,29 +253,6 @@ export default function LandingPage() {
     if (!searchQuery) return
     runSearchDemo(searchQuery)
   }
-
-  // Animation timeline values based on time (0s - 12s)
-  const isMapPulsing = time >= 0 && time < 2
-  const mapScale = 1.0 + (time < 2 ? (time / 2) * 0.015 : 0.015 - ((time - 2) / 10) * 0.015)
-
-  // Travelers move from 2s to 8s (progress is 0 to 1)
-  const showTravelers = time >= 2 && time < 8.2
-  const travelProgress = Math.max(0, Math.min(1, (time - 2) / 6))
-  const showOverlays = time >= 4 && time < 8
-
-  // Coordinates computed by interpolation
-  const carPos = interpolatePath(CAR_PATH, travelProgress)
-  const bikePos = interpolatePath(BIKE_PATH, travelProgress)
-  const joggerPos = interpolatePath(JOGGER_PATH, travelProgress)
-  const familyPos = interpolatePath(FAMILY_PATH, travelProgress)
-
-  // Ripple arrivals occur between 8s and 10s
-  const showRipples = time >= 8 && time < 10
-  const rippleScale = 1.0 + ((time - 8) / 2) * 0.8
-  const rippleOpacity = 1.0 - (time - 8) / 2
-
-  // Success banner active from 10s to 11.8s
-  const showSuccess = time >= 10 && time < 11.8
 
   return (
     <div className="bg-[#061219] min-h-screen relative flex flex-col font-static overflow-x-hidden select-none text-[#E2F1F5] selection:bg-[#48F6C1]/30">
@@ -597,272 +502,7 @@ export default function LandingPage() {
           {/* Right Column: Hero Animation Loop Canvas (Increased Height & Seamless Blending) */}
           <div className="lg:col-span-7 flex justify-center items-center relative min-h-[500px] lg:min-h-[640px] w-full">
             <div className="relative w-full h-[540px] lg:h-[620px] rounded-2xl overflow-hidden">
-              
-              {/* Map background image with subtle respirating scaling */}
-              <div 
-                className="w-full h-full overflow-hidden relative z-0"
-                style={{
-                  transform: `scale(${mapScale})`,
-                  transition: 'transform 0.05s linear'
-                }}
-              >
-                <img 
-                  src="/base_map_canvas.png" 
-                  alt="City Map Viewport" 
-                  className="w-full h-full object-cover select-none filter brightness-90 contrast-105 saturate-[0.9]"
-                />
-
-                {/* SVG Route Trails Layer */}
-                <svg 
-                  className="absolute inset-0 w-full h-full z-10 pointer-events-none"
-                  viewBox="0 0 100 100" 
-                  preserveAspectRatio="none"
-                >
-                  {/* Car route path (Mint Green) */}
-                  <path
-                    d="M 10 92 L 22 78 L 28 70 L 28 50"
-                    fill="none"
-                    stroke="#48F6C1"
-                    strokeWidth="0.8"
-                    strokeDasharray="100"
-                    strokeDashoffset={showTravelers ? 100 - travelProgress * 100 : 100}
-                    className="transition-all duration-100 ease-out"
-                    opacity="0.8"
-                  />
-                  {/* Bike route path (Electric Cyber Blue - `#00D2FF` variant) */}
-                  <path
-                    d="M 48 92 L 48 72 L 58 60 L 58 51"
-                    fill="none"
-                    stroke="#00D2FF"
-                    strokeWidth="0.8"
-                    strokeDasharray="100"
-                    strokeDashoffset={showTravelers ? 100 - travelProgress * 100 : 100}
-                    className="transition-all duration-100 ease-out"
-                    opacity="0.8"
-                  />
-                  {/* Jogger route path (Lighter Mint) */}
-                  <path
-                    d="M 92 90 L 81 79 L 81 54"
-                    fill="none"
-                    stroke="#5CEBBA"
-                    strokeWidth="0.8"
-                    strokeDasharray="100"
-                    strokeDashoffset={showTravelers ? 100 - travelProgress * 100 : 100}
-                    className="transition-all duration-100 ease-out"
-                    opacity="0.8"
-                  />
-                  {/* Family route path (Muted Teal) */}
-                  <path
-                    d="M 64 22 L 64 40 L 58 46 L 58 51"
-                    fill="none"
-                    stroke="#2E8EA5"
-                    strokeWidth="0.8"
-                    strokeDasharray="100"
-                    strokeDashoffset={showTravelers ? 100 - travelProgress * 100 : 100}
-                    className="transition-all duration-100 ease-out"
-                    opacity="0.8"
-                  />
-                </svg>
-
-                {/* Pulsating Street Lines grid indicator */}
-                <div 
-                  className={`absolute inset-0 bg-[#2B7A8C]/5 mix-blend-overlay pointer-events-none transition-opacity duration-1000 ${
-                    isMapPulsing ? 'opacity-80' : 'opacity-20'
-                  }`} 
-                />
-              </div>
-
-              {/* Edge Gradient Blending to make the canvas look seamless inside the dark page */}
-              <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-[#061219] to-transparent z-20 pointer-events-none" />
-              <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-[#061219] to-transparent z-20 pointer-events-none" />
-              <div className="absolute left-0 right-0 top-0 h-20 bg-gradient-to-b from-[#061219] to-transparent z-20 pointer-events-none" />
-              <div className="absolute left-0 right-0 bottom-0 h-20 bg-gradient-to-t from-[#061219] to-transparent z-20 pointer-events-none" />
-
-              {/* FACILITY PIN MARKERS OVERLAY */}
-              
-              {/* General Hospital */}
-              <div 
-                className="absolute z-20"
-                style={HOSPITAL_PIN}
-              >
-                {/* Ripple Circle (Mint color) */}
-                {showRipples && (
-                  <div 
-                    className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#48F6C1] bg-[#48F6C1]/10 pointer-events-none"
-                    style={{
-                      width: `${rippleScale * 45}px`,
-                      height: `${rippleScale * 45}px`,
-                      opacity: rippleOpacity,
-                      transition: 'all 0.05s linear'
-                    }}
-                  />
-                )}
-                {/* Map pin */}
-                <div className="absolute -translate-x-1/2 -translate-y-[85%] flex flex-col items-center">
-                  <div className="bg-[#28A684] text-white p-1 rounded-full border border-white shadow-md">
-                    <MapPin className="w-4.5 h-4.5" weight="fill" />
-                  </div>
-                  <div className="mt-1 bg-[#0A1A21]/90 backdrop-blur-sm border border-[#1C4659]/50 px-1.5 py-0.5 rounded text-[10px] font-bold text-white whitespace-nowrap shadow-sm">
-                    General Hospital
-                  </div>
-                </div>
-              </div>
-
-              {/* Urgent Care Clinic */}
-              <div 
-                className="absolute z-20"
-                style={CLINIC_PIN}
-              >
-                {/* Ripple Circle (Blue color) */}
-                {showRipples && (
-                  <div 
-                    className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#00D2FF] bg-[#00D2FF]/10 pointer-events-none"
-                    style={{
-                      width: `${rippleScale * 45}px`,
-                      height: `${rippleScale * 45}px`,
-                      opacity: rippleOpacity,
-                      transition: 'all 0.05s linear'
-                    }}
-                  />
-                )}
-                {/* Map pin */}
-                <div className="absolute -translate-x-1/2 -translate-y-[85%] flex flex-col items-center">
-                  <div className="bg-[#00D2FF] text-[#061219] p-1 rounded-full border border-white shadow-md">
-                    <MapPin className="w-4.5 h-4.5" weight="fill" />
-                  </div>
-                  <div className="mt-1 bg-[#0A1A21]/90 backdrop-blur-sm border border-[#1C4659]/50 px-1.5 py-0.5 rounded text-[10px] font-bold text-white whitespace-nowrap shadow-sm">
-                    Urgent Care Clinic
-                  </div>
-                </div>
-              </div>
-
-              {/* Diagnostic Lab */}
-              <div 
-                className="absolute z-20"
-                style={LAB_PIN}
-              >
-                {/* Ripple Circle */}
-                {showRipples && (
-                  <div 
-                    className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-[#2E8EA5] bg-[#2E8EA5]/10 pointer-events-none"
-                    style={{
-                      width: `${rippleScale * 45}px`,
-                      height: `${rippleScale * 45}px`,
-                      opacity: rippleOpacity,
-                      transition: 'all 0.05s linear'
-                    }}
-                  />
-                )}
-                {/* Map pin */}
-                <div className="absolute -translate-x-1/2 -translate-y-[85%] flex flex-col items-center">
-                  <div className="bg-[#195669] text-white p-1 rounded-full border border-white shadow-md">
-                    <MapPin className="w-4.5 h-4.5" weight="fill" />
-                  </div>
-                  <div className="mt-1 bg-[#0A1A21]/90 backdrop-blur-sm border border-[#1C4659]/50 px-1.5 py-0.5 rounded text-[10px] font-bold text-white whitespace-nowrap shadow-sm">
-                    Diagnostic Lab
-                  </div>
-                </div>
-              </div>
-
-              {/* TRAVELER NODES & OVERLAYS */}
-              {showTravelers && (
-                <>
-                  {/* Car Traveler */}
-                  <div 
-                    className="absolute z-20 -translate-x-1/2 -translate-y-1/2 transition-all duration-100 ease-out"
-                    style={{ left: carPos.left, top: carPos.top }}
-                  >
-                    <div className="relative">
-                      {/* Car Marker Pin */}
-                      <div className="w-7 h-7 rounded-full bg-[#48F6C1] text-[#061219] flex items-center justify-center border border-white shadow-lg shadow-[#48F6C1]/40">
-                        <Car className="w-4 h-4" />
-                      </div>
-                      
-                      {/* Floating overlay tracking above car */}
-                      {showOverlays && (
-                        <div className="absolute bottom-[115%] left-1/2 -translate-x-1/2 bg-[#061219]/95 backdrop-blur-md border border-[#48F6C1]/30 text-white text-[9px] font-mono px-2 py-1 rounded whitespace-nowrap flex items-center gap-1 shadow-lg pointer-events-none animate-bounce">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#48F6C1] animate-ping" />
-                          <span>Routing ETA: 6m</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Bike Traveler (Electric Cyber Blue Variant) */}
-                  <div 
-                    className="absolute z-20 -translate-x-1/2 -translate-y-1/2 transition-all duration-100 ease-out"
-                    style={{ left: bikePos.left, top: bikePos.top }}
-                  >
-                    <div className="relative">
-                      <div className="w-7 h-7 rounded-full bg-[#00D2FF] text-[#061219] flex items-center justify-center border border-white shadow-lg shadow-[#00D2FF]/40">
-                        <Bicycle className="w-4 h-4" />
-                      </div>
-
-                      {showOverlays && (
-                        <div className="absolute bottom-[115%] left-1/2 -translate-x-1/2 bg-[#061219]/95 backdrop-blur-md border border-[#00D2FF]/30 text-white text-[9px] font-mono px-2 py-1 rounded whitespace-nowrap flex flex-col gap-0.5 items-center shadow-lg pointer-events-none">
-                          <span>Flat terrain optimized</span>
-                          <span className="text-[7.5px] opacity-75">ETA: 11m</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Jogger Traveler */}
-                  <div 
-                    className="absolute z-20 -translate-x-1/2 -translate-y-1/2 transition-all duration-100 ease-out"
-                    style={{ left: joggerPos.left, top: joggerPos.top }}
-                  >
-                    <div className="relative">
-                      <div className="w-7 h-7 rounded-full bg-[#5CEBBA] text-[#061219] flex items-center justify-center border border-white shadow-lg shadow-[#5CEBBA]/30">
-                        <User className="w-4 h-4" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Family Traveler */}
-                  <div 
-                    className="absolute z-20 -translate-x-1/2 -translate-y-1/2 transition-all duration-100 ease-out"
-                    style={{ left: familyPos.left, top: familyPos.top }}
-                  >
-                    <div className="relative">
-                      <div className="w-7 h-7 rounded-full bg-[#2E8EA5] text-white flex items-center justify-center border border-white shadow-lg shadow-[#2E8EA5]/30">
-                        <User className="w-4 h-4" />
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* SUCCESS BANNER OVERLAY */}
-              <AnimatePresence>
-                {showSuccess && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20, x: '-50%' }}
-                    animate={{ opacity: 1, y: 12, x: '-50%' }}
-                    exit={{ opacity: 0, y: -20, x: '-50%' }}
-                    className="absolute top-0 left-1/2 z-30 w-[85%] rounded-xl border border-[#48F6C1]/30 bg-[#061219]/95 backdrop-blur-xl p-3 flex items-center justify-between shadow-2xl"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[#48F6C1]/20 text-[#48F6C1] flex items-center justify-center border border-[#48F6C1]/30">
-                        <ShieldCheck className="w-5 h-5" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[11px] font-bold text-white tracking-wide uppercase">Facility matched</span>
-                        <span className="text-[9.5px] font-mono text-[#48F6C1]">Routed to the best available option near you</span>
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-mono font-semibold bg-[#48F6C1]/10 text-[#48F6C1] px-2 py-0.5 rounded border border-[#48F6C1]/20">
-                      SECURE GATEWAY
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Live HUD System Status */}
-              <div className="absolute bottom-3 left-3 z-20 bg-[#061219]/80 backdrop-blur-sm border border-[#1C4659]/50 rounded-md px-2 py-1 flex items-center gap-1.5 pointer-events-none">
-                <span className="w-2 h-2 rounded-full bg-[#48F6C1] animate-ping" />
-                <span className="text-[9px] font-mono text-white tracking-wider uppercase">SECURE NETWORK OK</span>
-              </div>
+              <HeroMap3D pageColor="#061219" />
             </div>
           </div>
 
