@@ -5,9 +5,9 @@ import { sheetGeometry } from "./sheetGeometry"
 describe("sheetGeometry, keyboard closed", () => {
   it.each([
     // [innerHeight, free, half, full]
-    [568, 448, 224, 440], // 320x568
-    [640, 520, 260, 512], // 360x640
-    [844, 724, 362, 716], // 390x844
+    [568, 448, 269, 440], // 320x568
+    [640, 520, 312, 512], // 360x640
+    [844, 724, 434, 716], // 390x844
     [375, 255, 176, 247], // 667x375 landscape: half has a 176 floor
   ])("height %i", (h, free, half, full) => {
     const g = sheetGeometry({ innerHeight: h, vvHeight: h, vvOffsetTop: 0 })

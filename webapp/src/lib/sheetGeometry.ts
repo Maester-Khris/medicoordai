@@ -26,7 +26,7 @@ export function sheetGeometry({ innerHeight, vvHeight, vvOffsetTop }: ViewportIn
   const bottomOffset = keyboardOpen ? inset : BOTTOM_NAV_H // the keyboard covers the nav
   const free = keyboardOpen ? vvHeight - TOP_BAR_H : vvHeight - TOP_BAR_H - BOTTOM_NAV_H
   const full = free - 8
-  const half = Math.min(Math.max(176, Math.round(free / 2)), full - 1)
+  const half = Math.min(Math.max(176, Math.round(free * 0.6)), full - 1)
   const peek = Math.min(PEEK_H, half - 1)
   return { keyboardOpen, bottomOffset, free, peek, half, full }
 }

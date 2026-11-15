@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css'
 import { useEffect, useState, useRef, useMemo } from 'react'
-import { MapContainer, TileLayer, Marker, Tooltip, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Tooltip, Popup, CircleMarker } from 'react-leaflet'
 import { useMapEvents } from 'react-leaflet'
 import type { Facility, TravelModeKey, TriageUIState } from '../../../../shared/types'
 import { useBreakpoint } from '../../hooks/useBreakpoint'
@@ -30,6 +30,8 @@ interface MapPanelProps {
   sizeVersion?: number
   onClear?: () => void
   onModeChange?: (mode: TravelModeKey) => void
+  /** Facility chosen from the mobile list: the map flies to it and rings it. */
+  highlightedFacilityId?: string | null
 }
 
 // Short labels for filter chips
@@ -40,7 +42,7 @@ const CHIP_LABEL: Record<CategoryFilter, string> = {
   residential: 'Residential',
 }
 
-export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange }: MapPanelProps) {
+export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange, highlightedFacilityId = null }: MapPanelProps) {
   const config = useConfig()
   const isMobile = useBreakpoint()
   const pinnedIdRef = useRef<string | null>(null)
@@ -98,6 +100,11 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
     ambulatory: facilities.filter(f => f.category === "ambulatory").length,
     residential: facilities.filter(f => f.category === "residential").length,
   }
+
+  const highlighted = useMemo(
+    () => facilities.find(f => f.id != null && f.id === highlightedFacilityId) ?? null,
+    [facilities, highlightedFacilityId],
+  )
 
   const displayedFacilities = useMemo(() => {
     // When proximity results have loaded, they are already category-filtered by the DB.
@@ -174,6 +181,7 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
             <Tooltip className="text-[13px] font-semibold" direction="top">CN Tower Area</Tooltip>
           </Marker>
           <RoadRouteLayer />
+          <HighlightedFacility target={highlighted} />
           <FacilityMarkerLayer
             displayedFacilities={displayedFacilities}
             triageCandidates={triageCandidates}
@@ -665,6 +673,16 @@ function ProximityAnchorView({
   }, [anchor.lat, anchor.lng, proximity])
 
   return null
+}
+
+// One ring and one flyTo; the 300 facility markers are not touched.
+function HighlightedFacility({ target }: { target: { lat: number; lng: number } | null }) {
+  const map = useMap()
+  useEffect(() => {
+    if (target) map.flyTo([target.lat, target.lng], Math.max(map.getZoom(), 15), { duration: 0.8 })
+  }, [map, target])
+  if (!target) return null
+  return <CircleMarker center={[target.lat, target.lng]} radius={22} pathOptions={{ color: '#48F6C1', weight: 3, fillOpacity: 0.1 }} interactive={false} />
 }
 
 function FocusUserButton({

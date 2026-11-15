@@ -15,6 +15,7 @@ import { DrawerMenu } from './DrawerMenu'
 import { BottomNavBar, type MobileTab } from './BottomNavBar'
 import { BottomSheet } from './BottomSheet'
 import { FacilityCardPanel } from './FacilityCardPanel'
+import { FacilityList } from './FacilityList'
 import { useAuth } from '../../auth/useAuth'
 import { useSheetGeometry } from '../../hooks/useSheetGeometry'
 import { stateForTab, tabForState, type SheetState } from '../../lib/sheetState'
@@ -72,6 +73,7 @@ export function MobileLayout({
   // Nav
   const [sheetState, setSheetState] = useState<SheetState>('peek')
   const geometry = useSheetGeometry()
+  const [highlightedFacilityId, setHighlightedFacilityId] = useState<string | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   // Mode derived from triage state
@@ -173,6 +175,11 @@ export function MobileLayout({
     }
   }, [omniValue, user, geo, activeSessionId, createSession, sendMessage, handleApplyTriage, config, busyUntil])
 
+  const handleShowOnMap = useCallback((facilityId: string) => {
+    setHighlightedFacilityId(facilityId)
+    setSheetState('peek')
+  }, [])
+
   const handleTabChange = useCallback((tab: MobileTab) => setSheetState(stateForTab(tab)), [])
 
   const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
@@ -205,6 +212,7 @@ export function MobileLayout({
           sizeVersion={0}
           onClear={handleNewConversation}
           onModeChange={mode => { void changeMode(mode) }}
+          highlightedFacilityId={highlightedFacilityId}
         />
       </div>
 
@@ -229,6 +237,16 @@ export function MobileLayout({
             onGetDirections={(name, lat, lng) => getDirections(name, lat, lng)}
           />
         ) : null}
+        listSlot={(
+          <FacilityList
+            facilities={facilities}
+            loading={facilitiesLoading}
+            origin={geo.coords ?? config.downtown_fallback}
+            originIsFallback={geo.coords === null}
+            onShowOnMap={handleShowOnMap}
+            onDirections={getDirections}
+          />
+        )}
         showEmergencyStrip={triage.active && triage.severity === 'emergent'}
         hasConversation={messages.length > 0 || triage.active}
         onNewConversation={handleNewConversation}

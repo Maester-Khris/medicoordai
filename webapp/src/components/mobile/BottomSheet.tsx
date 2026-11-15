@@ -18,6 +18,8 @@ interface BottomSheetProps {
   bottomOffset: number
   messages: Message[]
   resultSlot: ReactNode
+  /** Facilities tab content; shown instead of the thread while the sheet is in half. */
+  listSlot: ReactNode
   showEmergencyStrip: boolean
   hasConversation: boolean
   onNewConversation: () => void
@@ -62,7 +64,7 @@ const STATUS_TEXT = {
 
 export function BottomSheet({
   state, onStateChange, heights, bottomOffset,
-  messages, resultSlot, showEmergencyStrip, hasConversation, onNewConversation,
+  messages, resultSlot, listSlot, showEmergencyStrip, hasConversation, onNewConversation,
   omniValue, onOmniChange, onSend, inputDisabled, onChipSelect,
   progressStage, locationNotice, busyText, starterPrompts,
 }: BottomSheetProps) {
@@ -73,6 +75,7 @@ export function BottomSheet({
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
+    if (state === 'half') { el.scrollTop = 0; return }
     // With a result on screen, start at the reply (its 911 line and notice), not below it.
     const reply = resultSlot ? el.querySelector<HTMLElement>('[data-last-assistant]') : null
     if (reply) el.scrollTop = Math.max(0, reply.offsetTop - el.offsetTop - 8)
@@ -151,10 +154,14 @@ export function BottomSheet({
           )}
         </div>
         {!showEmergencyStrip && <EmergencyCall variant="link" />}
-        {messages.map(msg => <MessageBubble key={msg.id} msg={msg} isLastAssistant={msg.id === lastAssistantId} />)}
-        {resultSlot}
-        {messages.length === 0 && (
-          <SuggestionChips chips={starterPrompts} onSelect={onChipSelect} disabled={inputDisabled} />
+        {state === 'half' ? listSlot : (
+          <>
+            {messages.map(msg => <MessageBubble key={msg.id} msg={msg} isLastAssistant={msg.id === lastAssistantId} />)}
+            {resultSlot}
+            {messages.length === 0 && (
+              <SuggestionChips chips={starterPrompts} onSelect={onChipSelect} disabled={inputDisabled} />
+            )}
+          </>
         )}
       </div>
 
