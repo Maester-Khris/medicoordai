@@ -101,3 +101,22 @@ describe('edge vignette', () => {
     expect(css).not.toContain('--hm-page')
   })
 })
+
+describe('hero map CSS defaults match the dusk palette', () => {
+  const defaultsRule = (css.match(/\.hero-map\s*\{([^}]*)\}/) as RegExpMatchArray)[1]
+  const cssDefault = (name: string): string | undefined =>
+    defaultsRule.match(new RegExp(`${name}:\\s*(#[0-9a-fA-F]{6})`))?.[1].toUpperCase()
+  const bootVars = [...read('./boot.ts').matchAll(/'(--hm-[a-z-]+)':\s*P\.(\w+)/g)]
+
+  it('boot.ts sets the custom properties under test', () => {
+    expect(bootVars.length).toBeGreaterThan(0)
+  })
+
+  it.each(bootVars.map((m) => [m[1], m[2]]))('%s defaults to PALETTE.%s', (name, key) => {
+    expect(cssDefault(name)).toBe(hex(key))
+  })
+
+  it('lifts markers above the vignette', () => {
+    expect(css).toMatch(/\.maplibregl-marker\s*\{[^}]*z-index:\s*2\b/)
+  })
+})

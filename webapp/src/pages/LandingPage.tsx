@@ -499,7 +499,7 @@ export default function LandingPage() {
             )}
           </div>
 
-          {/* Right Column: Hero Animation Loop Canvas (Increased Height & Seamless Blending) */}
+          {/* Right Column: Live 3D map card (HeroMap3D) */}
           <div className="lg:col-span-7 flex justify-center items-center relative min-h-[500px] lg:min-h-[640px] w-full">
             <div className="relative w-full h-[540px] lg:h-[620px]">
               <HeroMap3D />

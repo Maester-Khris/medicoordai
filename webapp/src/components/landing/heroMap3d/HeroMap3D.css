@@ -1,9 +1,9 @@
 /* 3D hero map. Ported from the light prototype. Everything lives inside .hero-map. */
 .hero-map {
-  /* Defaults only: boot.ts sets these from CONFIG.PALETTE. */
-  --hm-haze: #f4eee4; /* the distance haze dissolves into this */
-  --hm-ground: #f0e8db;
-  --hm-route: #0c8c7e;
+  /* Defaults only (the cool, dimmed dusk palette): boot.ts sets these from CONFIG.PALETTE. */
+  --hm-haze: #e4e9ec; /* the distance haze dissolves into this */
+  --hm-ground: #d3d9dd;
+  --hm-route: #087a6d;
   --hm-chrome: #313a3d;
   --hm-chrome-hover: #3f4a4e;
   --hm-chrome-text: #f4f6f6;
@@ -15,7 +15,7 @@
   --hm-walkin: #3ac9d4;
   --hm-residential: #74c69d;
 
-  /* Product-preview card: crisp card edge, the glow and the dark shadow separate the light panel from the dark page. */
+  /* Product-preview card: crisp card edge, the glow and the dark shadow separate the dimmed dusk panel from the dark page. */
   box-sizing: border-box;
   position: relative;
   width: 100%;
@@ -44,7 +44,7 @@
   display: none;
 }
 
-/* Distance haze: far blocks wash out towards the cream. Sits above the canvas, under the markers. */
+/* Distance haze: far blocks wash out towards the cool dusk haze. Sits above the canvas, under the markers. */
 .hero-map__haze {
   position: absolute;
   inset: 0;
@@ -64,6 +64,11 @@
   z-index: 1;
   pointer-events: none;
   background: radial-gradient(ellipse at 50% 46%, transparent 52%, rgba(6, 18, 25, 0.42) 100%);
+}
+
+/* Markers (pins, you-are-here dot, chip) sit above the vignette so they stay crisp; the map canvas stays under it. */
+.hero-map .maplibregl-marker {
+  z-index: 2;
 }
 
 /* pause / play: the app's dark pill */
