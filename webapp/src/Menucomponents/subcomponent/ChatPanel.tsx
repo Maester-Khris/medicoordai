@@ -1,3 +1,4 @@
+import { EmergencyCall } from "../../components/EmergencyCall"
 import { FeedbackControl } from "../../components/triage/FeedbackControl"
 import { useAuth } from "../../auth/useAuth"
 import { useState, useRef, useEffect, useCallback } from "react"
@@ -242,6 +243,7 @@ export function ChatPanel({
           </div>
 
           <div className="flex items-center gap-3">
+            <div style={{ width: 150 }}><EmergencyCall variant="link" /></div>
             <button
               onClick={handleNewConversation}
               disabled={!user}

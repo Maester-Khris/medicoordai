@@ -4,6 +4,7 @@ import { motion } from 'motion/react'
 import { MapPin } from '@phosphor-icons/react'
 import type { TravelModeKey, TriageUIState } from '@shared/types'
 import { DIRECTIONS_UNAVAILABLE } from '../../lib/directions'
+import { EmergencyCall } from '../EmergencyCall'
 import { TransitModeGrid } from './TransitModeGrid'
 import { FeedbackControl } from '../triage/FeedbackControl'
 
@@ -58,6 +59,9 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
     >
       {/* Primary facility card */}
       <div className="px-4 pt-4 pb-3">
+        {triage.severity === 'emergent' && (
+          <div className="mb-3"><EmergencyCall variant="primary" /></div>
+        )}
         {/* Header row */}
         <div className="flex items-center gap-3">
           {/* Monogram avatar */}

@@ -5,6 +5,7 @@ import type { Message } from '@shared/types'
 import { OmniInputBox } from './OmniInputBox'
 import { SuggestionChips } from './SuggestionChips'
 
+import { EmergencyCall } from '../EmergencyCall'
 import { MedicalNotice } from '../MedicalNotice'
 
 const COLLAPSED_H = 220
@@ -150,6 +151,8 @@ export function BottomSheet({
             : 'ANALYZING SYMPTOMS...'}
         </span>
       </div>
+
+      <div className="flex-none px-4"><EmergencyCall variant="link" /></div>
 
       {/* Message thread (expanded only) */}
       {isExpanded && messages.length > 0 && (
