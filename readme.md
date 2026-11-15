@@ -140,6 +140,7 @@ Three High findings were found and fixed with tests: a junk `Bearer` header coul
 - **Data:** Railway Postgres for the guest demo, Redis for caches, Neo4j Aura for the optional graph path; Supabase remains the legacy store
 - **Config and secrets:** Doppler
 - **Deploy:** Vercel (frontend), Railway (API and worker)
+- **Infrastructure as code:** AWS SAM (CloudFormation) for the analytics pipeline's AWS resources (`pipeline/infra/template.yaml`, `pipeline/infra/s3-buckets.yaml`); no Terraform or Kubernetes in the repo
 - **Evaluation:** a 27-vignette triage harness in `backend/scripts/symptom_eval/`
 
 ---

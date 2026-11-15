@@ -39,6 +39,8 @@ Sprints are listed newest first, by the date each started (or, where a section h
 - Track B (DeepEval judge) skipped: it would repeat what Track A shows.
 - Line in the sand, set before the paid run: if v3 does not beat `off` beyond the paired interval on the lay set, `off` stays the default and the negative result is published.
 - English only; non-commercial use for now.
+- Departure from the plan: W1 compared v1 against v2, but the v2 graph was deleted when its hosting paused, so the legs are `off`, static and v3 (the August v2 numbers stay as reference only).
+- Departure from the plan: elicitation coverage was judged by `gpt-4o-mini`, not the expensive judge at a gate, and its second-judge check was misconfigured, so judge reliability is unproven; to be redone under the judge protocol before those numbers are quoted again (agentic-conversation sprint).
 
 ### Reference
 
