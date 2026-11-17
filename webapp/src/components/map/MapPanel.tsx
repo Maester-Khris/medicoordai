@@ -19,6 +19,7 @@ import { MapSizeGuard } from './layers/MapSizeGuard'
 import { RoadRouteLayer } from './layers/RoadRouteLayer'
 import { FacilityMarkerLayer } from './components/FacilityMarkerLayer'
 import { FacilityLegend } from './components/FacilityLegend'
+import type { HighlightRequest } from '../../lib/highlightRequest'
 import { isOpen24h, isOpenWeekends, isOpenNow } from '../../utils/hoursUtils'
 import { meetsWaitTimeFilter } from '../../utils/waitTimeUtils'
 
@@ -30,8 +31,8 @@ interface MapPanelProps {
   sizeVersion?: number
   onClear?: () => void
   onModeChange?: (mode: TravelModeKey) => void
-  /** Facility chosen from the mobile list: the map flies to it and rings it. */
-  highlightedFacilityId?: string | null
+  /** Facility chosen from the mobile list: the map flies to it and rings it, on every new request. */
+  highlightRequest?: HighlightRequest | null
 }
 
 // Short labels for filter chips
@@ -43,7 +44,7 @@ const CHIP_LABEL: Record<CategoryFilter, string> = {
 }
 
 // memo: the mobile layout re-renders on every keystroke; without it every marker icon is rebuilt each time.
-export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange, highlightedFacilityId = null }: MapPanelProps) {
+export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange, highlightRequest = null }: MapPanelProps) {
   const config = useConfig()
   const isMobile = useBreakpoint()
   const pinnedIdRef = useRef<string | null>(null)
@@ -103,8 +104,8 @@ export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, 
   }
 
   const highlighted = useMemo(
-    () => facilities.find(f => f.id != null && f.id === highlightedFacilityId) ?? null,
-    [facilities, highlightedFacilityId],
+    () => facilities.find(f => f.id != null && f.id === highlightRequest?.id) ?? null,
+    [facilities, highlightRequest?.id],
   )
 
   const displayedFacilities = useMemo(() => {
@@ -182,7 +183,7 @@ export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, 
             <Tooltip className="text-[13px] font-semibold" direction="top">CN Tower Area</Tooltip>
           </Marker>
           <RoadRouteLayer />
-          <HighlightedFacility target={highlighted} />
+          <HighlightedFacility request={highlightRequest} facility={highlighted} />
           <FacilityMarkerLayer
             displayedFacilities={displayedFacilities}
             triageCandidates={triageCandidates}
@@ -676,14 +677,45 @@ function ProximityAnchorView({
   return null
 }
 
-// One ring and one flyTo; the 300 facility markers are not touched.
-function HighlightedFacility({ target }: { target: { lat: number; lng: number } | null }) {
+const RING_VISIBLE_MS = 4000 // how long the ring stays once the map has arrived
+const MOVEEND_FALLBACK_MS = 1200 // the map may already be there, so no moveend fires
+
+// One ring and one flyTo per request; the 300 facility markers are not touched. The effect depends on
+// the request only, so a facilities reload (a new facility object) never moves the map. The fade timer
+// is local state, so MapPanel does not re-render when the ring disappears.
+function HighlightedFacility({ request, facility }: {
+  request: HighlightRequest | null
+  facility: { lat: number; lng: number } | null
+}) {
   const map = useMap()
+  const [ringVisible, setRingVisible] = useState(false)
+  const facilityRef = useRef(facility)
+  facilityRef.current = facility
+
   useEffect(() => {
-    if (target) map.flyTo([target.lat, target.lng], Math.max(map.getZoom(), 15), { duration: 0.8 })
-  }, [map, target])
-  if (!target) return null
-  return <CircleMarker center={[target.lat, target.lng]} radius={22} pathOptions={{ color: '#48F6C1', weight: 3, fillOpacity: 0.1 }} interactive={false} />
+    const target = facilityRef.current
+    if (!request || !target) { setRingVisible(false); return }
+
+    setRingVisible(true)
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const startFade = () => {
+      map.off('moveend', startFade)
+      clearTimeout(timer)
+      timer = setTimeout(() => setRingVisible(false), RING_VISIBLE_MS)
+    }
+    map.once('moveend', startFade)
+    timer = setTimeout(startFade, MOVEEND_FALLBACK_MS)
+
+    const zoom = Math.max(map.getZoom(), 15)
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) map.setView([target.lat, target.lng], zoom, { animate: false })
+    else map.flyTo([target.lat, target.lng], zoom, { duration: 0.8 })
+
+    return () => { map.off('moveend', startFade); clearTimeout(timer) }
+  }, [map, request])
+
+  if (!ringVisible || !facility) return null
+  return <CircleMarker center={[facility.lat, facility.lng]} radius={22} pathOptions={{ color: '#48F6C1', weight: 3, fillOpacity: 0.1 }} interactive={false} />
 }
 
 function FocusUserButton({

@@ -200,3 +200,35 @@ test("no horizontal scroll and a tappable Send on the browse screen", async ({ p
   await page.getByPlaceholder("Describe your symptoms...").fill("x")
   await expectTappable(page, page.getByRole("button", { name: "Send" }))
 })
+
+test("show on map twice: the ring appears, fades, and reappears after panning away", async ({ page }) => {
+  await open(page, "routine")
+  await page.locator("nav").getByRole("button", { name: "Facilities" }).click()
+  const ring = page.locator(".leaflet-overlay-pane path")
+  const showFirstOnMap = async () => {
+    await page.locator("nav").getByRole("button", { name: "Facilities" }).click()
+    await page.getByTestId("facility-row").first().locator("button").first().click()
+    await page.getByTestId("facility-show-on-map").click()
+  }
+
+  await page.getByTestId("facility-row").first().locator("button").first().click()
+  await page.getByTestId("facility-show-on-map").click()
+  await expect(ring).toBeVisible()
+  await expect(ring).toBeHidden({ timeout: 10_000 }) // fades by itself
+
+  // Pan the map away from the facility.
+  const map = (await page.locator(".leaflet-container").boundingBox())!
+  const y = map.y + map.height * 0.4
+  await page.mouse.move(map.x + map.width * 0.8, y)
+  await page.mouse.down()
+  await page.mouse.move(map.x + map.width * 0.2, y, { steps: 8 })
+  await page.mouse.up()
+
+  await showFirstOnMap()
+  await expect(ring).toBeVisible()
+  await expect.poll(async () => {
+    const r = (await ring.boundingBox())!
+    const m = (await page.locator(".leaflet-container").boundingBox())!
+    return Math.hypot(r.x + r.width / 2 - (m.x + m.width / 2), r.y + r.height / 2 - (m.y + m.height / 2))
+  }).toBeLessThan(40)
+})

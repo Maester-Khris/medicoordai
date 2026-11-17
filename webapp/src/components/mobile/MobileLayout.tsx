@@ -18,6 +18,7 @@ import { BottomSheet } from './BottomSheet'
 import { FacilityCardPanel } from './FacilityCardPanel'
 import { FacilityList } from './FacilityList'
 import { useAuth } from '../../auth/useAuth'
+import { nextHighlightRequest, type HighlightRequest } from '../../lib/highlightRequest'
 import { useSheetGeometry } from '../../hooks/useSheetGeometry'
 import { stateForTab, tabForState, type SheetState } from '../../lib/sheetState'
 import { useGeolocation } from '../../hooks/useGeolocation'
@@ -74,7 +75,7 @@ export function MobileLayout({
   // Nav
   const [sheetState, setSheetState] = useState<SheetState>('peek')
   const geometry = useSheetGeometry()
-  const [highlightedFacilityId, setHighlightedFacilityId] = useState<string | null>(null)
+  const [highlightRequest, setHighlightRequest] = useState<HighlightRequest | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   // Mode derived from triage state
@@ -96,6 +97,7 @@ export function MobileLayout({
 
   const handleNewConversation = useCallback(() => {
     triageReset()
+    setHighlightRequest(null)
     setActiveSessionId(null)
     setMessages([])
     setOmniValue('')
@@ -179,7 +181,7 @@ export function MobileLayout({
   const handleModeChange = useCallback((mode: TravelModeKey) => { void changeMode(mode) }, [changeMode])
 
   const handleShowOnMap = useCallback((facilityId: string) => {
-    setHighlightedFacilityId(facilityId)
+    setHighlightRequest(previous => nextHighlightRequest(previous, facilityId))
     setSheetState('peek')
   }, [])
 
@@ -215,7 +217,7 @@ export function MobileLayout({
           sizeVersion={0}
           onClear={handleNewConversation}
           onModeChange={handleModeChange}
-          highlightedFacilityId={highlightedFacilityId}
+          highlightRequest={highlightRequest}
         />
       </div>
 
