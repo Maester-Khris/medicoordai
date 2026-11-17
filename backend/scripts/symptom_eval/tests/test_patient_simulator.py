@@ -100,3 +100,9 @@ class TestSimulatorFromEnv:
 
         with pytest.raises(ValueError, match="EVAL_SIMULATOR_PROVIDER"):
             simulator_from_env()
+
+
+def test_simulator_from_env_claude_cli(monkeypatch):
+    from scripts.symptom_eval.patient_simulator import simulator_from_env
+    monkeypatch.setenv("EVAL_SIMULATOR_PROVIDER", "claude-cli")
+    assert simulator_from_env().model_name == "claude-cli:claude-haiku-4-5"
