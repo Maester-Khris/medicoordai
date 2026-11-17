@@ -157,6 +157,39 @@ def test_manifest_records_the_guard_settings_the_agent_will_use(monkeypatch):
     assert manifest.capped_reply_sha256 == sha256_text(capped_reply_fingerprint())
 
 
+def test_manifest_records_the_safety_guard_modes_the_list_hash_and_the_retry_budget(monkeypatch):
+    from services.red_flags import red_flag_list_sha256
+
+    monkeypatch.setenv("RED_FLAG_FLOOR_MODE", "enforce")
+    monkeypatch.setenv("GROUNDEDNESS_GUARD_MODE", "off")
+    monkeypatch.setenv("EMERGENCY_MISMATCH_MODE", "enforce")
+    monkeypatch.setenv("RETRY_BUDGET_PERCENT", "25")
+
+    manifest = cli.build_manifest(
+        system_model="m1", simulator_model="m2", providers=("off",), variant="original",
+        repeats=1, judges_enabled=False, seed=5,
+    )
+
+    assert (manifest.red_flag_floor_mode, manifest.groundedness_guard_mode, manifest.emergency_mismatch_mode) == (
+        "enforce", "off", "enforce")
+    assert manifest.red_flag_list_sha256 == red_flag_list_sha256()
+    assert manifest.retry_budget_percent == 25
+
+
+def test_manifest_defaults_record_the_production_guard_modes(monkeypatch):
+    for name in ("RED_FLAG_FLOOR_MODE", "GROUNDEDNESS_GUARD_MODE", "EMERGENCY_MISMATCH_MODE", "RETRY_BUDGET_PERCENT"):
+        monkeypatch.delenv(name, raising=False)
+
+    manifest = cli.build_manifest(
+        system_model="m1", simulator_model="m2", providers=("off",), variant="original",
+        repeats=1, judges_enabled=False, seed=5,
+    )
+
+    assert (manifest.red_flag_floor_mode, manifest.groundedness_guard_mode, manifest.emergency_mismatch_mode) == (
+        "shadow", "enforce", "shadow")
+    assert manifest.retry_budget_percent == 10
+
+
 def test_parser_reads_new_flags():
     args = cli.build_parser().parse_args(
         ["run-ablation", "--variant", "lay", "--repeats", "3", "--no-judges", "--seed", "5"])

@@ -24,13 +24,18 @@ from datetime import datetime, timezone
 from typing import Callable
 
 from config import (
+    emergency_mismatch_mode,
+    groundedness_guard_mode,
     llm_breaker_cooldown_seconds,
     llm_breaker_failures,
     llm_conversation_token_cap,
     llm_retry_attempts,
+    red_flag_floor_mode,
+    retry_budget_percent,
 )
 from llm.prompts import build_system_prompt
 from llm.retry import BASE_DELAY_SECONDS
+from services.red_flags import red_flag_list_sha256
 from scripts.symptom_eval.ablation import AblationLegResult, CheckpointStore, TooManyFailures, run_ablation
 from scripts.symptom_eval.checklist_extractor import OpenAIChecklistExtractor
 from scripts.symptom_eval.compare_legs import compare_legs, format_comparison
@@ -171,6 +176,11 @@ def build_manifest(
         capped_reply_sha256=sha256_text(capped_reply_fingerprint()),
         graph_index_manifest_sha256=index_sha256,
         semantic_model_id=semantic_model_id,
+        red_flag_floor_mode=red_flag_floor_mode(),
+        groundedness_guard_mode=groundedness_guard_mode(),
+        emergency_mismatch_mode=emergency_mismatch_mode(),
+        red_flag_list_sha256=red_flag_list_sha256(),
+        retry_budget_percent=retry_budget_percent(),
     )
 
 

@@ -30,6 +30,8 @@ def _manifest(**overrides) -> RunManifest:
         retry_max_attempts=2, retry_base_delay_seconds=0.25, conversation_token_cap=30000,
         breaker_enabled=False, breaker_failure_threshold=5, breaker_cooldown_seconds=30.0,
         capped_reply_sha256="e" * 64, graph_index_manifest_sha256="", semantic_model_id="",
+        red_flag_floor_mode="shadow", groundedness_guard_mode="enforce", emergency_mismatch_mode="shadow",
+        red_flag_list_sha256="d" * 64, retry_budget_percent=10,
     )
     values.update(overrides)
     return RunManifest(**values)
@@ -87,6 +89,8 @@ def test_every_non_exempt_field_is_checked(tmp_path):
         "retry_max_attempts": 9, "retry_base_delay_seconds": 9.0, "conversation_token_cap": 9,
         "breaker_enabled": True, "breaker_failure_threshold": 9, "breaker_cooldown_seconds": 9.0,
         "capped_reply_sha256": "z", "graph_index_manifest_sha256": "z", "semantic_model_id": "other-model",
+        "red_flag_floor_mode": "enforce", "groundedness_guard_mode": "off", "emergency_mismatch_mode": "off",
+        "red_flag_list_sha256": "z", "retry_budget_percent": 99,
     }
     assert set(changes) == {f.name for f in dataclasses.fields(base)} - exempt
 
@@ -169,6 +173,11 @@ def test_read_manifest_is_none_when_absent_and_a_dict_when_present(tmp_path):
     ("breaker_failure_threshold", 9),
     ("breaker_cooldown_seconds", 60.0),
     ("capped_reply_sha256", "f" * 64),
+    ("red_flag_floor_mode", "enforce"),
+    ("groundedness_guard_mode", "off"),
+    ("emergency_mismatch_mode", "off"),
+    ("red_flag_list_sha256", "f" * 64),
+    ("retry_budget_percent", 20),
 ])
 def test_a_changed_guard_setting_is_refused_on_resume(tmp_path, field, changed):
     checkpoint = str(tmp_path / "checkpoint.jsonl")
