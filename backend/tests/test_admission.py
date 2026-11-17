@@ -72,3 +72,50 @@ def test_the_retry_delay_is_the_setting_plus_up_to_two_seconds(monkeypatch: pyte
     assert admission.retry_after_seconds(lambda: 0.999) == 5
     monkeypatch.setenv("ADMISSION_RETRY_SECONDS", "7")
     assert admission.retry_after_seconds(lambda: 0.0) == 7
+
+
+def test_a_limit_with_admission_control_off_is_ignored_and_nothing_is_counted(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MAX_TURNS_IN_FLIGHT", "1")
+    monkeypatch.setenv("ADMISSION_CONTROL", "off")
+    before = _registry.get_sample_value("chat_turns_rejected_total") or 0
+    with admission.admit():
+        with admission.admit():
+            assert admission.in_flight() == 2
+    assert (_registry.get_sample_value("chat_turns_rejected_total") or 0) == before
+
+
+def test_a_limit_with_admission_control_on_still_refuses(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MAX_TURNS_IN_FLIGHT", "1")
+    monkeypatch.setenv("ADMISSION_CONTROL", "on")
+    with admission.admit():
+        with pytest.raises(admission.Busy):
+            with admission.admit():
+                pass
+
+
+def test_a_zero_limit_still_means_no_limit_with_admission_control_on(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MAX_TURNS_IN_FLIGHT", "0")
+    monkeypatch.setenv("ADMISSION_CONTROL", "on")
+    with admission.admit():
+        with admission.admit():
+            with admission.admit():
+                assert admission.in_flight() == 3
+
+
+def test_an_unknown_admission_control_value_behaves_as_on(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MAX_TURNS_IN_FLIGHT", "1")
+    monkeypatch.setenv("ADMISSION_CONTROL", "maybe")
+    with admission.admit():
+        with pytest.raises(admission.Busy):
+            with admission.admit():
+                pass
+
+
+@pytest.mark.parametrize("raw,expected", [(None, True), ("on", True), ("ON", True), ("off", False), (" OFF ", False), ("maybe", True), ("", True)])
+def test_admission_control_enabled_reads_the_environment(monkeypatch: pytest.MonkeyPatch, raw: str | None, expected: bool) -> None:
+    import config
+    if raw is None:
+        monkeypatch.delenv("ADMISSION_CONTROL", raising=False)
+    else:
+        monkeypatch.setenv("ADMISSION_CONTROL", raw)
+    assert config.admission_control_enabled() is expected

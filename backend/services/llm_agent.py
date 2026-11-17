@@ -57,10 +57,11 @@ def build_guarded_client(provider: str, *, breaker: bool) -> BaseLLMClient:
     """
     from llm.breaker import CircuitBreakerLLMClient
     from llm.instrumented import InstrumentedLLMClient
-    from llm.retry import RetryingLLMClient
+    from llm.retry import RetryingLLMClient, shared_retry_budget
 
     client: BaseLLMClient = RetryingLLMClient(
         _build_provider_client(provider, 0), provider=provider, attempts=llm_retry_attempts(),
+        budget=shared_retry_budget(),
     )
     if breaker:
         client = CircuitBreakerLLMClient(

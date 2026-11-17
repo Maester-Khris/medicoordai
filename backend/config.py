@@ -74,6 +74,10 @@ def llm_retry_attempts() -> int:
     return env_int("LLM_RETRY_ATTEMPTS", 2, minimum=1, maximum=5)
 
 
+def retry_budget_percent() -> int:
+    return env_int("RETRY_BUDGET_PERCENT", 10, minimum=1, maximum=100)
+
+
 def llm_breaker_failures() -> int:
     return env_int("LLM_BREAKER_FAILURES", 5, minimum=1)
 
@@ -142,3 +146,17 @@ def stubbed_providers() -> list[str]:
     """
     return [name for name in ("groq", "geoapify") if os.environ.get(f"{name.upper()}_BASE_URL", "").strip()]
 
+
+def admission_control_enabled() -> bool:
+    """Whether admission control enforces MAX_TURNS_IN_FLIGHT.
+
+    MAX_TURNS_IN_FLIGHT=0 means "no limit", so ADMISSION_CONTROL=off lets operators
+    switch a measured limit off without forgetting the configured number.
+    """
+    raw = os.environ.get("ADMISSION_CONTROL", "").strip().lower()
+    if not raw or raw == "on":
+        return True
+    if raw == "off":
+        return False
+    logger.warning("env_setting_invalid", extra={"setting": "ADMISSION_CONTROL", "reason": "not on or off"})
+    return True
