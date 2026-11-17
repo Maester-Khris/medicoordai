@@ -5,6 +5,10 @@ interface EmergencyCallProps {
   variant: "primary" | "link"
   // Injected for tests; defaults to the device's pointer type.
   touch?: boolean
+  // Where the trigger sits in its row; the panel always uses the full width.
+  align?: "start" | "center"
+  // "overlay" floats the panel over the content below the nearest positioned ancestor (used in the web header).
+  panel?: "inline" | "overlay"
   // Called when the panel opens (the sheet uses it to make room).
   onOpen?: () => void
 }
@@ -38,13 +42,13 @@ const LINK_STYLE = {
 
 // LEGAL: runs only from a tap or key press. On touch devices the link opens the dialer;
 // the user still has to press call. On web it shows the template panel only.
-export function EmergencyCall({ variant, touch, onOpen }: EmergencyCallProps) {
+export function EmergencyCall({ variant, touch, align = "center", panel = "inline", onOpen }: EmergencyCallProps) {
   const [open, setOpen] = useState(false)
   const titleRef = useRef<HTMLParagraphElement>(null)
   const isTouch = touch ?? isTouchDevice()
   const label = variant === "primary" ? EMERGENCY_COPY.button : EMERGENCY_COPY.headerLink
   const style = variant === "primary" ? PRIMARY_STYLE : LINK_STYLE
-  const className = "flex items-center justify-center w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
+  const className = `flex items-center ${align === "start" ? "justify-start" : "justify-center"} w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 whitespace-nowrap`
 
   const reveal = () => { setOpen(true); onOpen?.() }
 
@@ -62,8 +66,8 @@ export function EmergencyCall({ variant, touch, onOpen }: EmergencyCallProps) {
       {open && (
         <div
           data-testid="emergency-panel"
-          className="rounded-lg p-3"
-          style={{ background: "rgba(255,123,147,0.10)", border: "1px solid rgba(255,123,147,0.45)", color: "#E2F1F5" }}
+          className={`rounded-lg p-3 ${panel === "overlay" ? "absolute left-5 right-5 top-full z-30 mt-1 shadow-lg" : ""}`}
+          style={{ background: panel === "overlay" ? "rgb(36,18,28)" : "rgba(255,123,147,0.10)", border: "1px solid rgba(255,123,147,0.45)", color: "#E2F1F5" }}
         >
           <p ref={titleRef} tabIndex={-1} data-testid="emergency-title" className="font-bold text-[15px]">
             {EMERGENCY_COPY.title}

@@ -245,21 +245,35 @@ export function ChatPanel({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14px] font-bold tracking-tight leading-tight" style={{ color: '#E2F1F5' }}>
+              <h2 className="text-[14px] font-bold tracking-tight leading-tight whitespace-nowrap" style={{ color: '#E2F1F5' }}>
                 AI Health Assistant
               </h2>
-              <p className="text-[11px] font-semibold mt-0.5" style={{ color: '#48F6C1' }}>
+              <p className="text-[11px] font-semibold mt-0.5 whitespace-nowrap" style={{ color: '#48F6C1' }}>
                 Ready to assist you
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div style={{ width: 150 }}><EmergencyCall variant="link" /></div>
+            <div
+              className="flex items-center gap-1.5 rounded-full"
+              style={{
+                padding: '4px 10px',
+                background: 'rgba(72, 246, 193, 0.08)',
+                border: '1px solid rgba(72, 246, 193, 0.2)',
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#48F6C1' }} />
+              <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#48F6C1' }}>Online</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 mt-1">
+          <div className="flex-none"><EmergencyCall variant="link" align="start" panel="overlay" /></div>
             <button
               onClick={handleNewConversation}
               disabled={!user}
-              className="flex items-center gap-1.5 text-xs font-semibold rounded-lg transition-all"
+              className="flex-none flex items-center gap-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap"
               style={{
                 padding: '5px 10px',
                 color: user ? '#7AA0B0' : '#1C4659',
@@ -273,18 +287,6 @@ export function ChatPanel({
               </svg>
               New conversation
             </button>
-            <div
-              className="flex items-center gap-1.5 rounded-full"
-              style={{
-                padding: '4px 10px',
-                background: 'rgba(72, 246, 193, 0.08)',
-                border: '1px solid rgba(72, 246, 193, 0.2)',
-              }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#48F6C1' }} />
-              <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#48F6C1' }}>Online</span>
-            </div>
-          </div>
         </div>
       </div>
 

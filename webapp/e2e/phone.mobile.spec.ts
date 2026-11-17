@@ -29,6 +29,12 @@ async function expectNoHorizontalScroll(page: Page) {
 // A control is "tappable" when it is at least 44 px tall and the element at its centre is itself.
 async function expectTappable(page: Page, locator: ReturnType<Page["locator"]>) {
   await locator.scrollIntoViewIfNeeded()
+  // Wait for the sheet's spring animation and scroll to settle before measuring.
+  await expect.poll(async () => {
+    const a = JSON.stringify(await locator.boundingBox())
+    await page.waitForTimeout(150)
+    return a === JSON.stringify(await locator.boundingBox())
+  }).toBe(true)
   const box = await locator.boundingBox()
   expect(box, "control has a box").not.toBeNull()
   expect(box!.height).toBeGreaterThanOrEqual(43.5)

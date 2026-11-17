@@ -1,11 +1,12 @@
 import { LEGEND_ITEMS } from '../config/categories'
 import { getFacilitySvgInner } from '../config/icons'
 
-export function FacilityLegend({ verticalLegend }: { verticalLegend: boolean }) {
+// bottomInset lifts the legend above the mobile bottom sheet, which covers the bottom of the map.
+export function FacilityLegend({ verticalLegend, bottomInset = 0 }: { verticalLegend: boolean; bottomInset?: number }) {
   return (
     <div style={{
       position: 'absolute',
-      bottom: 12,
+      bottom: 12 + bottomInset,
       left: 12,
       zIndex: 15,
       background: 'rgba(6, 18, 25, 0.85)',

@@ -33,6 +33,10 @@ interface MapPanelProps {
   onModeChange?: (mode: TravelModeKey) => void
   /** Facility chosen from the mobile list: the map flies to it and rings it, on every new request. */
   highlightRequest?: HighlightRequest | null
+  /** Height of the mobile bottom sheet at rest: map controls sit above it so it never covers them. */
+  bottomInset?: number
+  /** False when the legend would not fit above the sheet (short landscape phones). */
+  showLegend?: boolean
 }
 
 // Short labels for filter chips
@@ -44,7 +48,7 @@ const CHIP_LABEL: Record<CategoryFilter, string> = {
 }
 
 // memo: the mobile layout re-renders on every keystroke; without it every marker icon is rebuilt each time.
-export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange, highlightRequest = null }: MapPanelProps) {
+export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange, highlightRequest = null, bottomInset = 0, showLegend = true }: MapPanelProps) {
   const config = useConfig()
   const isMobile = useBreakpoint()
   const pinnedIdRef = useRef<string | null>(null)
@@ -197,7 +201,7 @@ export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, 
             </Marker>
           )}
           {/* Focus User Location button */}
-          <FocusUserButton geo={geo} isMobile={isMobile} />
+          <FocusUserButton geo={geo} isMobile={isMobile} bottomInset={bottomInset} />
         </MapProvider>
       </MapContainer>
 
@@ -642,7 +646,7 @@ export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, 
         )}
       </div>
 
-      <FacilityLegend verticalLegend={verticalLegend} />
+      {showLegend && <FacilityLegend verticalLegend={verticalLegend} bottomInset={bottomInset} />}
     </div>
   )
 })
@@ -721,9 +725,11 @@ function HighlightedFacility({ request, facility }: {
 function FocusUserButton({
   geo,
   isMobile,
+  bottomInset,
 }: {
   geo: ReturnType<typeof useGeolocation>
   isMobile: boolean
+  bottomInset: number
 }) {
   const map = useMap()
 
@@ -740,7 +746,7 @@ function FocusUserButton({
       title="Focus on my location"
       style={{
         position: 'absolute',
-        bottom: isMobile ? 236 : 16,
+        bottom: isMobile ? 16 + bottomInset : 16,
         right: 16,
         zIndex: 1000,
         width: 38,

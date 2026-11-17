@@ -50,6 +50,9 @@ function stripToolNarration(content: string): string {
     .trim()
 }
 
+// The vertical legend needs about this much map height above the sheet, below the filter chips.
+const LEGEND_MIN_MAP_HEIGHT = 300
+
 const FALLBACK_STARTERS = ['I have a fever', 'Chest pain', 'Sore throat', 'Dizziness']
 
 export function MobileLayout({
@@ -218,6 +221,8 @@ export function MobileLayout({
           onClear={handleNewConversation}
           onModeChange={handleModeChange}
           highlightRequest={highlightRequest}
+          bottomInset={heights.peek}
+          showLegend={geometry.free - heights.peek >= LEGEND_MIN_MAP_HEIGHT}
         />
       </div>
 
