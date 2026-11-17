@@ -1,7 +1,8 @@
 name: Eval gate
 
-# Runs only on a PR that carries the `run-eval` label. It makes live calls to Groq (free tier), so it is
-# never run on every push. The gate protects the production (no-graph) path: seven cases that were right on
+# Runs on a PR that carries the `run-eval` label, nightly on the default branch, and on demand. It makes
+# live calls to Groq (free tier), so it is never run on every push. The nightly run catches drift in the
+# hosted model, which no code change would trigger. The gate protects the production (no-graph) path: seven cases that were right on
 # every recorded baseline run must still be right. It catches gross breaks (a prompt, parser or provider
 # change), not subtle drift. Design: CHANGELOG.md, Sprint 23, item 6.
 
@@ -9,15 +10,18 @@ on:
   pull_request:
     types: [labeled, synchronize]
     branches: [preview, main]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
 
 concurrency:
-  group: eval-gate-${{ github.event.pull_request.number }}
+  group: eval-gate-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
   eval-gate:
     name: Eval gate (sentinel cases, no-graph path)
-    if: contains(github.event.pull_request.labels.*.name, 'run-eval')
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-eval')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
@@ -39,12 +43,16 @@ jobs:
 
       # One repeat of each sentinel case. The system is gpt-oss-120b on Groq; the simulated patient is a
       # different Groq model. --min-gap-s keeps the system under Groq's 8,000 tokens-per-minute limit.
+      # Two passes: a conversation skipped by a Groq error (a 400 on a malformed tool call) is retried once
+      # from the checkpoint; a sentinel still missing after that fails the gate.
       - name: Run the sentinel conversations
         run: |
-          python -m scripts.symptom_eval.cli run-ablation \
-            --variant lay --providers off --repeats 1 --no-judges --min-gap-s 20 --skip-failed \
-            --cases "$(python -c "import json;print(','.join(s['case_id'] for s in json.load(open('scripts/symptom_eval/baselines/off-lay-sentinels.json'))['sentinels']))")" \
-            --checkpoint "$RUNNER_TEMP/gate.jsonl"
+          for attempt in 1 2; do
+            python -m scripts.symptom_eval.cli run-ablation \
+              --variant lay --providers off --repeats 1 --no-judges --min-gap-s 20 --skip-failed \
+              --cases "$(python -c "import json;print(','.join(s['case_id'] for s in json.load(open('scripts/symptom_eval/baselines/off-lay-sentinels.json'))['sentinels']))")" \
+              --checkpoint "$RUNNER_TEMP/gate.jsonl"
+          done
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GROQ_MODEL: openai/gpt-oss-120b
