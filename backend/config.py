@@ -83,7 +83,36 @@ def llm_breaker_cooldown_seconds() -> int:
 
 
 def llm_conversation_token_cap() -> int:
-    return env_int("LLM_CONVERSATION_TOKEN_CAP", 30000, minimum=1)
+    # 2x the largest conversation measured (Sprint 24 baseline: max 7.2k, Sprint 23: about 11k).
+    return env_int("LLM_CONVERSATION_TOKEN_CAP", 22000, minimum=1)
+
+
+GUARD_MODES: tuple[str, ...] = ("off", "shadow", "enforce")
+
+
+def guard_mode(name: str, default: str = "shadow") -> str:
+    """A safety guard's mode from the environment: off, shadow (log what it would do) or enforce.
+    A missing value uses `default`; an unknown value uses `default` with one warning, so a typo
+    never turns a guard off or stops the API from starting."""
+    raw = os.environ.get(name, "").strip().lower()
+    if not raw:
+        return default
+    if raw not in GUARD_MODES:
+        logger.warning("env_setting_invalid", extra={"setting": name, "reason": "not a guard mode"})
+        return default
+    return raw
+
+
+def red_flag_floor_mode() -> str:
+    return guard_mode("RED_FLAG_FLOOR_MODE", "shadow")
+
+
+def emergency_mismatch_mode() -> str:
+    return guard_mode("EMERGENCY_MISMATCH_MODE", "shadow")
+
+
+def groundedness_guard_mode() -> str:
+    return guard_mode("GROUNDEDNESS_GUARD_MODE", "enforce")
 
 
 def load_aware_routing() -> bool:

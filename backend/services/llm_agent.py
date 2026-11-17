@@ -121,6 +121,7 @@ CAPPED_NOTE = (
     "so far. If your symptoms change or get worse, call 911."
 )
 CAPPED_NO_RESULT = f"I couldn't finish assessing this. {SAFETY_LINE}"
+EMERGENT_OPENER = "Please call 911 now."
 
 
 def capped_reply(severity: str, facility: dict | None) -> str:
@@ -137,8 +138,38 @@ def capped_reply(severity: str, facility: dict | None) -> str:
         )
     else:
         where = "I can't point to a facility from here, so please call 211 or search online for nearby care."
-    urgency = " Please call 911 now." if severity == "emergent" else ""
+    urgency = f" {EMERGENT_OPENER}" if severity == "emergent" else ""
     return f"Based on what you've told me, this looks {severity}.{urgency} {where} {CAPPED_NOTE}"
+
+
+def ensure_911_first(text: str, severity: str) -> str:
+    """The rule for an emergent reply: it says 911, and 911 comes before any 211. A reply that
+    already follows the rule is returned as it is; otherwise the fixed opener goes in front.
+    Other severities are never touched."""
+    if severity != "emergent":
+        return text
+    if "911" in text and ("211" not in text or text.index("911") < text.index("211")):
+        return text
+    return f"{EMERGENT_OPENER} {text}"
+
+
+def facility_fact(facility: dict | None, severity: str) -> str:
+    """The sentence that tells the model which facility to name (or that there is none)."""
+    if facility:
+        return (
+            f"The nearest appropriate facility is: {facility['name']} "
+            f"at {facility['address']}, approximately {facility['distanceKm']} km away. "
+            f"Use this exact facility name in your response — do not modify or replace it."
+        )
+    if severity == "emergent":
+        return (
+            "No location data is available. Do not mention any specific facility. "
+            "Tell the patient to call 911 now. Do not suggest any other phone number."
+        )
+    return (
+        "No location data is available. Do not mention any specific facility. "
+        "Advise the patient to call 211 or search online for nearby care."
+    )
 
 
 def capped_reply_fingerprint() -> str:
@@ -146,8 +177,9 @@ def capped_reply_fingerprint() -> str:
     so changing any wording starts a new configuration instead of silently mixing two."""
     sample_facility = {"name": "Sample Hospital", "address": "1 Sample St", "distanceKm": 1.0}
     return "\n".join([
-        SAFETY_LINE, CAPPED_NOTE, CAPPED_NO_RESULT,
-        capped_reply("urgent", sample_facility), capped_reply("emergent", None),
+        SAFETY_LINE, CAPPED_NOTE, CAPPED_NO_RESULT, EMERGENT_OPENER,
+        facility_fact(None, "emergent"), facility_fact(None, "moderate"), facility_fact(sample_facility, "urgent"),
+        capped_reply("urgent", sample_facility), capped_reply("emergent", None), capped_reply("emergent", sample_facility),
     ])
 
 
@@ -419,10 +451,10 @@ class LLMAgent:
                 ctx=ctx,
             )
 
-        if severity == "emergent" and "911" not in response_text:
-            # The model decides whether to say 911 (measured: it left it out in 5 of 10 emergent replies,
-            # and with no location sent the guest to 211). For an emergency the number is not optional.
-            response_text = response_text.rstrip() + " Please call 911 now."
+        # The model decides whether to say 911 (measured: it left it out in 5 of 10 emergent replies,
+        # and with no location sent the guest to 211). For an emergency the number is not optional
+        # and comes before any 211.
+        response_text = ensure_911_first(response_text, severity)
 
         grounding = check_facility_groundedness(response_text, recommended_facility)
         logger.info(
@@ -454,24 +486,12 @@ class LLMAgent:
         facility: dict | None,
         ctx: _TurnContext,
     ) -> str:
-        if facility:
-            facility_fact = (
-                f"The nearest appropriate facility is: {facility['name']} "
-                f"at {facility['address']}, approximately {facility['distanceKm']} km away. "
-                f"Use this exact facility name in your response — do not modify or replace it."
-            )
-        else:
-            facility_fact = (
-                "No location data is available. Do not mention any specific facility. "
-                "Advise the patient to call 211 or search online for nearby care."
-            )
-
         grounding = LLMMessage(
             role="system",
             content=(
                 f"Symptom severity has been classified as: {severity}.\n"
                 f"Internal reasoning (do not reveal): {reasoning}\n\n"
-                f"{facility_fact}\n\n"
+                f"{facility_fact(facility, severity)}\n\n"
                 f"Write a warm, concise response to the patient (2-4 sentences). "
                 f"Mention the severity level and the facility name. "
                 f"Do not recommend treatments or medications. "

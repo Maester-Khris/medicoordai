@@ -9,7 +9,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from llm.base import LLMResponse
-from services.llm_agent import LLMAgent
+from services.llm_agent import EMERGENT_OPENER, LLMAgent
 
 
 def _agent(severity: str, reply: str) -> LLMAgent:
@@ -32,9 +32,9 @@ def _respond(agent: LLMAgent) -> dict:
     "Please go immediately to Test General Hospital.",                      # no number at all
     "Call emergency services right away.",                                  # no number
 ])
-def test_an_emergent_reply_without_911_gets_the_911_line(reply):
+def test_an_emergent_reply_without_911_gets_the_911_line_first(reply):
     out = _respond(_agent("emergent", reply))["response"]
-    assert "911" in out and out.startswith(reply.rstrip())
+    assert out == f"{EMERGENT_OPENER} {reply}"
 
 
 def test_an_emergent_reply_that_already_says_911_is_unchanged():
