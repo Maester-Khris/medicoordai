@@ -79,7 +79,7 @@ class TestEmergencyMismatchModes:
         result = asyncio.run(agent.respond("I have chest pain", NEUTRAL_THREE_TURNS))
         assert result["severity"] == "emergent"
         assert client.chat.await_count == 1  # classification only: the reply is the template
-        assert result["response"] == capped_reply("emergent", None)
+        assert result["response"] == capped_reply("emergent", None, capped=False)
         assert "911" in result["response"]
 
     def test_enforce_finds_a_red_flag_from_an_earlier_turn(self, monkeypatch) -> None:

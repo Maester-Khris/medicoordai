@@ -14,7 +14,7 @@ It started as a 48-hour hackathon build (Toronto Tech Week 2025). The rebuild re
 
 ---
 
-## Current State (Sprint 23)
+## Current State (Sprint 24)
 
 | Area | Status |
 |---|---|
@@ -25,6 +25,8 @@ It started as a 48-hour hackathon build (Toronto Tech Week 2025). The rebuild re
 | Graph-assisted triage (SNOMED knowledge graph) | Built and measured, **off by default**: it does not beat the no-graph path yet (see Symptom Understanding) |
 | Load and scale | Measured to about 35 chat turns per second on one small instance (see Performance) |
 | Security | Reviewed in Sprint 23, 3 High findings fixed (see Security) |
+| Safety checks | Red-flag floor and emergency-mismatch check run in shadow (log only, awaiting a clinical reviewer); a groundedness guard replaces malformed replies with a template |
+| Cost guards | Token cap 22,000, admission off switch, retry budget, nightly eval gate |
 | Accounts, emergency-contact alerts, analytics, admin | Out of scope for this phase |
 
 Full history: [CHANGELOG.md](CHANGELOG.md).
@@ -102,6 +104,17 @@ The goal: check whether the graph improves understanding (asking for the facts a
 
 v3 minus `off`: -2.9 points (95% interval [-11.7, +3.1]). All comparisons include zero: the graph does not elicit more needed facts. The second-judge check failed (misconfigured), so judge reliability is unproven; one run only.
 
+### 4. Safety enforcement
+
+Under-triage (accuracy), 81 conversations per variant. Baseline against the run with the floor in shadow and the groundedness guard enforcing.
+
+| | Baseline | After |
+|---|---|---|
+| Lay | 18.5% (70.4%) | 22.2% (69.1%) |
+| Original wording | 21.0% (70.4%) | 19.8% (71.6%) |
+
+Paired intervals include zero in both variants (McNemar p = 1.0): no change was measured, which is expected while the floor only logs. The floor matched 4 of 16 emergent cases in lay wording and 5 of 16 in original wording, with one false positive (case 4); it is a net for explicit wording, not a classifier. The baseline and the "Now" rows above differ by run-to-run variation (`off` moved about 4 points between runs on the same setup). `gpt-oss` wrote its tool call as reply text in about a third of eval conversations, and the guard replaces those replies. After this run, a branch review found the matcher missed common phrasing ("No, I can't breathe", "never felt chest pain like this"); the negation window and the replacement wording were fixed, so the list and wording hashes differ from the run's manifest. The offline pass over the same transcripts gives the same hits and the same one false positive.
+
 ### Reading
 
 - Better matching did not make triage safer or the chat's questions better.
@@ -110,9 +123,11 @@ v3 minus `off`: -2.9 points (95% interval [-11.7, +3.1]). All comparisons includ
 
 ### CI regression gate
 
-A label-triggered check (`run-eval` on a PR, `.github/workflows/eval-gate.yml`) protects the production no-graph path. It does not measure quality: it fails when a case that was reliably right is now wrong. It runs 7 sentinel cases of the lay set once, on Groq's free tier, and fails if an emergent sentinel is under-triaged, if 2 or more other sentinels differ from the baseline, or if a sentinel is missing.
+A check (`.github/workflows/eval-gate.yml`; the `run-eval` label on a PR, nightly at 06:17 UTC, or on demand) protects the production no-graph path. It does not measure quality: it fails when a case that was reliably right is now wrong. It runs 7 sentinel cases of the lay set once, on Groq's free tier, and fails if an emergent sentinel is under-triaged, if 2 or more other sentinels differ from the baseline, or if a sentinel is missing.
 
 Calibrated on that setup (30 conversations of the no-graph leg): accuracy 73.3%, under-triage 23.3%, in line with the table above. Three cases that held on the Ollama baseline did not hold on Groq (one urgent, two emergent under-triaged), so they are reported but cannot fail the gate: only 5 emergent cases are protected, and why those two under-triage on Groq is not investigated. One run is a sample, and the gate has not run in CI yet.
+
+Since Sprint 24 a skipped sentinel is retried once; one still missing fails the gate. The first run on the new code passed 7 of 7 on Groq, after one retry of case 8 (a Groq 400). The `GROQ_API_KEY` repository secret is still needed. The gate checks triage only: escalation and in-conversation security tests are planned and not built.
 
 ---
 
@@ -127,7 +142,7 @@ Sprint 23 review (2026-11-09 to 2026-11-12), run locally with free tools; the AI
 | Red team (72 attacks, real model) | none lowered the severity or leaked the prompt; every emergent reply carried 911; 6 flagged, none High |
 | Agent power | the model has one tool that returns a classification; it cannot fetch, send or run anything |
 
-Three High findings were found and fixed with tests: a junk `Bearer` header could stall the API, the model's severity was not validated, and emergent replies could lack a 911 line. Open: typed personal details reach the model provider unredacted, and a reply can be replaced by attacker text (the severity and 911 line still hold). Limits: one run of a sample, not a proof; the semantic path and live graph were not tested.
+Three High findings were found and fixed with tests: a junk `Bearer` header could stall the API, the model's severity was not validated, and emergent replies could lack a 911 line. Open: typed personal details reach the model provider unredacted. Closed in Sprint 24 for the red-team forms, effective once released: a raw tool-call blob, a reply with a forged prompt tag, a reply too short to be real (a planted code word, finding `inj4`), or a reply that omits the chosen facility's name is replaced by a template. Limit: attacker text written as a full sentence on a turn with no facility is not detected. Limits: one run of a sample, not a proof; the semantic path and live graph were not tested.
 
 ---
 

@@ -35,6 +35,7 @@ RED_FLAG_PATTERNS: dict[str, tuple[str, ...]] = {
         r"\b(?:difficulty|trouble) breathing\b",
         r"\bgasping\b",
         r"\bnot breathing\b",
+        r"\b(?:isn'?t|is not|stopped|stops) breathing\b",
     ),
     "unresponsive": (
         r"\bunconscious\b",
@@ -76,16 +77,29 @@ NEGATION_WORDS = frozenset({
     "don't", "dont", "doesn't", "doesnt", "didn't", "didnt", "isn't", "isnt",
     "wasn't", "wasnt", "aren't", "hasn't", "haven't", "havent",
 })
-# A negation reaches back over a list ("haven't noticed any numbness or trouble breathing") but stops
-# at a contrast word, so "no fever but I can't breathe" still finds the breathing problem.
-CONTRAST_WORDS = frozenset({"but", "however", "although", "though", "except", "yet", "now", "then", "until", "still"})
-NEGATION_REACH_WORDS = 12
+# A negation reaches back over a short list in one clause ("haven't noticed any numbness or trouble
+# breathing") but stops at a contrast word or a clause joiner, so "no fever but I can't breathe" and
+# "it isn't getting better and I have chest pain" still find the problem. Commas and colons end the
+# clause altogether; a comma does so only when a new subject follows it ("No, I can't breathe" is an
+# emergency, not a denial), not for list items ("no fever, chills, or trouble breathing").
+SUBJECT_WORDS = frozenset({
+    "i", "i'm", "i've", "i'd", "he", "she", "they", "we", "you", "it", "he's", "she's", "they're", "it's",
+    "my", "his", "her", "their", "our", "there", "there's", "this", "that",
+})
+CONTRAST_WORDS = frozenset({
+    "but", "however", "although", "though", "except", "yet", "now", "then", "until", "still",
+    "and", "so", "because",
+})
+NEGATION_REACH_WORDS = 8
+# "I've never felt chest pain like this" is a worst-ever symptom, not a denial.
+NEVER_LIKE_THIS = ("like this", "like that")
 HISTORY_BEFORE = ("history of", "family history")
 HISTORY_AFTER = ("years ago", "year ago", "decades ago")
 HISTORY_WINDOW_WORDS = 4
 
 _SENTENCE_BREAK = re.compile(r"[.?!;\n]+")
 _WORD = re.compile(r"[a-z']+")
+_WORD_OR_PAUSE = re.compile(r"[a-z']+|[,:]")
 
 
 def _normalise(text: str) -> str:
@@ -93,15 +107,27 @@ def _normalise(text: str) -> str:
 
 
 def _cancelled(sentence: str, start: int, end: int) -> bool:
-    """A mention is cancelled by a negation cue before it with no contrast word in between, or by a
-    history cue ("history of ..." before it, "years ago" after it). Only its own mention is cancelled."""
-    for word in reversed(_WORD.findall(sentence[:start])[-NEGATION_REACH_WORDS:]):
-        if word in CONTRAST_WORDS:
+    """A mention is cancelled by a negation cue before it in the same clause with no contrast word in
+    between, or by a history cue ("history of ..." before it, "years ago" after it). Only its own
+    mention is cancelled."""
+    tokens = _WORD_OR_PAUSE.findall(sentence[:start])
+    clause_words: list[str] = []  # the words between the scan position and the mention, nearest last
+    for token in reversed(tokens):
+        if token in (",", ":"):
+            if token == ":" or any(w in SUBJECT_WORDS for w in clause_words):
+                break
+            continue
+        if token in CONTRAST_WORDS or len(clause_words) >= NEGATION_REACH_WORDS:
             break
-        if word in NEGATION_WORDS:
+        if token in NEGATION_WORDS:
+            if token == "never" and " ".join(_WORD.findall(sentence[end:])[:2]) in NEVER_LIKE_THIS:
+                clause_words.insert(0, token)
+                continue
             return True
-    before_text = " ".join(_WORD.findall(sentence[:start])[-HISTORY_WINDOW_WORDS:])
-    after_text = " ".join(_WORD.findall(sentence[end:])[:HISTORY_WINDOW_WORDS])
+        clause_words.insert(0, token)
+    clause_before = sentence[:start].rsplit(",", 1)[-1].rsplit(":", 1)[-1]
+    before_text = " ".join(_WORD.findall(clause_before)[-HISTORY_WINDOW_WORDS:])
+    after_text = " ".join(_WORD.findall(sentence[end:].split(",")[0])[:HISTORY_WINDOW_WORDS])
     return any(cue in before_text for cue in HISTORY_BEFORE) or any(cue in after_text for cue in HISTORY_AFTER)
 
 

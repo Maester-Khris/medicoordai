@@ -43,15 +43,16 @@ jobs:
 
       # One repeat of each sentinel case. The system is gpt-oss-120b on Groq; the simulated patient is a
       # different Groq model. --min-gap-s keeps the system under Groq's 8,000 tokens-per-minute limit.
-      # Two passes: a conversation skipped by a Groq error (a 400 on a malformed tool call) is retried once
-      # from the checkpoint; a sentinel still missing after that fails the gate.
+      # Two passes: a conversation skipped by a Groq error (a 400 on a malformed tool call) or a pass that
+      # stopped early (three failures in a row) is retried once from the checkpoint. `|| true` keeps the
+      # first pass's exit code from skipping the second; the gate step below fails on a missing sentinel.
       - name: Run the sentinel conversations
         run: |
           for attempt in 1 2; do
             python -m scripts.symptom_eval.cli run-ablation \
               --variant lay --providers off --repeats 1 --no-judges --min-gap-s 20 --skip-failed \
               --cases "$(python -c "import json;print(','.join(s['case_id'] for s in json.load(open('scripts/symptom_eval/baselines/off-lay-sentinels.json'))['sentinels']))")" \
-              --checkpoint "$RUNNER_TEMP/gate.jsonl"
+              --checkpoint "$RUNNER_TEMP/gate.jsonl" || true
           done
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}

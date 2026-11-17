@@ -94,3 +94,31 @@ def test_the_list_hash_is_a_sha256_and_changes_with_the_list(monkeypatch: pytest
     assert len(before) == 64 and int(before, 16) >= 0
     monkeypatch.setitem(red_flags.RED_FLAG_PATTERNS, "chest_pain", ("something else",))
     assert red_flag_list_sha256() != before
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("No, I can't breathe", ["breathing"]),
+    ("I don't know what's happening, I can't breathe", ["breathing"]),
+    ("I don't know, my chest pain is really bad", ["chest_pain"]),
+    ("It isn't getting better and I have chest pain", ["chest_pain"]),
+    ("I've never felt chest pain like this", ["chest_pain"]),
+    ("Never had this before: chest pain and sweating", ["chest_pain"]),
+    ("I did not eat, and chest pain started", ["chest_pain"]),
+    ("history of seizures, he is having a seizure now", ["seizure"]),
+    ("My wife collapsed and isn't breathing", ["breathing"]),
+    ("he stopped breathing", ["breathing"]),
+])
+def test_lay_emergency_phrasing_is_not_cancelled_by_a_nearby_negation_or_history(text: str, expected: list[str]) -> None:
+    assert cats(text) == expected
+
+
+@pytest.mark.parametrize("text", [
+    "no fever and no chest pain",
+    "I never had chest pain",
+    "no cough or chest pain",
+    "No, I haven't noticed any fever, chills, or trouble breathing",
+    "He's not struggling to breathe, no coughing, choking, or drooling",
+    "I haven't had any nausea or pain, and I don't think I have a fever or trouble breathing",
+])
+def test_a_negation_still_reaches_across_a_short_list_in_one_clause(text: str) -> None:
+    assert cats(text) == []

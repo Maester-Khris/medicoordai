@@ -99,3 +99,22 @@ def test_an_agent_reply_that_sends_the_patient_to_211_first_is_fixed() -> None:
     reply = LLMResponse(content="Please call 211 for help.", tool_calls=None, finish_reason="stop", model="fake", usage={})
     result = asyncio.run(LLMAgent(client=_Scripted(triage, reply)).respond("it hurts", history=[]))
     assert result["severity"] == "emergent" and _911_before_211(result["response"])
+
+
+def test_the_emergent_no_facility_template_never_sends_the_patient_to_211() -> None:
+    text = capped_reply("emergent", None)
+    assert "911" in text and "211" not in text
+
+
+def test_a_replacement_reply_does_not_claim_the_conversation_was_cut_short() -> None:
+    for severity in ("urgent", "emergent"):
+        assert "wrapping up" not in capped_reply(severity, FACILITY, capped=False)
+        assert "911" in capped_reply(severity, FACILITY, capped=False)
+    assert "wrapping up" in capped_reply("urgent", FACILITY)
+
+
+def test_the_fingerprint_covers_the_replacement_wording() -> None:
+    fingerprint = capped_reply_fingerprint()
+    sample = {"name": "Sample Hospital", "address": "1 Sample St", "distanceKm": 1.0}
+    assert capped_reply("urgent", sample, capped=False) in fingerprint
+    assert capped_reply("emergent", None, capped=False) in fingerprint

@@ -125,12 +125,17 @@ CAPPED_NOTE = (
     "I'm wrapping up here to keep this conversation short, so this is based on what you've shared "
     "so far. If your symptoms change or get worse, call 911."
 )
+REPLACED_NOTE = (
+    "This is based on what you've shared so far. If your symptoms change or get worse, call 911."
+)
 CAPPED_NO_RESULT = f"I couldn't finish assessing this. {SAFETY_LINE}"
 EMERGENT_OPENER = "Please call 911 now."
 
 
-def capped_reply(severity: str, facility: dict | None) -> str:
-    """The patient-facing text once a conversation has spent its token allowance.
+def capped_reply(severity: str, facility: dict | None, capped: bool = True) -> str:
+    """The patient-facing text once a conversation has spent its token allowance, and the same
+    template when a guard replaces a reply (capped=False drops the "wrapping up" note, which would
+    be false there).
 
     No model call: the cap exists to stop spend, so the grounded reply that normally costs a
     second call is a template. Everything it says comes from the classification and the facility
@@ -141,10 +146,13 @@ def capped_reply(severity: str, facility: dict | None) -> str:
             f"The nearest appropriate facility is {facility['name']} at {facility['address']}, "
             f"about {facility['distanceKm']} km away."
         )
+    elif severity == "emergent":
+        where = ""  # the opener already says 911; no second number for the patient to choose
     else:
         where = "I can't point to a facility from here, so please call 211 or search online for nearby care."
     urgency = f" {EMERGENT_OPENER}" if severity == "emergent" else ""
-    return f"Based on what you've told me, this looks {severity}.{urgency} {where} {CAPPED_NOTE}"
+    note = CAPPED_NOTE if capped else REPLACED_NOTE
+    return " ".join(part for part in (f"Based on what you've told me, this looks {severity}.{urgency}", where, note) if part)
 
 
 def ensure_911_first(text: str, severity: str) -> str:
@@ -187,9 +195,10 @@ def capped_reply_fingerprint() -> str:
     so changing any wording starts a new configuration instead of silently mixing two."""
     sample_facility = {"name": "Sample Hospital", "address": "1 Sample St", "distanceKm": 1.0}
     return "\n".join([
-        SAFETY_LINE, CAPPED_NOTE, CAPPED_NO_RESULT, EMERGENT_OPENER,
+        SAFETY_LINE, CAPPED_NOTE, REPLACED_NOTE, CAPPED_NO_RESULT, EMERGENT_OPENER,
         facility_fact(None, "emergent"), facility_fact(None, "moderate"), facility_fact(sample_facility, "urgent"),
         capped_reply("urgent", sample_facility), capped_reply("emergent", None), capped_reply("emergent", sample_facility),
+        capped_reply("urgent", sample_facility, capped=False), capped_reply("emergent", None, capped=False),
     ])
 
 
@@ -504,7 +513,7 @@ class LLMAgent:
                 facility_load.record(recommended_facility, severity, lat, lng)
 
         if ctx.capped or escalated_by_mismatch:
-            response_text = capped_reply(severity, recommended_facility)
+            response_text = capped_reply(severity, recommended_facility, capped=ctx.capped)
         else:
             response_text = await self._generate_grounded_response(
                 messages=messages,
@@ -537,7 +546,7 @@ class LLMAgent:
         )
         if problem and guard_mode == "enforce":
             logger.warning("reply_replaced_by_template", extra={"problem": problem, "severity": severity})
-            response_text = capped_reply(severity, recommended_facility)
+            response_text = capped_reply(severity, recommended_facility, capped=False)
 
         return {
             "response": response_text,
