@@ -7,7 +7,10 @@ from config import (
     llm_breaker_failures,
     llm_conversation_token_cap,
     llm_provider_chain,
+    emergency_mismatch_mode,
+    groundedness_guard_mode,
     llm_retry_attempts,
+    red_flag_floor_mode,
 )
 from graph.base import GraphContextProvider
 from graph.factory import get_graph_provider
@@ -20,8 +23,9 @@ from metrics import LLM_CAP_REACHED
 from llm.prompts import build_system_prompt, build_medical_context_block, build_graph_context_block
 from services import facility_load
 from services.proximity import find_nearest_facilities
+from services.red_flags import RedFlag, find_red_flags
 from services.recommendation import rank_facilities
-from services.triage_eval import check_emergency_mismatch, check_facility_groundedness
+from services.triage_eval import check_emergency_mismatch, check_facility_groundedness, reply_problem
 from starlette.concurrency import run_in_threadpool
 
 logger = logging.getLogger(__name__)
@@ -172,6 +176,11 @@ def facility_fact(facility: dict | None, severity: str) -> str:
     )
 
 
+def escalate(severity: str, flagged: bool) -> str:
+    """The floor's whole rule: a red flag can only raise a severity to emergent, never lower one."""
+    return "emergent" if flagged else severity
+
+
 def capped_reply_fingerprint() -> str:
     """Every fixed string and template a capped turn can show, rendered. The eval manifest hashes it,
     so changing any wording starts a new configuration instead of silently mixing two."""
@@ -193,6 +202,7 @@ class _TurnContext:
     conversation_id: str | None
     capped: bool
     tokens_used: int = field(default=0)
+    user_texts: list[str] = field(default_factory=list)  # every message the patient has sent, current last
 
 
 def _followup(text: str, ctx: _TurnContext) -> dict:
@@ -271,12 +281,50 @@ class LLMAgent:
         ctx = await self._turn_context(conversation_id)
         force_classify = user_turns >= self._max_followups or ctx.capped
 
-        return await self._run(
+        # The red-flag floor reads everything the patient has said, not only this message.
+        ctx.user_texts = [m["content"] for m in history if m.get("role") == "user"] + [user_message]
+        floor_mode = red_flag_floor_mode()
+        flags = find_red_flags(ctx.user_texts) if floor_mode != "off" else []
+        if flags and floor_mode == "enforce":
+            return await self._floor_triage(flags, messages, lat, lng, user_turns, ctx)
+
+        result = await self._run(
             messages, lat, lng,
             force=force_classify,
             user_turns=user_turns,
             ctx=ctx,
         )
+        if flags:  # shadow: say what the floor would have done, change nothing
+            model_severity = result["severity"]
+            logger.warning(
+                "red_flag_floor_shadow",
+                extra={
+                    "categories": [flag.category for flag in flags],
+                    "model_severity": model_severity,
+                    "would_escalate": escalate(model_severity or "routine", True) != model_severity,
+                    "user_turns": user_turns,
+                },
+            )
+        return result
+
+    async def _floor_triage(
+        self, flags: list[RedFlag], messages: list[LLMMessage], lat: float | None, lng: float | None,
+        user_turns: int, ctx: _TurnContext,
+    ) -> dict:
+        """The floor's answer: emergent, decided in code. The classification call is skipped, so an
+        emergency costs one model call (the reply) instead of two. Only category ids are logged."""
+        categories = [flag.category for flag in flags]
+        logger.warning("red_flag_floor_applied", extra={"categories": categories, "user_turns": user_turns})
+        tool_call = {
+            "id": "red-flag-floor",
+            "name": TRIAGE_RESPONSE.name,
+            "arguments": json.dumps({
+                "severity": "emergent",
+                "reasoning": f"red-flag floor: {categories[0]}",
+                "information_sufficient": True,
+            }),
+        }
+        return await self._handle_triage(tool_call, messages, lat, lng, user_turns, ctx)
 
     async def _turn_context(self, conversation_id: str | None) -> _TurnContext:
         if conversation_id is None or self._spend_store is None:
@@ -412,11 +460,25 @@ class LLMAgent:
         original_user_message = next(
             (m.content for m in reversed(messages) if m.role == "user"), ""
         )
-        if check_emergency_mismatch(original_user_message, severity):
+        escalated_by_mismatch = False
+        mismatch_mode = emergency_mismatch_mode()
+        user_texts = ctx.user_texts or [original_user_message]
+        if mismatch_mode != "off" and check_emergency_mismatch(user_texts, severity):
             logger.warning(
                 "emergency_mismatch_detected",
-                extra={"severity": severity, "user_turns": user_turns},
+                extra={
+                    "severity": severity,
+                    "categories": [flag.category for flag in find_red_flags(user_texts)],
+                    "guard_mode": mismatch_mode,
+                    "user_turns": user_turns,
+                },
             )
+            if mismatch_mode == "enforce":
+                # The model under-called an emergency the patient described. Raise it, and answer
+                # from the template: the reply the model would write was for the wrong severity.
+                severity = escalate(severity, True)
+                reasoning = f"{reasoning}; red-flag mismatch"
+                escalated_by_mismatch = True
         logger.info(
             "triage_called",
             extra={
@@ -440,7 +502,7 @@ class LLMAgent:
                 nearby_facilities = ranked[1:]
                 facility_load.record(recommended_facility, severity, lat, lng)
 
-        if ctx.capped:
+        if ctx.capped or escalated_by_mismatch:
             response_text = capped_reply(severity, recommended_facility)
         else:
             response_text = await self._generate_grounded_response(
@@ -456,6 +518,10 @@ class LLMAgent:
         # and comes before any 211.
         response_text = ensure_911_first(response_text, severity)
 
+        # A reply that is forged, not prose or does not name the chosen facility never reaches the
+        # patient in enforce mode: the template says the same thing from what the backend decided.
+        guard_mode = groundedness_guard_mode()
+        problem = reply_problem(response_text, recommended_facility) if guard_mode != "off" else None
         grounding = check_facility_groundedness(response_text, recommended_facility)
         logger.info(
             "triage_grounding_checked",
@@ -463,9 +529,14 @@ class LLMAgent:
                 "severity": severity,
                 "facility_provided": recommended_facility is not None,
                 "grounded": grounding["grounded"],
+                "problem": problem,
+                "guard_mode": guard_mode,
                 "user_turns": user_turns,
             },
         )
+        if problem and guard_mode == "enforce":
+            logger.warning("reply_replaced_by_template", extra={"problem": problem, "severity": severity})
+            response_text = capped_reply(severity, recommended_facility)
 
         return {
             "response": response_text,

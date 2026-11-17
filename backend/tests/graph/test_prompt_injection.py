@@ -59,7 +59,10 @@ def _sanitised(s: str) -> str:
     the actual string that lands in the block, not the raw input."""
     return s.replace("<", "").replace(">", "")
 
-from services.triage_eval import EMERGENCY_KEYWORDS, check_emergency_mismatch
+from services.triage_eval import check_emergency_mismatch
+
+# The six keywords the pre-Sprint 24 cross-check knew: the red-flag list must still catch each of them.
+EMERGENCY_KEYWORDS = ["chest pain", "difficulty breathing", "stroke", "severe bleeding", "loss of consciousness", "unconscious"]
 
 
 # ---------------------------------------------------------------------------
@@ -223,21 +226,21 @@ class TestEmergencyKeywordCrossCheck:
     @pytest.mark.parametrize("keyword", EMERGENCY_KEYWORDS)
     def test_fires_on_keyword_with_non_emergent_severity(self, keyword):
         msg = f"I am experiencing {keyword} right now"
-        assert check_emergency_mismatch(msg, "routine") is True
+        assert check_emergency_mismatch([msg], "routine") is True
 
     @pytest.mark.parametrize("keyword", EMERGENCY_KEYWORDS)
     def test_does_not_fire_when_severity_is_emergent(self, keyword):
         msg = f"I am experiencing {keyword} right now"
-        assert check_emergency_mismatch(msg, "emergent") is False
+        assert check_emergency_mismatch([msg], "emergent") is False
 
     def test_does_not_fire_without_emergency_keyword(self):
-        assert check_emergency_mismatch("I have a mild headache", "routine") is False
+        assert check_emergency_mismatch(["I have a mild headache"], "routine") is False
 
     def test_case_insensitive_match(self):
-        assert check_emergency_mismatch("CHEST PAIN started an hour ago", "moderate") is True
+        assert check_emergency_mismatch(["CHEST PAIN started an hour ago"], "moderate") is True
 
     def test_keyword_mid_sentence(self):
-        assert check_emergency_mismatch("my partner has difficulty breathing since last night", "urgent") is True
+        assert check_emergency_mismatch(["my partner has difficulty breathing since last night"], "urgent") is True
 
 
 # ---------------------------------------------------------------------------

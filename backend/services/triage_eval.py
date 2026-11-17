@@ -8,6 +8,10 @@ appears verbatim in the response. This check confirms that — no LLM call, no
 cost, safe to run on every logged session.
 """
 
+from collections.abc import Sequence
+
+from services.red_flags import find_red_flags
+
 
 def check_facility_groundedness(response_text: str, facility: dict | None) -> dict:
     """
@@ -26,25 +30,25 @@ def check_facility_groundedness(response_text: str, facility: dict | None) -> di
     }
 
 
-# The EMERGENCY cross-check function (output-side validation, §9 point 4).
-# Deterministic, no LLM. Fires if user message has an EMERGENCY keyword but
-# the returned severity is not "emergent". Moved here from
-# tests/graph/test_prompt_injection.py (I3) — detection/logging only, never
-# overrides the LLM's own severity classification.
-EMERGENCY_KEYWORDS = [
-    "chest pain",
-    "difficulty breathing",
-    "stroke",
-    "severe bleeding",
-    "loss of consciousness",
-    "unconscious",
-]
+def reply_problem(response_text: str, facility: dict | None) -> str | None:
+    """What is wrong with a patient-facing reply, if anything (deterministic, no model call).
+
+    "not_prose": empty, a JSON or tool-call blob, or no letters at all.
+    "ungrounded": a facility was chosen for this patient and the reply does not name it.
+    A forged reply (a code word planted by injected text) names no facility, so it is "ungrounded";
+    with no facility to name, only the prose check can catch it.
+    """
+    text = response_text.strip()
+    if not text or text[0] in "{[" or '"arguments"' in text or not any(c.isalpha() for c in text):
+        return "not_prose"
+    if check_facility_groundedness(text, facility)["grounded"] is False:
+        return "ungrounded"
+    return None
 
 
-def check_emergency_mismatch(user_message: str, severity: str) -> bool:
-    """Return True (anomalous) if the message contains an EMERGENCY keyword
-    but the severity is not 'emergent'. This is a second, independent check
-    that doesn't rely on the LLM fence having held."""
-    lower = user_message.lower()
-    has_keyword = any(kw in lower for kw in EMERGENCY_KEYWORDS)
-    return has_keyword and severity != "emergent"
+def check_emergency_mismatch(user_messages: Sequence[str], severity: str) -> bool:
+    """True (anomalous) when the patient's messages mention a red flag but the severity is not
+    'emergent'. Deterministic, no model: a second check that does not rely on the prompt having held.
+    It reads every patient message of the conversation, using the same pattern list as the floor
+    (services.red_flags), so a negated or historical mention ("no chest pain") does not count."""
+    return severity != "emergent" and bool(find_red_flags(user_messages))
