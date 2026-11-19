@@ -27,6 +27,8 @@ class RetryBudget:
 
     SDK and per-call retries multiply provider traffic exactly when a provider is
     struggling (a retry storm). The cap is per process; it is not shared between replicas.
+    Not thread-safe on purpose: it is driven from one event loop with no await between prune and
+    append. Add a lock if a client is ever driven from several threads.
     """
 
     def __init__(

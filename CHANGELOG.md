@@ -18,7 +18,7 @@ Sprints are listed newest first, by the date each started (or, where a section h
 - [x] **3. Groundedness and emergency-mismatch enforcement.** An ungrounded or malformed reply is replaced by the template (closes the forged-closing-tag and code-word findings for the red-team forms; an injected reply written as a full sentence on a turn with no facility is not caught); the 911 line now comes before any 211 line. **Done 2026-11-17 (task 015):** groundedness defaults to `enforce`; mismatch enforcement is built and defaults to `shadow`.
 - [x] **4. Emergency and directions buttons, web and mobile.** Call 911 on every emergent result (`tel:` link on touch devices, template panel on web, link in every chat header); Get directions opens Google Maps. **Done 2026-11-16 (task 016).** Alert contact, Save and web push are revisited later.
 - [x] **5. Mobile fix.** Chat on web mobile screens and a content and working-feature pass on the old interfaces. **Done 2026-11-16 (task 016):** three-state chat sheet, three tabs, facilities list, no guest menu, failed-send errors, one severity label per platform. Not done: landscape, "open now", M-012, M-015, M-026 to M-028. iOS keyboard covered by geometry unit tests plus a manual iPhone check; 70 Playwright tests pass; smoke specs not run.
-- [ ] **6. Cost guards.** Token cap 22,000 (about 2x the observed max, from the Phase 1 baseline, which is the before number for the agentic-conversation sprint), `ADMISSION_CONTROL` off switch, retry budget (10%), failover counter, nightly gate (06:17 UTC) with one retry. **Built 2026-11-17 (task 015); open:** Railway variables, one live gate run, the `GROQ_API_KEY` secret. Prompt-cache pinning deferred: count failovers first.
+- [ ] **6. Cost guards.** Token cap 22,000 (about 2x the observed max, from the Phase 1 baseline, which is the before number for the agentic-conversation sprint), `ADMISSION_CONTROL` off switch, retry budget (10%), failover counter, nightly gate (06:17 UTC) with one retry. **Built 2026-11-17 (task 015); Railway variables set 2026-11-18 on `python-api` (deploys skipped; they apply when this branch is deployed); open:** one live gate run and the `GROQ_API_KEY` secret. A failed nightly run also opens an issue. Prompt-cache pinning deferred: count failovers first.
 - [x] **7. Hero visual.** **Done:** the landing page now shows a 3D map with the road drawing, built and added to the landing.
 - [ ] **8. README fixes.** State the v1/v2 leg change (legs became `off`, static, v3), mark the elicitation-coverage numbers as unproven, check the `test_b.js` header.
 
@@ -31,6 +31,12 @@ Sprints are listed newest first, by the date each started (or, where a section h
 Every vignette that was emergent in all 3 repeats at the 2026-11-16 baseline stays emergent; under-triage no worse than baseline beyond the paired interval; every case the floor would escalate is listed; production smoke test green by Nov 20. Known gap, not claimed fixed: cases 10c, 17, 23 and 9 stay below emergent and contain no red-flag pattern.
 
 **Results (2026-11-17, task 015).** Floor in shadow and groundedness enforcing, against the Phase 1 baseline: no measurable change on 81 conversations per variant (every paired interval includes zero); sentinel gate 7 of 7 on Groq. Numbers in the README, Safety enforcement. A branch review after the run led to a tighter negation window in the matcher, replacement text that no longer says the chat was cut short (and never sends an emergent patient to 211), and a retry pass that survives a failed first pass; the offline floor pass was re-run with the same result.
+
+### Security findings (task 015)
+
+- **Closed:** M1 for the red-team forms (raw tool-call blobs, forged prompt tags, a planted code word such as `inj4`, a reply missing the chosen facility's name); L3 ("call 211" before "call 911"; emergent templates no longer mention 211). Both take effect when the branch is deployed.
+- **Open, new limit:** injected text written as a full sentence on a turn with no facility is not detected.
+- **Still open:** L5 (no chat-off switch: `ADMISSION_CONTROL=off` removes the limit, it does not stop chat), M2 (typed PII to the provider), M5 (staging shares production), L7, L8, L10 to L13.
 
 ### Miss response and cut order
 

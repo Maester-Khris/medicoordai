@@ -45,7 +45,7 @@ RED_FLAG_PATTERNS: dict[str, tuple[str, ...]] = {
         r"\bnot (?:responding|reacting)\b",
     ),
     "stroke_signs": (
-        r"\bstroke\b",
+        r"(?<!heat )(?<!sun )\bstroke\b",
         r"\bface (?:is |was )?(?:drooping|droopy|drooped)\b",
         r"\bdrooping face\b",
         r"\bslurred speech\b",

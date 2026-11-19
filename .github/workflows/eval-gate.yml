@@ -24,6 +24,9 @@ jobs:
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-eval')
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write  # only to open an issue when the nightly run fails
     defaults:
       run:
         working-directory: backend
@@ -85,3 +88,13 @@ jobs:
           name: eval-gate-conversations
           path: ${{ runner.temp }}/gate.jsonl
           retention-days: 14
+
+      # A scheduled failure only emails the person who last edited the cron, so open an issue too.
+      - name: Open an issue when the nightly run fails
+        if: failure() && github.event_name == 'schedule'
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "Nightly eval gate failed ($(date -u +%F))" \
+            --body "The sentinel gate failed on the production configuration. Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        env:
+          GH_TOKEN: ${{ github.token }}

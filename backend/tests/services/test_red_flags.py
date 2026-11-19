@@ -122,3 +122,12 @@ def test_lay_emergency_phrasing_is_not_cancelled_by_a_nearby_negation_or_history
 ])
 def test_a_negation_still_reaches_across_a_short_list_in_one_clause(text: str) -> None:
     assert cats(text) == []
+
+
+@pytest.mark.parametrize("text", ["I think it is heat stroke from the sun", "he had a sun stroke yesterday"])
+def test_heat_stroke_is_not_a_neurological_stroke(text: str) -> None:
+    assert cats(text) == []
+
+
+def test_a_stroke_is_still_found() -> None:
+    assert cats("I think she is having a stroke") == ["stroke_signs"]

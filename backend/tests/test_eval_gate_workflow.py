@@ -19,3 +19,11 @@ def test_a_failed_first_pass_still_lets_the_retry_pass_run() -> None:
     steps = _load()["jobs"]["eval-gate"]["steps"]
     script = next(s["run"] for s in steps if s.get("name") == "Run the sentinel conversations")
     assert "for attempt in 1 2" in script and "|| true" in script
+
+
+def test_a_failed_nightly_run_opens_an_issue() -> None:
+    job = _load()["jobs"]["eval-gate"]
+    assert job["permissions"]["issues"] == "write"
+    step = next(s for s in job["steps"] if "issue" in s.get("name", "").lower())
+    assert "schedule" in step["if"] and "failure()" in step["if"]
+    assert "gh issue create" in step["run"]
