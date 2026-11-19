@@ -20,7 +20,7 @@ Sprints are listed newest first, by the date each started (or, where a section h
 - [x] **5. Mobile fix.** Chat on web mobile screens and a content and working-feature pass on the old interfaces. **Done 2026-11-16 (task 016):** three-state chat sheet, three tabs, facilities list, no guest menu, failed-send errors, one severity label per platform. Not done: landscape, "open now", M-012, M-015, M-026 to M-028. iOS keyboard covered by geometry unit tests plus a manual iPhone check; 70 Playwright tests pass; smoke specs not run.
 - [ ] **6. Cost guards.** Token cap 22,000 (about 2x the observed max, from the Phase 1 baseline, which is the before number for the agentic-conversation sprint), `ADMISSION_CONTROL` off switch, retry budget (10%), failover counter, nightly gate (06:17 UTC) with one retry. **Built 2026-11-17 (task 015); Railway variables set 2026-11-18 on `python-api` (deploys skipped; they apply when this branch is deployed); open:** one live gate run and the `GROQ_API_KEY` secret. A failed nightly run also opens an issue. Prompt-cache pinning deferred: count failovers first.
 - [x] **7. Hero visual.** **Done:** the landing page now shows a 3D map with the road drawing, built and added to the landing.
-- [ ] **8. README fixes.** State the v1/v2 leg change (legs became `off`, static, v3), mark the elicitation-coverage numbers as unproven, check the `test_b.js` header.
+- [x] **8. README fixes.** State the v1/v2 leg change (legs became `off`, static, v3), mark the elicitation-coverage numbers as unproven, check the `test_b.js` header. **Done 2026-11-19:** legs paragraph added, v2 marked as replaced by v3 in both tables; the `test_b.js` header matches the code, no change.
 
 ### Post-deploy checks
 
