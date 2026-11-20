@@ -9,13 +9,13 @@ Sprints are listed newest first, by the date each started (or, where a section h
 
 ## [Sprint 24 — feat/safety-enforcement-and-release] · Production release and enforced safety checks — Closed
 
-**Closed — 2026-11-20.** Branch `feat/safety-enforcement-and-release`, merged to `preview` (PR #61, `30edf91`; CI, SonarCloud and the eval gate green), not yet promoted to `main`: the release (item 1) is the open step. Result: the red-flag floor and mismatch check are built and run in shadow, groundedness enforcement is on, the spend guards are in, and the eval gate runs nightly. No change in under-triage was measured (README, Safety enforcement).
+**Closed — 2026-11-20.** Branch `feat/safety-enforcement-and-release`, merged to `preview` (PR #61, `30edf91`; CI, SonarCloud and the eval gate green) and promoted to `main` on 2026-11-20 (PR #62, `1f49111`, with the Sprint 23 work). Result: the red-flag floor and mismatch check are built and run in shadow, groundedness enforcement is on, the spend guards are in, and the eval gate runs nightly. No change in under-triage was measured (README, Safety enforcement).
 
 **Started — 2026-11-14 · branch: `feat/safety-enforcement-and-release`.** Window: Nov 16 to 22. Goal: the Sprint 23 work (3 High security fixes, guards, CI gate) reaches production, the safety guarantees hold in code instead of in the prompt, and the chat is usable on a phone. Metric: under-triage rate on the 27 vignettes plus the lay set, on the production config with the floor on, paired with an interval. Counters: over-triage (routine sent to emergent) and cost per conversation (read from the existing token logs; it becomes the baseline for the agentic-conversation sprint).
 
 ### Scope
 
-- [ ] **1. Release (never cut).** Promote `preview` to `main`, deploy, smoke test the deployed build, one-token check of the Anthropic key, check Railway's healthcheck path. Done last, so one release carries all the new work with the Sprint 23 security fixes (decided 2026-11-14); smoke test green by Nov 20.
+- [x] **1. Release (never cut).** Promote `preview` to `main`, deploy, smoke test the deployed build, one-token check of the Anthropic key, check Railway's healthcheck path. Done last, so one release carries all the new work with the Sprint 23 security fixes (decided 2026-11-14); smoke test green by Nov 20. **Done 2026-11-20:** PR #62 (`preview` to `main`) merged as `1f49111` after fixing four SonarCloud findings (a float check, the hidden landing block, the wheel-only CI install); Railway `python-api` and Vercel production both deployed `1f49111`. Smoke on production: `/health` ok, `/config` ok, gzip on `/facilities` confirmed (no middleware needed), and a guest chat describing an emergency returned `emergent` with 911 before any 211 and the facility named. Not done: the Anthropic key check.
 - [x] **2. Deterministic red-flag floor.** Runs ahead of the model and can only escalate, on the four existing severity values. **Done 2026-11-17, shadow only (task 015):** it logs what it would do; enforce needs a clinical reviewer to sign the pattern list (none named).
 - [x] **3. Groundedness and emergency-mismatch enforcement.** An ungrounded or malformed reply is replaced by the template (closes the forged-closing-tag and code-word findings for the red-team forms; an injected reply written as a full sentence on a turn with no facility is not caught); the 911 line now comes before any 211 line. **Done 2026-11-17 (task 015):** groundedness defaults to `enforce`; mismatch enforcement is built and defaults to `shadow`.
 - [x] **4. Emergency and directions buttons, web and mobile.** Call 911 on every emergent result (`tel:` link on touch devices, template panel on web, link in every chat header); Get directions opens Google Maps. **Done 2026-11-16 (task 016).** Alert contact, Save and web push are revisited later.
@@ -26,7 +26,7 @@ Sprints are listed newest first, by the date each started (or, where a section h
 
 ### Post-deploy checks
 
-- **`/facilities` compression (task 016).** `backend/main.py` has no gzip middleware; about 121 KB of JSON may go uncompressed unless Railway compresses it. After deploy: `curl -sI -H 'Accept-Encoding: gzip' <api>/facilities`; add `GZipMiddleware` only if missing.
+- **`/facilities` compression (task 016).** Checked 2026-11-20 after the deploy: the response is gzip-encoded at the Railway edge, so no `GZipMiddleware` is needed.
 
 ### Line in the sand
 
@@ -47,6 +47,7 @@ Every vignette that was emergent in all 3 repeats at the 2026-11-16 baseline sta
 ### Carried over
 
 - **Security, open (re-checked against the code 2026-11-20):** injected text written as a full sentence on a turn with no facility is not detected; no deliberate chat-off switch (L5: the admission switch removes the limit, it does not stop chat); typed names, phones and addresses reach the model provider unredacted, with no PII detector (M2); guests can nudge load-aware ranking counters (L7); `X-Real-IP` is trusted first for rate-limit buckets (L8); 11 npm advisories remain, 2 High (L10); Hugging Face downloads in the export scripts are not pinned to a revision (L12). L11 (Trivy leftovers) and L13 (one unexplained 503) were not re-checked. Review: `docs/security/2026-11-12-security-review.md`.
+- **Eval gate extension (deferred):** the gate checks triage severity only. Add two separate gates: an escalation gate (emergent patients get 911 before 211; red-flag phrasing reaches emergent or is logged by the floor; a replaced reply is a template, never raw JSON) and a security gate (a fixed subset of the red-team attacks, run against the live pipeline; fail if severity is lowered, a canary is echoed, the prompt leaks, or a 911 line is missing). Both check in code with no judge model. Needs a spec first (case list, pass and fail rules, cost, pacing: probably a separate nightly job, since the current gate already takes about 5 minutes).
 - **Before the floor or mismatch check leaves shadow:** name a clinical reviewer to sign the red-flag list.
 - **SonarCloud:** the `backend/scripts/**` exclusion is now set in the SonarCloud UI (the file setting was not honoured); PR #61's gate passes. 48 code smells remain open (composite test assertions, three functions over the complexity limit).
 - **Open finding (task 015):** `gpt-oss` writes its tool call as raw JSON in the reply text in about a third of eval conversations on Ollama Cloud; the rate on Groq (production) is not measured.
