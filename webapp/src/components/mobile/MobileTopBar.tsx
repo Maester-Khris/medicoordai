@@ -1,20 +1,22 @@
 // webapp/src/components/mobile/MobileTopBar.tsx
 import { ListIcon } from '@phosphor-icons/react'
 import type { Severity } from '@shared/types'
+import { SEVERITY_LABEL } from '../../lib/severityLabels'
 
 export type MobileMode = 'browse' | 'recommendation'
 
 interface MobileTopBarProps {
   mode: MobileMode
   severity: Severity | null
+  // Guests have no menu: it only held a link out of the app.
   onMenuOpen?: () => void
 }
 
 const SEVERITY_CHIP: Record<Severity, { border: string; bg: string; text: string; label: string }> = {
-  routine:  { border: 'rgba(0,210,255,0.6)',   bg: 'rgba(0,210,255,0.10)',   text: '#00D2FF', label: 'ROUTINE · ESI 5'    },
-  moderate: { border: 'rgba(0,210,255,0.6)',   bg: 'rgba(0,210,255,0.10)',   text: '#00D2FF', label: 'NON-URGENT · ESI 4' },
-  urgent:   { border: 'rgba(245,158,11,0.6)',  bg: 'rgba(245,158,11,0.10)',  text: '#F59E0B', label: 'URGENT · ESI 3'     },
-  emergent: { border: 'rgba(255,123,147,0.6)', bg: 'rgba(255,123,147,0.10)', text: '#FF7B93', label: 'EMERGENT · ESI 1'   },
+  routine:  { border: 'rgba(0,210,255,0.6)',   bg: 'rgba(0,210,255,0.10)',   text: '#00D2FF', label: SEVERITY_LABEL.routine    },
+  moderate: { border: 'rgba(0,210,255,0.6)',   bg: 'rgba(0,210,255,0.10)',   text: '#00D2FF', label: SEVERITY_LABEL.moderate },
+  urgent:   { border: 'rgba(245,158,11,0.6)',  bg: 'rgba(245,158,11,0.10)',  text: '#F59E0B', label: SEVERITY_LABEL.urgent     },
+  emergent: { border: 'rgba(255,123,147,0.6)', bg: 'rgba(255,123,147,0.10)', text: '#FF7B93', label: SEVERITY_LABEL.emergent   },
 }
 
 export function MobileTopBar({ mode, severity, onMenuOpen }: MobileTopBarProps) {
@@ -32,20 +34,24 @@ export function MobileTopBar({ mode, severity, onMenuOpen }: MobileTopBarProps) 
         borderBottom: '1px solid rgba(28,70,89,0.40)',
       }}
     >
-      {/* Left — hamburger + wordmark as a single tap target */}
-      <button
-        onClick={onMenuOpen}
-        className="flex items-center gap-2 bg-transparent border-none p-0 cursor-pointer"
-        aria-label="Open menu"
-      >
-        <ListIcon size={20} color="#48F6C1" weight="bold" />
-        <span
-          className="font-bold text-[16px]"
-          style={{ color: '#E2F1F5', fontFamily: 'var(--font-sans)' }}
+      {/* Left: menu button for signed-in users, plain wordmark for guests */}
+      {onMenuOpen ? (
+        <button
+          onClick={onMenuOpen}
+          className="flex items-center gap-2 bg-transparent border-none p-0 cursor-pointer"
+          style={{ minHeight: 44 }}
+          aria-label="Open menu"
         >
+          <ListIcon size={20} color="#48F6C1" weight="bold" />
+          <span className="font-bold text-[16px]" style={{ color: '#E2F1F5', fontFamily: 'var(--font-sans)' }}>
+            MediCoordAI
+          </span>
+        </button>
+      ) : (
+        <span className="font-bold text-[16px]" style={{ color: '#E2F1F5', fontFamily: 'var(--font-sans)' }}>
           MediCoordAI
         </span>
-      </button>
+      )}
 
       {/* Right — ONLINE pill (State 1) or Severity Chip (State 2) */}
       {mode === 'browse' ? (
@@ -61,7 +67,7 @@ export function MobileTopBar({ mode, severity, onMenuOpen }: MobileTopBarProps) 
             style={{ background: '#48F6C1' }}
           />
           <span
-            className="font-mono text-[10px] font-bold tracking-widest"
+            className="font-mono text-[12px] font-bold tracking-widest"
             style={{ color: '#48F6C1' }}
           >
             ONLINE
@@ -79,7 +85,7 @@ export function MobileTopBar({ mode, severity, onMenuOpen }: MobileTopBarProps) 
             }}
           >
             <span
-              className="font-mono text-[10px] font-bold tracking-widest"
+              className="font-mono text-[12px] font-bold tracking-widest"
               style={{ color: chip.text }}
             >
               {chip.label}

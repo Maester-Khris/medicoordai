@@ -10,7 +10,9 @@ interface FeedbackControlProps {
 type SaveState = "idle" | "saving" | "saved" | "error"
 
 const BUTTON_STYLE: React.CSSProperties = {
-  padding: "4px 10px",
+  padding: "4px 12px",
+  minWidth: 44,
+  minHeight: 44,
   borderRadius: 8,
   fontSize: 13,
   cursor: "pointer",
@@ -46,7 +48,7 @@ export function FeedbackControl({ sessionId, messageId }: FeedbackControlProps) 
   return (
     <div data-testid="feedback-control" className="mt-2 flex flex-col gap-2" style={{ fontFamily: "var(--font-sans)" }}>
       <div className="flex items-center gap-2">
-        <span className="text-[11px]" style={{ color: "#7AA0B0" }}>Was this helpful?</span>
+        <span className="text-[12px]" style={{ color: "#7AA0B0" }}>Was this helpful?</span>
         <button type="button" aria-label="Helpful" aria-pressed={thumb === "up"} data-testid="feedback-up"
           onClick={() => { void send("up", "") }} style={{ ...BUTTON_STYLE, border: border("up") }}>
           👍

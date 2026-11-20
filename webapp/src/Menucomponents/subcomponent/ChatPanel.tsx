@@ -1,7 +1,10 @@
+import type { SendResult } from "../../hooks/useConversations"
+import { failureMessage } from "../../lib/sendFailure"
+import { EmergencyCall } from "../../components/EmergencyCall"
 import { FeedbackControl } from "../../components/triage/FeedbackControl"
 import { useAuth } from "../../auth/useAuth"
 import { useState, useRef, useEffect, useCallback } from "react"
-import type { Message, Session, ConversationsCache, ChatMessageResponse, TriageResult, TriageUIState, TravelModeKey } from "@shared/types"
+import type { Message, Session, ConversationsCache, TriageResult, TriageUIState, TravelModeKey } from "@shared/types"
 import { TriageCard } from "../../components/triage/TriageCard"
 import { ToolCallProgress } from "../../components/triage/ToolCallProgress"
 import type { GeolocationPermission } from "../../hooks/useGeolocation"
@@ -31,7 +34,7 @@ type ProgressStage = "idle" | "typing" | "analyzing" | "locating" | "complete"
 interface ChatPanelProps {
   user: AuthUser | null
   cache: ConversationsCache | null
-  sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<ChatMessageResponse | null>
+  sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<SendResult>
   createSession: (firstMessage: string) => Promise<Session | null>
   loadOlderMessages: (sessionId: string, beforeId: string) => Promise<Message[]>
   geo: GeoProps
@@ -139,7 +142,11 @@ export function ChatPanel({
     let sid = activeSessionId
     if (!sid) {
       const session = await createSession(text)
-      if (!session) return
+      if (!session) {
+        setContent(text)
+        setLocalMessages(prev => [...prev, failureMessage(activeSessionId ?? "", user.id)])
+        return
+      }
       sid = session.id
       setActiveSessionId(sid)
     }
@@ -157,7 +164,15 @@ export function ChatPanel({
     setProgressStage("typing")
     const response = await sendMessage(sid, text, coords)
 
-    if (response) {
+    if (response === "busy" || response === "failed") {
+      // Keep the text for a retry; show the failure (the busy banner already explains a busy answer).
+      setLocalMessages(prev => {
+        const kept = prev.filter(m => m.id !== optimisticUserMsg.id)
+        return response === "failed" ? [...kept, failureMessage(sid, user.id)] : kept
+      })
+      setContent(text)
+      setProgressStage("idle")
+    } else {
       const cleanedAssistant = {
         ...response.assistant_message,
         content: stripToolNarration(response.assistant_message.content),
@@ -175,8 +190,6 @@ export function ChatPanel({
       } else {
         setProgressStage("idle")
       }
-    } else {
-      setProgressStage("idle")
     }
   }
 
@@ -232,20 +245,35 @@ export function ChatPanel({
               </svg>
             </div>
             <div>
-              <h2 className="text-[14px] font-bold tracking-tight leading-tight" style={{ color: '#E2F1F5' }}>
+              <h2 className="text-[14px] font-bold tracking-tight leading-tight whitespace-nowrap" style={{ color: '#E2F1F5' }}>
                 AI Health Assistant
               </h2>
-              <p className="text-[11px] font-semibold mt-0.5" style={{ color: '#48F6C1' }}>
+              <p className="text-[11px] font-semibold mt-0.5 whitespace-nowrap" style={{ color: '#48F6C1' }}>
                 Ready to assist you
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            <div
+              className="flex items-center gap-1.5 rounded-full"
+              style={{
+                padding: '4px 10px',
+                background: 'rgba(72, 246, 193, 0.08)',
+                border: '1px solid rgba(72, 246, 193, 0.2)',
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#48F6C1' }} />
+              <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#48F6C1' }}>Online</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 mt-1">
+          <div className="flex-none"><EmergencyCall variant="link" align="start" panel="overlay" /></div>
             <button
               onClick={handleNewConversation}
               disabled={!user}
-              className="flex items-center gap-1.5 text-xs font-semibold rounded-lg transition-all"
+              className="flex-none flex items-center gap-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap"
               style={{
                 padding: '5px 10px',
                 color: user ? '#7AA0B0' : '#1C4659',
@@ -259,18 +287,6 @@ export function ChatPanel({
               </svg>
               New conversation
             </button>
-            <div
-              className="flex items-center gap-1.5 rounded-full"
-              style={{
-                padding: '4px 10px',
-                background: 'rgba(72, 246, 193, 0.08)',
-                border: '1px solid rgba(72, 246, 193, 0.2)',
-              }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#48F6C1' }} />
-              <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#48F6C1' }}>Online</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -366,7 +382,6 @@ export function ChatPanel({
                     <div className="mt-1 max-w-[80%]">
                       <TriageCard
                         triage={triage}
-                        emergencyContactPhone={profile?.emergency_contact_phone ?? null}
                         onModeChange={onModeChange}
                         onSelectFacility={onSelectFacility}
                       />

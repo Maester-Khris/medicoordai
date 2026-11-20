@@ -53,10 +53,10 @@ export function TransitModeGrid({ etaMinutes, activeMode, loading, onModeChange 
             }}
           >
             <Icon size={20} color={style.color} />
-            <span className="font-mono text-[11px] font-bold" style={{ color: style.color }}>
+            <span className="font-mono text-[12px] font-bold" style={{ color: style.color }}>
               {isActive && etaMinutes !== null ? `${etaMinutes}min` : '—'}
             </span>
-            <span className="font-mono text-[9px] uppercase tracking-wide" style={{ color: style.color }}>
+            <span className="font-mono text-[12px] uppercase tracking-wide" style={{ color: style.color }}>
               {label}
             </span>
           </button>

@@ -13,6 +13,7 @@ from llm.anthropic_client import AnthropicClient
 from llm.base import BaseLLMClient, LLMMessage
 from llm.groq_client import GroqClient
 from llm.sync import run_sync
+from scripts.symptom_eval.claude_cli_client import ClaudeCliClient
 from scripts.symptom_eval.domain import ConversationTurn, Vignette
 
 SIMULATOR_TEMPERATURE = 0.3  # requested; AnthropicClient does not send it (see llm/anthropic_client.py)
@@ -71,7 +72,7 @@ DEFAULT_GROQ_SIMULATOR_MODEL = "qwen/qwen3.8-27b"
 
 
 def simulator_from_env() -> "AnthropicPatientSimulator":
-    """EVAL_SIMULATOR_PROVIDER: anthropic (default, claude-haiku-4-5) or groq (EVAL_SIMULATOR_MODEL).
+    """EVAL_SIMULATOR_PROVIDER: anthropic (default, claude-haiku-4-5), groq (EVAL_SIMULATOR_MODEL) or claude-cli (headless `claude -p`).
 
     The class name is historical: it plays the patient with whatever chat client it is given.
     """
@@ -84,4 +85,6 @@ def simulator_from_env() -> "AnthropicPatientSimulator":
         if model == system_model:
             raise ValueError(f"The simulator and the system under test are the same model ({model}).")
         return AnthropicPatientSimulator(client=GroqClient(model=model))
-    raise ValueError(f"EVAL_SIMULATOR_PROVIDER must be 'anthropic' or 'groq', got {provider!r}")
+    if provider == "claude-cli":
+        return AnthropicPatientSimulator(client=ClaudeCliClient())
+    raise ValueError(f"EVAL_SIMULATOR_PROVIDER must be 'anthropic', 'groq' or 'claude-cli', got {provider!r}")

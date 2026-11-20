@@ -52,6 +52,11 @@ class RunManifest:
     capped_reply_sha256: str
     graph_index_manifest_sha256: str  # "" when no semantic leg: the index a neo4j_semantic leg ran against
     semantic_model_id: str
+    red_flag_floor_mode: str          # off | shadow | enforce, as the system under test will run them
+    groundedness_guard_mode: str
+    emergency_mismatch_mode: str
+    red_flag_list_sha256: str         # a changed pattern list is a new configuration
+    retry_budget_percent: int
 
 
 def sha256_text(text: str) -> str:

@@ -1,13 +1,14 @@
 // webapp/src/components/mobile/FacilityCardPanel.tsx
-import { motion } from 'motion/react'
+import { useState } from 'react'
 import { MapPin } from '@phosphor-icons/react'
 import type { TravelModeKey, TriageUIState } from '@shared/types'
+import { DIRECTIONS_UNAVAILABLE } from '../../lib/directions'
 import { TransitModeGrid } from './TransitModeGrid'
 import { FeedbackControl } from '../triage/FeedbackControl'
 
 interface FacilityCardPanelProps {
   triage: TriageUIState
-  onGetDirections: (name: string, lat: number, lng: number) => void
+  onGetDirections: (name: string, lat: number, lng: number) => boolean
   onModeChange: (mode: TravelModeKey) => void
   feedback: { sessionId: string; messageId: string } | null
 }
@@ -33,26 +34,23 @@ const SECONDARY_ETA_COLOR: Record<string, string> = {
 }
 
 export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedback }: FacilityCardPanelProps) {
+  const [directionsFailed, setDirectionsFailed] = useState(false)
   const facility = triage.recommendedFacility
   const recommendedRoute = triage.routes.find(r => r.facilityId === triage.recommendedFacilityId)
 
-  if (!facility || !triage.active) return null
+  if (!triage.active) return null
+  if (!facility) {
+    return (
+      <div data-testid="no-facility" className="rounded-xl p-3 text-[14px]" style={{ background: 'rgba(10,29,39,1)', border: '1px solid rgba(28,70,89,0.40)', color: '#E2F1F5' }}>
+        We could not find a facility near you.{triage.severity === 'emergent' ? ' Call 911 or go to the nearest emergency department.' : ''}
+      </div>
+    )
+  }
 
   const etaColor = SECONDARY_ETA_COLOR[triage.severity ?? 'routine'] ?? '#00D2FF'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 28 }}
-      style={{
-        background: 'rgba(10,29,39,0.92)',
-        backdropFilter: 'blur(16px)',
-        borderTop: '1px solid rgba(28,70,89,0.40)',
-        overflowY: 'auto',
-        maxHeight: '55dvh',
-      }}
-    >
+    <div data-testid="result-card" className="rounded-xl" style={{ background: 'rgba(10,29,39,1)', border: '1px solid rgba(28,70,89,0.40)' }}>
       {/* Primary facility card */}
       <div className="px-4 pt-4 pb-3">
         {/* Header row */}
@@ -83,7 +81,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
               {facility.name}
             </p>
             <span
-              className="inline-block mt-1 px-2 py-0.5 rounded-full font-mono text-[9px] uppercase tracking-wide"
+              className="inline-block mt-1 px-2 py-0.5 rounded-full font-mono text-[12px] uppercase tracking-wide"
               style={{
                 background: 'rgba(28,70,89,0.50)',
                 color: '#85A4B1',
@@ -93,22 +91,12 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
             </span>
           </div>
 
-          {/* Open status */}
-          <div className="flex-none flex items-center gap-1">
-            <span
-              className="w-1.5 h-1.5 rounded-full animate-pulse"
-              style={{ background: '#48F6C1' }}
-            />
-            <span className="font-mono text-[10px] font-bold" style={{ color: '#48F6C1' }}>
-              OPEN
-            </span>
-          </div>
         </div>
 
         {/* Address row */}
         <div className="flex items-center gap-1.5 mt-2">
           <MapPin size={12} color="#35A7C4" />
-          <span className="font-mono text-[10px]" style={{ color: '#85A4B1' }}>
+          <span className="font-mono text-[12px]" style={{ color: '#85A4B1' }}>
             {capitalizeAddress(facility.address)}
           </span>
         </div>
@@ -132,7 +120,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
               background: "rgba(245, 158, 11, 0.1)",
               border: "1px solid rgba(245, 158, 11, 0.3)",
               color: "#F59E0B",
-              fontSize: 11,
+              fontSize: 12,
               lineHeight: 1.4,
               fontFamily: "var(--font-mono)",
             }}
@@ -143,18 +131,22 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
 
         {/* CTA button */}
         <button
-          onClick={() => onGetDirections(facility.name, facility.lat, facility.lng)}
+          onClick={() => setDirectionsFailed(!onGetDirections(facility.name, facility.lat, facility.lng))}
           className="w-full mt-3 flex items-center justify-center gap-2 font-bold text-[14px] active:scale-[0.97] transition-transform border-none cursor-pointer"
           style={{
             height: 48,
             borderRadius: 12,
-            background: '#48F6C1',
-            color: '#061219',
+            background: triage.severity === 'emergent' ? 'transparent' : '#48F6C1',
+            border: triage.severity === 'emergent' ? '1px solid #48F6C1' : 'none',
+            color: triage.severity === 'emergent' ? '#48F6C1' : '#061219',
             fontFamily: 'var(--font-sans)',
           }}
         >
           Get Directions →
         </button>
+        {directionsFailed && (
+          <p role="status" className="mt-2 text-[12px]" style={{ color: '#F59E0B' }}>{DIRECTIONS_UNAVAILABLE}</p>
+        )}
         {feedback && <FeedbackControl sessionId={feedback.sessionId} messageId={feedback.messageId} />}
       </div>
 
@@ -162,7 +154,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
       {triage.nearbyFacilities.length > 0 && (
         <>
           <p
-            className="font-mono text-[9px] uppercase tracking-widest px-4 pt-3 pb-2"
+            className="font-mono text-[12px] uppercase tracking-widest px-4 pt-3 pb-2"
             style={{ color: '#85A4B1' }}
           >
             OTHER NEARBY OPTIONS
@@ -180,7 +172,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
               >
                 {/* Icon */}
                 <div
-                  className="flex-none flex items-center justify-center rounded-lg font-bold text-[10px]"
+                  className="flex-none flex items-center justify-center rounded-lg font-bold text-[12px]"
                   style={{
                     width: 32, height: 32,
                     background: 'rgba(28,70,89,0.40)',
@@ -199,7 +191,7 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
                   >
                     {nearby.name}
                   </p>
-                  <p className="font-mono text-[9px]" style={{ color: '#85A4B1' }}>
+                  <p className="font-mono text-[12px]" style={{ color: '#85A4B1' }}>
                     {nearby.category}
                   </p>
                 </div>
@@ -208,24 +200,18 @@ export function FacilityCardPanel({ triage, onGetDirections, onModeChange, feedb
                 <div className="flex-none flex items-center gap-2">
                   {nearbyRoute && (
                     <span
-                      className="font-mono text-[11px] font-bold"
+                      className="font-mono text-[12px] font-bold"
                       style={{ color: etaColor }}
                     >
                       {nearbyRoute.etaMinutes} MIN
                     </span>
                   )}
-                  <span
-                    className="text-[12px] font-sans cursor-pointer"
-                    style={{ color: '#35A7C4' }}
-                  >
-                    Save
-                  </span>
                 </div>
               </div>
             )
           })}
         </>
       )}
-    </motion.div>
+    </div>
   )
 }

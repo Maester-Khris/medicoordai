@@ -7,9 +7,54 @@ Sprints are listed newest first, by the date each started (or, where a section h
 
 ---
 
+## [Sprint 24 — feat/safety-enforcement-and-release] · Production release and enforced safety checks — In progress
+
+**Started — 2026-11-14 · branch: `feat/safety-enforcement-and-release`.** Window: Nov 16 to 22. Goal: the Sprint 23 work (3 High security fixes, guards, CI gate) reaches production, the safety guarantees hold in code instead of in the prompt, and the chat is usable on a phone. Metric: under-triage rate on the 27 vignettes plus the lay set, on the production config with the floor on, paired with an interval. Counters: over-triage (routine sent to emergent) and cost per conversation (read from the existing token logs; it becomes the baseline for the agentic-conversation sprint).
+
+### Scope
+
+- [ ] **1. Release (never cut).** Promote `preview` to `main`, deploy, smoke test the deployed build, one-token check of the Anthropic key, check Railway's healthcheck path. Done last, so one release carries all the new work with the Sprint 23 security fixes (decided 2026-11-14); smoke test green by Nov 20.
+- [x] **2. Deterministic red-flag floor.** Runs ahead of the model and can only escalate, on the four existing severity values. **Done 2026-11-17, shadow only (task 015):** it logs what it would do; enforce needs a clinical reviewer to sign the pattern list (none named).
+- [x] **3. Groundedness and emergency-mismatch enforcement.** An ungrounded or malformed reply is replaced by the template (closes the forged-closing-tag and code-word findings for the red-team forms; an injected reply written as a full sentence on a turn with no facility is not caught); the 911 line now comes before any 211 line. **Done 2026-11-17 (task 015):** groundedness defaults to `enforce`; mismatch enforcement is built and defaults to `shadow`.
+- [x] **4. Emergency and directions buttons, web and mobile.** Call 911 on every emergent result (`tel:` link on touch devices, template panel on web, link in every chat header); Get directions opens Google Maps. **Done 2026-11-16 (task 016).** Alert contact, Save and web push are revisited later.
+- [x] **5. Mobile fix.** Chat on web mobile screens and a content and working-feature pass on the old interfaces. **Done 2026-11-16 (task 016):** three-state chat sheet, three tabs, facilities list, no guest menu, failed-send errors, one severity label per platform. Not done: landscape, "open now", M-012, M-015, M-026 to M-028. iOS keyboard covered by geometry unit tests plus a manual iPhone check; 70 Playwright tests pass; smoke specs not run.
+- [ ] **6. Cost guards.** Token cap 22,000 (about 2x the observed max, from the Phase 1 baseline, which is the before number for the agentic-conversation sprint), `ADMISSION_CONTROL` off switch, retry budget (10%), failover counter, nightly gate (06:17 UTC) with one retry. **Built 2026-11-17 (task 015); Railway variables set 2026-11-18 on `python-api` (deploys skipped; they apply when this branch is deployed); open:** one live gate run and the `GROQ_API_KEY` secret. A failed nightly run also opens an issue. Prompt-cache pinning deferred: count failovers first.
+- [x] **7. Hero visual.** **Done:** the landing page now shows a 3D map with the road drawing, built and added to the landing.
+- [x] **8. README fixes.** State the v1/v2 leg change (legs became `off`, static, v3), mark the elicitation-coverage numbers as unproven, check the `test_b.js` header. **Done 2026-11-19:** legs paragraph added, v2 marked as replaced by v3 in both tables; the `test_b.js` header matches the code, no change.
+
+### Post-deploy checks
+
+- **`/facilities` compression (task 016).** `backend/main.py` has no gzip middleware; about 121 KB of JSON may go uncompressed unless Railway compresses it. After deploy: `curl -sI -H 'Accept-Encoding: gzip' <api>/facilities`; add `GZipMiddleware` only if missing.
+
+### Line in the sand
+
+Every vignette that was emergent in all 3 repeats at the 2026-11-16 baseline stays emergent; under-triage no worse than baseline beyond the paired interval; every case the floor would escalate is listed; production smoke test green by Nov 20. Known gap, not claimed fixed: cases 10c, 17, 23 and 9 stay below emergent and contain no red-flag pattern.
+
+**Results (2026-11-17, task 015).** Floor in shadow and groundedness enforcing, against the Phase 1 baseline: no measurable change on 81 conversations per variant (every paired interval includes zero); sentinel gate 7 of 7 on Groq. Numbers in the README, Safety enforcement. A branch review after the run led to a tighter negation window in the matcher, replacement text that no longer says the chat was cut short (and never sends an emergent patient to 211), and a retry pass that survives a failed first pass; the offline floor pass was re-run with the same result.
+
+### Security findings (task 015)
+
+- **Closed:** M1 for the red-team forms (raw tool-call blobs, forged prompt tags, a planted code word such as `inj4`, a reply missing the chosen facility's name); L3 ("call 211" before "call 911"; emergent templates no longer mention 211). Both take effect when the branch is deployed.
+- **Open, new limit:** injected text written as a full sentence on a turn with no facility is not detected.
+- **Still open:** L5 (no chat-off switch: `ADMISSION_CONTROL=off` removes the limit, it does not stop chat), M2 (typed PII to the provider), M5 (staging shares production), L7, L8, L10 to L13.
+
+### Miss response and cut order
+
+- If the floor or the groundedness enforcement misses, both stay log-only and the false positives are published; ship only the wording fix, the off switch and the mobile fix. If the release slips, the sprint is the release, smoke test and mobile fix only.
+- Cut order if the week slips: cache pinning, retry budget, nightly gate. Capacity is not reduced.
+- Reversible: each guard has its own flag; the floor can only escalate; fixed-turn stays the default; a deploy rolls back to the previous Railway release.
+
+### Carried over
+
+- **Owner actions from Sprint 23:** add the `GROQ_API_KEY` secret and the `run-eval` label; replace the invalid Anthropic keys in Doppler `dev_personal` and `eval`; drop the local stash holding an old key; set the SonarCloud exclusion for `backend/scripts/**`.
+- **Open finding (task 015):** `gpt-oss` writes its tool call as raw JSON in the reply text in about a third of eval conversations on Ollama Cloud; the rate on Groq (production) is not measured.
+- **Not in this sprint:** retrieval challengers, graph v3 as default, agentic sufficiency and the open-weight shadow run (agentic-conversation sprint, Dec 14 to 20), natural-language follow-ups and the no-dialogue lookup channel test (Nov 30 to Dec 6).
+
+---
+
 ## [Sprint 23 — feat/eval-hardening] · Eval Hardening — triage evidence baseline and graph v3 — Closed
 
-**Closed — 2026-11-12** (CI eval gate added 2026-11-14). Branch `feat/eval-hardening`, not merged to `preview`. Result: graph v3 does not beat the no-graph path (`off`) on triage, so `off` stays the production default and the negative result is published (README, Symptom Understanding; for-engineers case study `ac1fd77`).
+**Closed — 2026-11-12** (CI eval gate added 2026-11-14). Branch `feat/eval-hardening`, merged to `preview` (PR #59; the `rescore` tooling and plan notes in PR #60, 2026-11-14), not yet promoted to `main`. Result: graph v3 does not beat the no-graph path (`off`) on triage, so `off` stays the production default and the negative result is published (README, Symptom Understanding; for-engineers case study `ac1fd77`).
 
 **Started — 2026-11-02 · branch: `feat/eval-hardening`.** Goal: one triage number with an interval that holds up under review, measured in the language guests actually use, with a rebuilt graph compared against v1 and no graph. Metric: under-triage rate (a more severe case classified lower). Counter-metric: accuracy. Both scored in code.
 
@@ -30,8 +75,8 @@ Sprints are listed newest first, by the date each started (or, where a section h
 - **Dropped on purpose:** Railway ops and the one-hour load test (Task 16, `off` stays default); the judge validity fix, information gain, absence-as-reassurance counting and the red-flag content audit.
 - **Security, open:** typed text (names, phones, addresses) reaches the model provider unredacted, with no PII detector (Medium); forged closing tags can replace the reply text with a code word while the structured result stays correct (Medium-low); `medicoordai-staging` shares production's database, Redis and keys (Medium); guests can nudge load-aware ranking counters (Low).
 - **Known earlier:** anon-writable Supabase tables (fixed at the Postgres move); `/facilities/nearby` broken.
-- **Owner actions:** merge and deploy this branch (the 3 High security fixes reach production only then); set `SEMANTIC_MODEL_SHA256` before turning the semantic path on; drop the local stash holding an old key; add the `GROQ_API_KEY` repository secret and the `run-eval` label for the CI gate (it also reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; the first CI run may show more missing variables); replace the invalid Anthropic keys in Doppler `dev_personal` and `eval`.
-- **Tooling:** `rescore` (elicitation coverage on saved conversations) is built but not committed.
+- **Owner actions:** deploy the merged work (the 3 High security fixes reach production only when `preview` is promoted to `main`; carried to Sprint 24); set `SEMANTIC_MODEL_SHA256` before turning the semantic path on; drop the local stash holding an old key; add the `GROQ_API_KEY` repository secret and the `run-eval` label for the CI gate (it also reads `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; the first CI run may show more missing variables); replace the invalid Anthropic keys in Doppler `dev_personal` and `eval`.
+- **Tooling:** `rescore` (elicitation coverage on saved conversations) is committed (PR #60); no judge run yet.
 
 ### Decisions
 

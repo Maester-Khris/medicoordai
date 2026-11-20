@@ -8,13 +8,11 @@
 
 A person describes symptoms in plain language. The system asks follow-up questions when it needs them, classifies the severity (`routine`, `moderate`, `urgent` or `emergent`), picks the nearest appropriate facility, and shows the route on a live map. The chat explains why, in plain words, and every emergent answer tells the person to call 911.
 
-It is a guest-only demo for Toronto: no account, no stored identity. Each browser gets an anonymous guest id.
-
 It started as a 48-hour hackathon build (Toronto Tech Week 2025). The rebuild replaced the simulation with a working backend, a real chat flow and measured evidence. The hackathon code is archived in the repository.
 
 ---
 
-## Current State (Sprint 23)
+## Current State (Sprint 24)
 
 | Area | Status |
 |---|---|
@@ -25,6 +23,8 @@ It started as a 48-hour hackathon build (Toronto Tech Week 2025). The rebuild re
 | Graph-assisted triage (SNOMED knowledge graph) | Built and measured, **off by default**: it does not beat the no-graph path yet (see Symptom Understanding) |
 | Load and scale | Measured to about 35 chat turns per second on one small instance (see Performance) |
 | Security | Reviewed in Sprint 23, 3 High findings fixed (see Security) |
+| Safety checks | Red-flag floor and emergency-mismatch check run in shadow (log only, awaiting a clinical reviewer); a groundedness guard replaces malformed replies with a template |
+| Cost guards | Token cap 22,000, admission off switch, retry budget, nightly eval gate |
 | Accounts, emergency-contact alerts, analytics, admin | Out of scope for this phase |
 
 Full history: [CHANGELOG.md](CHANGELOG.md).
@@ -62,7 +62,9 @@ Next: an async database pool and a 2-worker box, re-measured with the same ladde
 
 **Why this is measured.** The aim is a graph path that is clinically as good as the no-graph baseline (`off`), where the LLM alone decides. Relying on the LLM alone sends every user's symptom text to the model host, with no data processing agreement yet. Matching `off` on safety and on the questions asked is the condition for moving part of that work off the model. Not met today.
 
-Method: 27 clinician-reviewed vignettes, 3 repeats, simulated patient (`claude-haiku-4-5`), scored in code against gold severity. Sprint 23 system under test: `gpt-oss-120b` on Ollama Cloud (August: Groq). Details: [CHANGELOG.md](CHANGELOG.md).
+Method: 27 clinician-reviewed vignettes extracted from CTAS (Canadian Triage and Acuity Scale) data, 3 repeats, simulated patient (`claude-haiku-4-5`), scored in code against gold severity. Sprint 23 system under test: `gpt-oss-120b` on Ollama Cloud (August: Groq). Details: [CHANGELOG.md](CHANGELOG.md).
+
+**Legs.** `off` = no graph (the LLM alone decides; production default), static = the v1 lookup, v3 = the rebuilt semantic graph. v3 replaced the v2 graph because v2 had one major flaw: its complaints were poorly clustered (the cross-symptom cluster layer was only built for one pilot cluster), which led to poor retrieval. The August v2 numbers are kept for reference and have no "now" column.
 
 ### 1. Retrieval
 
@@ -71,7 +73,7 @@ Does the graph find the right complaint? Gold anchor in the top 5 (top 1 in brac
 | Leg | August 2026 | Now (Sprint 23) |
 |---|---|---|
 | static lookup | 100% on 20 messages (top 1); 0 of 10 lay messages | not re-run |
-| v2 graph | 35% on 20 messages (top 1); 0 of 10 lay messages | not re-run |
+| v2 graph | 35% on 20 messages (top 1); 0 of 10 lay messages | not re-run (replaced by v3) |
 | v3 (BioLORD) | did not exist | 83 to 93% across four sets of 104 to 365 messages (top 1: 38 to 71%) |
 | v3 (bge-small) | did not exist | 69 to 81% on the same four sets (top 1: 36 to 56%) |
 
@@ -85,7 +87,7 @@ Under-triage = a more severe case classified lower (lower is better). Accuracy i
 |---|---|---|---|
 | `off` | 22.2% (63.0%) | 23.5% (69.1%) | 22.2% (69.1%) |
 | static | 37.0% (51.9%) | 25.9% (66.7%) | 27.2% (64.2%) |
-| v2 | 22.2% (66.7%) | removed | removed |
+| v2 | 22.2% (66.7%) | not re-run (replaced by v3) | not re-run (replaced by v3) |
 | v3 | n/a | 28.4% (65.4%) | 29.6% (64.2%) |
 
 v3 is 7.4 points worse than `off` on the lay set (paired 95% interval [-14.8, -1.2], exact McNemar p = 0.25): no evidence it helps, not proof it harms. Re-running the lay set moved `off` by 5 points, so smaller gaps are noise.
@@ -100,7 +102,22 @@ The goal: check whether the graph improves understanding (asking for the facts a
 | static | 33.9% | 23.9% |
 | v3 | 32.6% | 24.2% |
 
-v3 minus `off`: -2.9 points (95% interval [-11.7, +3.1]). All comparisons include zero: the graph does not elicit more needed facts. The second-judge check failed (misconfigured), so judge reliability is unproven; one run only.
+v3 minus `off`: -2.9 points (95% interval [-11.7, +3.1]). All comparisons include zero: the graph does not elicit more needed facts. One run; the second-judge check failed (misconfigured).
+
+### 4. Safety enforcement
+
+Under-triage (accuracy), 81 conversations per variant. Baseline against the run with the floor in shadow and the groundedness guard enforcing.
+
+| | Baseline | After |
+|---|---|---|
+| Lay | 18.5% (70.4%) | 22.2% (69.1%) |
+| Original wording | 21.0% (70.4%) | 19.8% (71.6%) |
+
+Paired intervals include zero in both variants (McNemar p = 1.0): no change was measured, as expected while the floor only logs. Run-to-run variation is about 4 points.
+
+- The floor matched 4 of 16 emergent cases in lay wording and 5 of 16 in original wording, with one false positive (case 4). It is a net for explicit wording, not a classifier.
+- `gpt-oss` wrote its tool call as reply text in about a third of conversations; the groundedness guard replaces those replies.
+- A later review tightened the matcher and the replacement wording; the offline pass over the same transcripts gives the same hits.
 
 ### Reading
 
@@ -110,9 +127,13 @@ v3 minus `off`: -2.9 points (95% interval [-11.7, +3.1]). All comparisons includ
 
 ### CI regression gate
 
-A label-triggered check (`run-eval` on a PR, `.github/workflows/eval-gate.yml`) protects the production no-graph path. It does not measure quality: it fails when a case that was reliably right is now wrong. It runs 7 sentinel cases of the lay set once, on Groq's free tier, and fails if an emergent sentinel is under-triaged, if 2 or more other sentinels differ from the baseline, or if a sentinel is missing.
+One workflow (`.github/workflows/eval-gate.yml`) protects the production no-graph path. It runs 7 sentinel cases of the lay set once each, on Groq's free tier. It does not measure quality: it fails when a case that was reliably right is now wrong.
 
-Calibrated on that setup (30 conversations of the no-graph leg): accuracy 73.3%, under-triage 23.3%, in line with the table above. Three cases that held on the Ollama baseline did not hold on Groq (one urgent, two emergent under-triaged), so they are reported but cannot fail the gate: only 5 emergent cases are protected, and why those two under-triage on Groq is not investigated. One run is a sample, and the gate has not run in CI yet.
+1. **Nightly run (model drift).** Every night at 06:17 UTC, and on demand. It catches silent changes in the hosted model that no code change triggers. A failed nightly run opens an issue.
+2. **Regression on under-triage.** On a PR with the `run-eval` label. It fails if an emergent sentinel is under-triaged, if 2 or more other sentinels differ from the baseline, or if a sentinel is missing.
+3. **Retry of skipped conversations.** A conversation skipped by a Groq error is retried once; a sentinel still missing fails the gate.
+4. **Calibration and limits.** Calibrated on 30 conversations of the no-graph leg: accuracy 73.3%, under-triage 23.3%, in line with the table above. Three cases that held on the Ollama baseline did not hold on Groq (one urgent, two emergent under-triaged), so they are reported but cannot fail the gate: only 5 emergent cases are protected, and why those two under-triage on Groq is not investigated. The first run on the Sprint 24 code passed 7 of 7 after one retry. The gate has not run in CI yet; it needs the `GROQ_API_KEY` repository secret.
+5. **Not covered yet.** Escalation tests and in-conversation security tests are planned, not built.
 
 ---
 
@@ -127,7 +148,7 @@ Sprint 23 review (2026-11-09 to 2026-11-12), run locally with free tools; the AI
 | Red team (72 attacks, real model) | none lowered the severity or leaked the prompt; every emergent reply carried 911; 6 flagged, none High |
 | Agent power | the model has one tool that returns a classification; it cannot fetch, send or run anything |
 
-Three High findings were found and fixed with tests: a junk `Bearer` header could stall the API, the model's severity was not validated, and emergent replies could lack a 911 line. Open: typed personal details reach the model provider unredacted, and a reply can be replaced by attacker text (the severity and 911 line still hold). Limits: one run of a sample, not a proof; the semantic path and live graph were not tested.
+Three High findings were found and fixed with tests: a junk `Bearer` header could stall the API, the model's severity was not validated, and emergent replies could lack a 911 line. Open: typed personal details reach the model provider unredacted. Closed in Sprint 24 for the red-team forms, effective once released: a raw tool-call blob, a reply with a forged prompt tag, a reply too short to be real (a planted code word, finding `inj4`), or a reply that omits the chosen facility's name is replaced by a template. Limit: attacker text written as a full sentence on a turn with no facility is not detected. Limits: one run of a sample, not a proof; the semantic path and live graph were not tested.
 
 ---
 

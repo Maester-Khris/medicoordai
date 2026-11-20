@@ -197,3 +197,17 @@ def test_anthropic_defaults_to_the_current_haiku_and_never_sends_temperature(mon
     sent = create.call_args.kwargs
     assert "temperature" not in sent and sent["max_tokens"] == 4096 and sent["model"] == "claude-haiku-5-5"
     assert response.content == "ok"  # a leading thinking block is skipped, not read as the answer
+
+
+def test_a_failover_is_counted_by_provider_pair() -> None:
+    from observability import _registry
+
+    labels = {"from_provider": "groq", "to_provider": "anthropic"}
+    down, up = _Down(), _Up()
+    down.provider, up.provider = "groq", "anthropic"  # type: ignore[attr-defined]
+    before = _registry.get_sample_value("llm_fallbacks_total", labels) or 0
+    asyncio.run(FallbackLLMClient([down, up]).chat([LLMMessage(role="user", content="hi")]))
+    assert _registry.get_sample_value("llm_fallbacks_total", labels) == before + 1
+    # A call the first provider answers is not a failover.
+    asyncio.run(FallbackLLMClient([up, down]).chat([LLMMessage(role="user", content="hi")]))
+    assert _registry.get_sample_value("llm_fallbacks_total", labels) == before + 1

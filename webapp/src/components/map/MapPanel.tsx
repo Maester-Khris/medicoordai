@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css'
-import { useEffect, useState, useRef, useMemo } from 'react'
-import { MapContainer, TileLayer, Marker, Tooltip, Popup } from 'react-leaflet'
+import { memo, useEffect, useState, useRef, useMemo } from 'react'
+import { MapContainer, TileLayer, Marker, Tooltip, Popup, CircleMarker } from 'react-leaflet'
 import { useMapEvents } from 'react-leaflet'
 import type { Facility, TravelModeKey, TriageUIState } from '../../../../shared/types'
 import { useBreakpoint } from '../../hooks/useBreakpoint'
@@ -19,6 +19,7 @@ import { MapSizeGuard } from './layers/MapSizeGuard'
 import { RoadRouteLayer } from './layers/RoadRouteLayer'
 import { FacilityMarkerLayer } from './components/FacilityMarkerLayer'
 import { FacilityLegend } from './components/FacilityLegend'
+import type { HighlightRequest } from '../../lib/highlightRequest'
 import { isOpen24h, isOpenWeekends, isOpenNow } from '../../utils/hoursUtils'
 import { meetsWaitTimeFilter } from '../../utils/waitTimeUtils'
 
@@ -30,6 +31,12 @@ interface MapPanelProps {
   sizeVersion?: number
   onClear?: () => void
   onModeChange?: (mode: TravelModeKey) => void
+  /** Facility chosen from the mobile list: the map flies to it and rings it, on every new request. */
+  highlightRequest?: HighlightRequest | null
+  /** Height of the mobile bottom sheet at rest: map controls sit above it so it never covers them. */
+  bottomInset?: number
+  /** False when the legend would not fit above the sheet (short landscape phones). */
+  showLegend?: boolean
 }
 
 // Short labels for filter chips
@@ -40,7 +47,8 @@ const CHIP_LABEL: Record<CategoryFilter, string> = {
   residential: 'Residential',
 }
 
-export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange }: MapPanelProps) {
+// memo: the mobile layout re-renders on every keystroke; without it every marker icon is rebuilt each time.
+export const MapPanel = memo(function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend = false, sizeVersion = 0, onClear, onModeChange, highlightRequest = null, bottomInset = 0, showLegend = true }: MapPanelProps) {
   const config = useConfig()
   const isMobile = useBreakpoint()
   const pinnedIdRef = useRef<string | null>(null)
@@ -98,6 +106,11 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
     ambulatory: facilities.filter(f => f.category === "ambulatory").length,
     residential: facilities.filter(f => f.category === "residential").length,
   }
+
+  const highlighted = useMemo(
+    () => facilities.find(f => f.id != null && f.id === highlightRequest?.id) ?? null,
+    [facilities, highlightRequest?.id],
+  )
 
   const displayedFacilities = useMemo(() => {
     // When proximity results have loaded, they are already category-filtered by the DB.
@@ -174,6 +187,7 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
             <Tooltip className="text-[13px] font-semibold" direction="top">CN Tower Area</Tooltip>
           </Marker>
           <RoadRouteLayer />
+          <HighlightedFacility request={highlightRequest} facility={highlighted} />
           <FacilityMarkerLayer
             displayedFacilities={displayedFacilities}
             triageCandidates={triageCandidates}
@@ -187,7 +201,7 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
             </Marker>
           )}
           {/* Focus User Location button */}
-          <FocusUserButton geo={geo} isMobile={isMobile} />
+          <FocusUserButton geo={geo} isMobile={isMobile} bottomInset={bottomInset} />
         </MapProvider>
       </MapContainer>
 
@@ -573,11 +587,11 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
         {onClear && activeTriage.active && (
           <button
             onClick={onClear}
-            aria-label="Clear map"
+            aria-label="New conversation"
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              padding: '5px 12px',
-              fontSize: 11, fontWeight: 700,
+              padding: '5px 12px', minHeight: 44,
+              fontSize: 12, fontWeight: 700,
               background: 'rgba(255, 123, 147, 0.15)',
               border: '1px solid rgba(255, 123, 147, 0.50)',
               borderRadius: 999,
@@ -599,7 +613,7 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
-            Clear map
+            New conversation
           </button>
         )}
         {!isMobile && (
@@ -632,10 +646,10 @@ export function MapPanel({ facilities, facilitiesLoading, triage, verticalLegend
         )}
       </div>
 
-      <FacilityLegend verticalLegend={verticalLegend} />
+      {showLegend && <FacilityLegend verticalLegend={verticalLegend} bottomInset={bottomInset} />}
     </div>
   )
-}
+})
 
 function MapClickHandler({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -667,12 +681,55 @@ function ProximityAnchorView({
   return null
 }
 
+const RING_VISIBLE_MS = 4000 // how long the ring stays once the map has arrived
+const MOVEEND_FALLBACK_MS = 1200 // the map may already be there, so no moveend fires
+
+// One ring and one flyTo per request; the 300 facility markers are not touched. The effect depends on
+// the request only, so a facilities reload (a new facility object) never moves the map. The fade timer
+// is local state, so MapPanel does not re-render when the ring disappears.
+function HighlightedFacility({ request, facility }: {
+  request: HighlightRequest | null
+  facility: { lat: number; lng: number } | null
+}) {
+  const map = useMap()
+  const [ringVisible, setRingVisible] = useState(false)
+  const facilityRef = useRef(facility)
+  facilityRef.current = facility
+
+  useEffect(() => {
+    const target = facilityRef.current
+    if (!request || !target) { setRingVisible(false); return }
+
+    setRingVisible(true)
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const startFade = () => {
+      map.off('moveend', startFade)
+      clearTimeout(timer)
+      timer = setTimeout(() => setRingVisible(false), RING_VISIBLE_MS)
+    }
+    map.once('moveend', startFade)
+    timer = setTimeout(startFade, MOVEEND_FALLBACK_MS)
+
+    const zoom = Math.max(map.getZoom(), 15)
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) map.setView([target.lat, target.lng], zoom, { animate: false })
+    else map.flyTo([target.lat, target.lng], zoom, { duration: 0.8 })
+
+    return () => { map.off('moveend', startFade); clearTimeout(timer) }
+  }, [map, request])
+
+  if (!ringVisible || !facility) return null
+  return <CircleMarker center={[facility.lat, facility.lng]} radius={22} pathOptions={{ color: '#48F6C1', weight: 3, fillOpacity: 0.1 }} interactive={false} />
+}
+
 function FocusUserButton({
   geo,
   isMobile,
+  bottomInset,
 }: {
   geo: ReturnType<typeof useGeolocation>
   isMobile: boolean
+  bottomInset: number
 }) {
   const map = useMap()
 
@@ -689,7 +746,7 @@ function FocusUserButton({
       title="Focus on my location"
       style={{
         position: 'absolute',
-        bottom: isMobile ? 236 : 16,
+        bottom: isMobile ? 16 + bottomInset : 16,
         right: 16,
         zIndex: 1000,
         width: 38,

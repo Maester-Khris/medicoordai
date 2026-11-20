@@ -26,7 +26,7 @@ export function SuggestionChips({ onSelect, disabled = false, chips }: Suggestio
             data-testid="starter-prompt"
             onClick={() => handleTap(chip)}
             disabled={disabled}
-            className="flex-none h-8 px-3 rounded-full whitespace-nowrap transition-colors disabled:opacity-50 cursor-pointer"
+            className="flex-none h-11 px-4 rounded-full whitespace-nowrap transition-colors disabled:opacity-50 cursor-pointer"
             style={{
               border: isActive
                 ? '1px solid rgba(72,246,193,0.60)'

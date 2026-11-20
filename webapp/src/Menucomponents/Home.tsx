@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import type { Facility, Message, Session, ConversationsCache, ChatMessageResponse } from '@shared/types'
+import type { Facility, Message, Session, ConversationsCache } from '@shared/types'
+import type { SendResult } from '../hooks/useConversations'
 import { MapPanel } from '../components/map'
 import { ChatPanel } from './subcomponent/ChatPanel'
 import { LoginModal } from '../components/auth/LoginModal'
@@ -14,7 +15,7 @@ interface HomeProps {
   facilities: Facility[]
   facilitiesLoading: boolean
   conversationsCache: ConversationsCache | null
-  sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<ChatMessageResponse | null>
+  sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<SendResult>
   createSession: (firstMessage: string) => Promise<Session | null>
   loadOlderMessages: (sessionId: string, beforeId: string) => Promise<Message[]>
   busyUntil: number | null

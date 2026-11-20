@@ -5,11 +5,14 @@ can succeed. 400 (bad request/client errors) and timeouts are not retried becaus
 the cost or the wait. Full jitter avoids a retry storm when multiple requests fail simultaneously.
 """
 import asyncio
+from collections import deque
 from collections.abc import Awaitable, Callable
 import random
+import time
 from typing import Any
 
-from metrics import LLM_RETRIES
+import config
+from metrics import LLM_RETRIES, LLM_RETRY_BUDGET_EXHAUSTED
 
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
 from .instrumented import classify_llm_error
@@ -17,6 +20,64 @@ from .instrumented import classify_llm_error
 # Named so the eval run manifest can record the values that shape a retry.
 BASE_DELAY_SECONDS = 0.25
 MAX_DELAY_SECONDS = 1.0
+
+
+class RetryBudget:
+    """Process-wide rolling-window cap on LLM retries.
+
+    SDK and per-call retries multiply provider traffic exactly when a provider is
+    struggling (a retry storm). The cap is per process; it is not shared between replicas.
+    Not thread-safe on purpose: it is driven from one event loop with no await between prune and
+    append. Add a lock if a client is ever driven from several threads.
+    """
+
+    def __init__(
+        self,
+        percent: int,
+        window_seconds: float = 60.0,
+        floor: int = 3,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self._percent = percent
+        self._window_seconds = window_seconds
+        self._floor = floor
+        self._clock = clock
+        self._calls: deque[float] = deque()
+        self._retries: deque[float] = deque()
+
+    def _prune(self, now: float) -> None:
+        cutoff = now - self._window_seconds
+        while self._calls and self._calls[0] <= cutoff:
+            self._calls.popleft()
+        while self._retries and self._retries[0] <= cutoff:
+            self._retries.popleft()
+
+    def record_call(self) -> None:
+        """Record that one call to a provider happened."""
+        now = self._clock()
+        self._prune(now)
+        self._calls.append(now)
+
+    def allow_retry(self) -> bool:
+        """Return True and record a retry if retries in the window are still within budget."""
+        now = self._clock()
+        self._prune(now)
+        limit = max(self._floor, self._percent / 100 * len(self._calls))
+        if len(self._retries) < limit:
+            self._retries.append(now)
+            return True
+        return False
+
+
+_shared_budget: RetryBudget | None = None
+
+
+def shared_retry_budget() -> RetryBudget:
+    """Return the single process-wide RetryBudget, built lazily from config."""
+    global _shared_budget
+    if _shared_budget is None:
+        _shared_budget = RetryBudget(percent=config.retry_budget_percent())
+    return _shared_budget
 
 
 def is_retryable(exc: BaseException) -> bool:
@@ -46,6 +107,7 @@ class RetryingLLMClient(BaseLLMClient):
         max_delay: float = MAX_DELAY_SECONDS,
         sleep: Callable[[float], Awaitable[Any]] = asyncio.sleep,
         jitter: Callable[[], float] = random.random,
+        budget: RetryBudget | None = None,
     ) -> None:
         if attempts < 1:
             raise ValueError("attempts must be at least 1")
@@ -56,6 +118,7 @@ class RetryingLLMClient(BaseLLMClient):
         self.max_delay = max_delay
         self._sleep = sleep
         self._jitter = jitter
+        self._budget = budget
 
     @property
     def model_name(self) -> str:
@@ -69,6 +132,8 @@ class RetryingLLMClient(BaseLLMClient):
         stop: list[str] | None = None,
         force_tool: str | None = None,
     ) -> LLMResponse:
+        if self._budget is not None:
+            self._budget.record_call()
         for attempt in range(self.attempts):
             try:
                 return await self._inner.chat(
@@ -80,6 +145,9 @@ class RetryingLLMClient(BaseLLMClient):
                 )
             except Exception as exc:
                 if not is_retryable(exc) or attempt >= self.attempts - 1:
+                    raise
+                if self._budget is not None and not self._budget.allow_retry():
+                    LLM_RETRY_BUDGET_EXHAUSTED.labels(provider=self.provider).inc()
                     raise
                 LLM_RETRIES.labels(provider=self.provider).inc()
                 delay = self._jitter() * min(self.max_delay, self.base_delay * (2 ** attempt))

@@ -6,6 +6,8 @@ this class is the seam where it would plug in.
 """
 import logging
 
+from metrics import LLM_FALLBACKS
+
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
 from .instrumented import classify_llm_error, worth_trying_another_provider
 
@@ -51,6 +53,9 @@ class FallbackLLMClient(BaseLLMClient):
             except Exception as exc:
                 if position == last or not worth_trying_another_provider(exc):
                     raise
+                LLM_FALLBACKS.labels(
+                    from_provider=_provider_name(client), to_provider=_provider_name(self._clients[position + 1]),
+                ).inc()
                 logger.warning(
                     "llm_fallback",
                     extra={

@@ -1,7 +1,8 @@
 // webapp/src/components/mobile/BottomNavBar.tsx
-import { MapPin, Buildings, FirstAid, ChatCircle } from '@phosphor-icons/react'
+import { MapPin, Buildings, ChatCircle } from '@phosphor-icons/react'
+import type { SheetTab } from '../../lib/sheetState'
 
-export type MobileTab = 'map' | 'facilities' | 'triage' | 'chat'
+export type MobileTab = SheetTab
 
 interface BottomNavBarProps {
   activeTab: MobileTab
@@ -9,10 +10,9 @@ interface BottomNavBarProps {
 }
 
 const TABS: Array<{ id: MobileTab; label: string; Icon: typeof MapPin }> = [
-  { id: 'map',        label: 'MAP',        Icon: MapPin    },
-  { id: 'facilities', label: 'FACILITIES', Icon: Buildings  },
-  { id: 'triage',    label: 'TRIAGE',     Icon: FirstAid   },
-  { id: 'chat',      label: 'CHAT',       Icon: ChatCircle },
+  { id: 'map',        label: 'Map',        Icon: MapPin     },
+  { id: 'facilities', label: 'Facilities', Icon: Buildings  },
+  { id: 'chat',       label: 'Chat',       Icon: ChatCircle },
 ]
 
 export function BottomNavBar({ activeTab, onTabChange }: BottomNavBarProps) {
@@ -27,7 +27,7 @@ export function BottomNavBar({ activeTab, onTabChange }: BottomNavBarProps) {
         borderTop: '1px solid rgba(28,70,89,0.50)',
         paddingBottom: 'env(safe-area-inset-bottom)',
         display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        gridTemplateColumns: `repeat(${TABS.length}, 1fr)`,
         zIndex: 50,
       }}
     >
@@ -40,7 +40,7 @@ export function BottomNavBar({ activeTab, onTabChange }: BottomNavBarProps) {
             onClick={() => onTabChange(id)}
             className="flex flex-col items-center justify-center gap-1 h-full relative border-none bg-transparent cursor-pointer"
             style={{ minHeight: 44 }}
-            aria-label={label}
+            aria-current={isActive ? 'page' : undefined}
           >
             {isActive && (
               <span
@@ -50,7 +50,7 @@ export function BottomNavBar({ activeTab, onTabChange }: BottomNavBarProps) {
             )}
             <Icon size={20} color={color} weight={isActive ? 'fill' : 'regular'} />
             <span
-              className="font-mono text-[9px] uppercase tracking-wide"
+              className="font-mono text-[12px] tracking-wide"
               style={{ color }}
             >
               {label}
