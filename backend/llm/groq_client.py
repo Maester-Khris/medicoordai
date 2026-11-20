@@ -1,5 +1,5 @@
 import os
-from groq import AsyncGroq, BadRequestError, DefaultAsyncHttpxClient
+from groq import AsyncGroq, DefaultAsyncHttpxClient
 from config import llm_timeout_seconds
 from .base import BaseLLMClient, LLMMessage, LLMResponse, ToolDefinition
 from .limits import connection_limits
@@ -7,12 +7,12 @@ from .limits import connection_limits
 
 class GroqClient(BaseLLMClient):
 
-    def __init__(self, max_retries: int | None = None) -> None:
+    def __init__(self, max_retries: int | None = None, model: str | None = None) -> None:
         api_key = os.environ.get("GROQ_API_KEY")
         if not api_key:
             raise RuntimeError("GROQ_API_KEY is not set")
-        # max_retries=None keeps the SDK's own retries (single-provider mode). A fallback chain
-        # passes 0: there the next provider is the retry.
+        # The guard stack passes max_retries=0 (llm.retry is the only retry policy); None keeps the
+        # SDK's own retries for callers that build the client directly.
         options: dict = {
             "api_key": api_key,
             "timeout": llm_timeout_seconds(),
@@ -23,7 +23,7 @@ class GroqClient(BaseLLMClient):
         self._client = AsyncGroq(**options)
         # llama-3.3-70b-versatile was shut down by Groq 2026-08-16; openai/gpt-oss-120b
         # is Groq's official migration target and supports tool calling.
-        self._model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+        self._model = model or os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
 
     @property
     def model_name(self) -> str:
@@ -57,17 +57,9 @@ class GroqClient(BaseLLMClient):
             kwargs["tools"] = groq_tools
             kwargs["tool_choice"] = tool_choice
 
-        try:
-            resp = await self._client.chat.completions.create(**kwargs)
-        except BadRequestError as e:
-            # ponytail: llama occasionally emits a tool-call arg as the wrong
-            # JSON type (e.g. "true" instead of true) — a transient sampling
-            # glitch, not a systematic prompt/schema problem. One retry, no
-            # backoff; if it fails twice, let it raise.
-            if groq_tools and "tool_use_failed" in str(e):
-                resp = await self._client.chat.completions.create(**kwargs)
-            else:
-                raise
+        # No retry here: llm.retry owns the retry policy, and a 400 (including a malformed tool call,
+        # tool_use_failed) is never retried. Sprint 23 step 2, decision D3.
+        resp = await self._client.chat.completions.create(**kwargs)
         choice = resp.choices[0]
 
         tool_calls = None

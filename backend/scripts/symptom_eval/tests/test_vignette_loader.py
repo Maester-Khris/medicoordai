@@ -3,6 +3,8 @@ import os
 import sys
 import tempfile
 
+import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 from scripts.symptom_eval.vignette_loader import build_vignette, load_all_vignettes
@@ -70,3 +72,36 @@ class TestLoadAllVignettes:
 
             assert len(vignettes) == 1
             assert vignettes[0].case_id == "2"
+
+
+class TestPairingExclusion:
+    def test_excluded_from_pairing_reaches_vignette(self):
+        checklist = {**CHECKLIST, "excluded_from_pairing": "lay wording drops the stridor cue"}
+
+        vignette = build_vignette(RAW_SINGLE_STAGE, checklist)
+
+        assert vignette.pairing_exclusion == "lay wording drops the stridor cue"
+
+    def test_missing_key_means_none(self):
+        assert build_vignette(RAW_SINGLE_STAGE, CHECKLIST).pairing_exclusion is None
+
+
+class TestVariant:
+    def test_lay_variant_reads_the_lay_directory(self, tmp_path, monkeypatch):
+        from scripts.symptom_eval import vignette_loader
+
+        lay_dir = tmp_path / "lay"
+        lay_dir.mkdir()
+        (lay_dir / "2.json").write_text(json.dumps({**CHECKLIST, "opening_message": "I nearly blacked out."}))
+        raw_path = tmp_path / "raw.json"
+        raw_path.write_text(json.dumps([RAW_SINGLE_STAGE]))
+        monkeypatch.setattr(vignette_loader, "CHECKLISTS_LAY_DIR", str(lay_dir))
+
+        vignettes = load_all_vignettes(raw_path=str(raw_path), variant="lay")
+
+        assert [v.opening_message for v in vignettes] == ["I nearly blacked out."]
+        assert vignettes[0].gold_severity == "emergent"  # gold always comes from the raw file
+
+    def test_unknown_variant_raises(self):
+        with pytest.raises(ValueError, match="variant"):
+            load_all_vignettes(variant="nonsense")

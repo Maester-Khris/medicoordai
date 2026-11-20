@@ -65,3 +65,44 @@ class TestAnthropicPatientSimulator:
         assert "How long has this been going on?" in contents
         assert "I feel dizzy." in contents
         assert "Any chest pain?" in contents
+
+
+class TestSimulatorFromEnv:
+    def test_groq_simulator_defaults_to_a_model_other_than_the_system_under_test(self, monkeypatch):
+        from scripts.symptom_eval.patient_simulator import simulator_from_env
+
+        monkeypatch.setenv("GROQ_API_KEY", "test-key")
+        monkeypatch.setenv("EVAL_SIMULATOR_PROVIDER", "groq")
+        monkeypatch.delenv("EVAL_SIMULATOR_MODEL", raising=False)
+        monkeypatch.setenv("GROQ_MODEL", "openai/gpt-oss-120b")
+
+        simulator = simulator_from_env()
+
+        assert simulator.model_name == "qwen/qwen3.8-27b"
+
+    def test_the_groq_simulator_may_not_be_the_system_model(self, monkeypatch):
+        import pytest
+        from scripts.symptom_eval.patient_simulator import simulator_from_env
+
+        monkeypatch.setenv("GROQ_API_KEY", "test-key")
+        monkeypatch.setenv("EVAL_SIMULATOR_PROVIDER", "groq")
+        monkeypatch.setenv("EVAL_SIMULATOR_MODEL", "openai/gpt-oss-120b")
+        monkeypatch.setenv("GROQ_MODEL", "openai/gpt-oss-120b")
+
+        with pytest.raises(ValueError, match="same model"):
+            simulator_from_env()
+
+    def test_an_unknown_provider_is_refused(self, monkeypatch):
+        import pytest
+        from scripts.symptom_eval.patient_simulator import simulator_from_env
+
+        monkeypatch.setenv("EVAL_SIMULATOR_PROVIDER", "nope")
+
+        with pytest.raises(ValueError, match="EVAL_SIMULATOR_PROVIDER"):
+            simulator_from_env()
+
+
+def test_simulator_from_env_claude_cli(monkeypatch):
+    from scripts.symptom_eval.patient_simulator import simulator_from_env
+    monkeypatch.setenv("EVAL_SIMULATOR_PROVIDER", "claude-cli")
+    assert simulator_from_env().model_name == "claude-cli:claude-haiku-4-5"

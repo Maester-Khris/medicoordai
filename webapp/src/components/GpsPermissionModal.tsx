@@ -1,9 +1,17 @@
+import { useEffect } from "react"
+
 interface GpsPermissionModalProps {
   onDismiss: () => void
   dismissLabel?: string
 }
 
 export function GpsPermissionModal({ onDismiss, dismissLabel = "Got it" }: GpsPermissionModalProps) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onDismiss() }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [onDismiss])
+
   return (
     <>
       <div

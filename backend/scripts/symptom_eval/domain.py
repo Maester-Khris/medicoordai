@@ -27,6 +27,7 @@ class Vignette:
     update_message: str | None = None
     updated_gold_severity: str | None = None
     source_pages: str = ""
+    pairing_exclusion: str | None = None  # reason a lay version can't support the gold label; None = pairable
 
 
 @dataclass
@@ -37,6 +38,9 @@ class ConversationTurn:
     graph_context_matched: bool
     surfaced_red_flag_indicators: list[str] = field(default_factory=list)
     surfaced_followup_questions: list[str] = field(default_factory=list)
+    cap_reached: bool = False
+    tokens_used: int = 0
+    complaint_name: str | None = None
 
 
 @dataclass

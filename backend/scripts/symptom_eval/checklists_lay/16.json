@@ -1,0 +1,66 @@
+{
+  "opening_message": "My throat has been sore for two days.",
+  "disclosure_items": [
+    {
+      "feature_id": "fever",
+      "category": "history",
+      "first_person_phrasing": "I might have a temperature. I checked 30 minutes ago and it was 38 degrees Celsius.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "medications",
+      "category": "history",
+      "first_person_phrasing": "I've been sucking throat lozenges but I'm not taking anything else.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "cough",
+      "category": "history",
+      "first_person_phrasing": "No cough.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "runny_nose",
+      "category": "history",
+      "first_person_phrasing": "No runny nose.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "swallowing",
+      "category": "history",
+      "first_person_phrasing": "I can swallow drinks and food without any trouble.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "appearance",
+      "category": "exam",
+      "first_person_phrasing": "I think I look okay.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "My blood pressure was 140 over 65.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse",
+      "category": "vitals",
+      "first_person_phrasing": "My pulse was 95 and steady.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respirations",
+      "category": "vitals",
+      "first_person_phrasing": "I was breathing 16 times a minute, evenly.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "oxygen_saturation",
+      "category": "vitals",
+      "first_person_phrasing": "My oxygen level is 96% on regular air.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

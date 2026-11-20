@@ -290,6 +290,48 @@ class TestSendMessage:
         assert "911" in data["assistant_message"]["content"]
         assert data["triage"] is None
 
+    def test_no_provider_available_returns_the_safety_line_with_911_and_211(self, client):
+        """An open breaker on the only provider: no severity, no facility, a saved message with the safety line."""
+        from llm.breaker import ProviderCircuitOpen
+
+        user_msg = self._fake_msg("user", "I feel sick")
+        fallback_msg = self._fake_msg("assistant", "unavailable")
+        with patch("routers.chat.add_message", side_effect=[user_msg, fallback_msg]) as add, \
+             patch("routers.chat.get_agent") as MockAgent:
+            MockAgent.return_value.respond = AsyncMock(side_effect=ProviderCircuitOpen("groq"))
+            resp = self._post(client, "I feel sick")
+
+        assert resp.status_code == 200
+        assert resp.json()["triage"] is None
+        saved = add.call_args_list[1].kwargs["content"]
+        assert "911" in saved and "211" in saved
+
+    def test_a_provider_quota_error_still_returns_the_busy_answer(self, client):
+        class _Quota(Exception):
+            status_code = 429
+
+        user_msg = self._fake_msg("user", "I feel sick")
+        with patch("routers.chat.add_message", side_effect=[user_msg]), \
+             patch("routers.chat.get_agent") as MockAgent:
+            MockAgent.return_value.respond = AsyncMock(side_effect=_Quota())
+            resp = self._post(client, "I feel sick")
+
+        assert resp.status_code == 429
+        assert resp.json()["code"] == "busy"
+
+    def test_the_session_id_is_the_conversation_the_cap_counts(self, client):
+        user_msg = self._fake_msg("user", "hi")
+        assistant_msg = self._fake_msg("assistant", "hi")
+        with patch("routers.chat.add_message", side_effect=[user_msg, assistant_msg]), \
+             patch("routers.chat.get_agent") as MockAgent:
+            MockAgent.return_value.respond = AsyncMock(return_value={
+                "response": "Can you tell me more?", "severity": None, "reasoning": None,
+                "recommended_facility": None, "nearby_facilities": [], "turn_type": "followup",
+            })
+            self._post(client, "hi")
+
+        assert MockAgent.return_value.respond.call_args.kwargs["conversation_id"] == str(FAKE_SESSION_ID)
+
     def test_response_contains_both_user_and_assistant_messages(self, client):
         user_msg = self._fake_msg("user", "hi")
         assistant_msg = self._fake_msg("assistant", "hi")

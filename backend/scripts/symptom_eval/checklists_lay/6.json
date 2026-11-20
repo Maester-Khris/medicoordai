@@ -1,0 +1,60 @@
+{
+  "opening_message": "I feel really weak and just generally off.",
+  "disclosure_items": [
+    {
+      "feature_id": "dizziness",
+      "category": "history",
+      "first_person_phrasing": "No dizziness at all.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "nausea",
+      "category": "history",
+      "first_person_phrasing": "No, I don't feel sick to my stomach.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vomiting",
+      "category": "history",
+      "first_person_phrasing": "No, I haven't thrown up.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pain",
+      "category": "history",
+      "first_person_phrasing": "No pain anywhere.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "dialysis_missed",
+      "category": "history",
+      "first_person_phrasing": "I skipped my dialysis session yesterday.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "My blood pressure is 105 over 60, I know that.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse",
+      "category": "vitals",
+      "first_person_phrasing": "My pulse is 60.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respirations",
+      "category": "vitals",
+      "first_person_phrasing": "I breathe about 14 times a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "oxygen_saturation",
+      "category": "vitals",
+      "first_person_phrasing": "My oxygen level is 96% with no extra oxygen.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

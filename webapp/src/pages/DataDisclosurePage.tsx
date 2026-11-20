@@ -15,7 +15,7 @@ export default function DataDisclosurePage() {
       badge: 'Deleted after 30 days',
       why: 'Shown back to you when you return in the same browser, and reviewed by the team to improve recommendations.',
       stored: 'Demo database (Railway, PostgreSQL). Each conversation and its messages are deleted 30 days after the conversation started.',
-      shared: 'Sent to the language-model provider (Groq) to generate replies. Not sold or shared otherwise.'
+      shared: 'Sent to the language-model provider (Groq, or Anthropic if Groq is unavailable) to generate replies. Not sold or shared otherwise.'
     },
     {
       data: 'Guest demo: feedback and usage events',

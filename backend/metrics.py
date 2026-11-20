@@ -25,8 +25,30 @@ LLM_CALL_DURATION = Histogram(
     ["provider", "outcome"], buckets=LLM_BUCKETS, registry=_registry,
 )
 LLM_CALLS = Counter(
-    "llm_calls_total", "LLM provider calls by outcome (ok, rate_limited, timeout, error)",
+    "llm_calls_total", "LLM provider calls by outcome (ok, rate_limited, timeout, circuit_open, error)",
     ["provider", "outcome"], registry=_registry,
+)
+LLM_RETRIES = Counter(
+    "llm_retries_total", "Retries of a provider call after a transient failure",
+    ["provider"], registry=_registry,
+)
+LLM_RETRY_BUDGET_EXHAUSTED = Counter(
+    "llm_retry_budget_exhausted_total", "Retries refused because the retry budget was used up",
+    ["provider"], registry=_registry,
+)
+LLM_FALLBACKS = Counter(
+    "llm_fallbacks_total", "Calls that failed over from one LLM provider to the next in the chain",
+    ["from_provider", "to_provider"], registry=_registry,
+)
+LLM_BREAKER_TRANSITIONS = Counter(
+    "llm_breaker_transitions_total", "Circuit breaker state changes per provider",
+    ["provider", "to"], registry=_registry,
+)
+LLM_SPEND_STORE_ERRORS = Counter(
+    "llm_spend_store_errors_total", "Failed spend counter operations (the cap fails open)", registry=_registry
+)
+LLM_CAP_REACHED = Counter(
+    "llm_cap_reached_total", "Turns that started with the conversation token cap reached", registry=_registry
 )
 LLM_TOKENS = Counter(
     "llm_tokens_total", "Tokens reported by the provider (kind: prompt, completion)",
@@ -39,6 +61,16 @@ ROUTING_CALL_DURATION = Histogram(
 GRAPH_LOOKUP_DURATION = Histogram(
     "graph_lookup_duration_seconds", "One symptom graph context lookup",
     ["provider", "outcome"], buckets=GRAPH_BUCKETS, registry=_registry,
+)
+SEMANTIC_BUCKETS = (0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5)
+SEMANTIC_OUTCOMES = Counter(
+    "graph_semantic_outcomes_total",
+    "Semantic candidate lookups by outcome (ok, empty, timeout, breaker_open, not_ready, error, queue_full)",
+    ["outcome"], registry=_registry,
+)
+SEMANTIC_EMBED_DURATION = Histogram(
+    "graph_semantic_embed_duration_seconds", "One message embedding plus index search",
+    buckets=SEMANTIC_BUCKETS, registry=_registry,
 )
 POOL_SIZE = Gauge("demo_db_pool_size", "Connections open in the demo database pool", registry=_registry)
 POOL_IN_USE = Gauge("demo_db_pool_in_use", "Connections currently checked out", registry=_registry)

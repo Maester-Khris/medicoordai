@@ -1,0 +1,100 @@
+name: Eval gate
+
+# Runs on a PR that carries the `run-eval` label, nightly on the default branch, and on demand. It makes
+# live calls to Groq (free tier), so it is never run on every push. The nightly run catches drift in the
+# hosted model, which no code change would trigger. The gate protects the production (no-graph) path: seven cases that were right on
+# every recorded baseline run must still be right. It catches gross breaks (a prompt, parser or provider
+# change), not subtle drift. Design: CHANGELOG.md, Sprint 23, item 6.
+
+on:
+  pull_request:
+    types: [labeled, synchronize]
+    branches: [preview, main]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: eval-gate-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  eval-gate:
+    name: Eval gate (sentinel cases, no-graph path)
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-eval')
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write  # only to open an issue when the nightly run fails
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: "pip install --only-binary :all: -r requirements.txt"
+
+      # One repeat of each sentinel case. The system is gpt-oss-120b on Groq; the simulated patient is a
+      # different Groq model. --min-gap-s keeps the system under Groq's 8,000 tokens-per-minute limit.
+      # Two passes: a conversation skipped by a Groq error (a 400 on a malformed tool call) or a pass that
+      # stopped early (three failures in a row) is retried once from the checkpoint. `|| true` keeps the
+      # first pass's exit code from skipping the second; the gate step below fails on a missing sentinel.
+      - name: Run the sentinel conversations
+        run: |
+          for attempt in 1 2; do
+            python -m scripts.symptom_eval.cli run-ablation \
+              --variant lay --providers off --repeats 1 --no-judges --min-gap-s 20 --skip-failed \
+              --cases "$(python -c "import json;print(','.join(s['case_id'] for s in json.load(open('scripts/symptom_eval/baselines/off-lay-sentinels.json'))['sentinels']))")" \
+              --checkpoint "$RUNNER_TEMP/gate.jsonl" || true
+          done
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: openai/gpt-oss-120b
+          EVAL_SIMULATOR_PROVIDER: groq
+          EVAL_SIMULATOR_MODEL: qwen/qwen3.8-27b
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Read at import. A dummy, unreachable URL on purpose: facility_load.record() writes load counters
+          # (fails open), and the real URL would write them into production's ranking data.
+          UPSTASH_REDIS_URL: redis://localhost:6379/0
+
+      - name: Apply the gate
+        run: |
+          python -m scripts.symptom_eval.gate \
+            --checkpoint "$RUNNER_TEMP/gate.jsonl" \
+            --baseline scripts/symptom_eval/baselines/off-lay-sentinels.json | tee -a "$GITHUB_STEP_SUMMARY"
+          exit "${PIPESTATUS[0]}"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Read at import. A dummy, unreachable URL on purpose: facility_load.record() writes load counters
+          # (fails open), and the real URL would write them into production's ranking data.
+          UPSTASH_REDIS_URL: redis://localhost:6379/0
+
+      - name: Keep the conversations for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-gate-conversations
+          path: ${{ runner.temp }}/gate.jsonl
+          retention-days: 14
+
+      # A scheduled failure only emails the person who last edited the cron, so open an issue too.
+      - name: Open an issue when the nightly run fails
+        if: failure() && github.event_name == 'schedule'
+        run: |
+          gh issue create --repo "$GITHUB_REPOSITORY" \
+            --title "Nightly eval gate failed ($(date -u +%F))" \
+            --body "The sentinel gate failed on the production configuration. Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -31,7 +31,12 @@ metrics.bind_turns_in_flight(in_flight)
 
 @contextlib.contextmanager
 def admit() -> Iterator[None]:
-    limit = config.env_int("MAX_TURNS_IN_FLIGHT", 0, minimum=0, maximum=100000)
+    # MAX_TURNS_IN_FLIGHT=0 means "no limit", so ADMISSION_CONTROL=off disables enforcement without losing the number.
+    limit = (
+        config.env_int("MAX_TURNS_IN_FLIGHT", 0, minimum=0, maximum=100000)
+        if config.admission_control_enabled()
+        else 0
+    )
     global _in_flight
     if limit != 0 and _in_flight >= limit:
         metrics.TURNS_REJECTED.inc()

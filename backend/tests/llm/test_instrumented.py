@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 import pytest
 
 from llm.base import BaseLLMClient, LLMMessage, LLMResponse
+from llm.breaker import ProviderCircuitOpen
 from llm.instrumented import InstrumentedLLMClient, classify_llm_error, worth_trying_another_provider
 from observability import _registry
 
@@ -114,6 +115,18 @@ def test_a_failed_call_is_counted_under_its_outcome_and_re_raised(exc: Exception
     assert _value("llm_call_duration_seconds_count", provider=provider, outcome=outcome) == 1
     assert _value("llm_calls_total", provider=provider, outcome="ok") == 0
     assert _value("llm_tokens_total", provider=provider, kind="prompt") == 0
+
+
+def test_an_open_breaker_fast_fail_has_its_own_outcome_and_is_not_counted_as_a_provider_error() -> None:
+    assert classify_llm_error(ProviderCircuitOpen("groq")) == "circuit_open"
+    assert worth_trying_another_provider(ProviderCircuitOpen("groq")) is True  # the fallback still moves on
+
+    client = InstrumentedLLMClient(_Fake(ProviderCircuitOpen("probe-open")), "probe-open")
+    with pytest.raises(ProviderCircuitOpen):
+        asyncio.run(client.chat(MESSAGES))
+
+    assert _value("llm_calls_total", provider="probe-open", outcome="circuit_open") == 1
+    assert _value("llm_calls_total", provider="probe-open", outcome="error") == 0
 
 
 def test_arguments_and_model_name_pass_through_unchanged() -> None:

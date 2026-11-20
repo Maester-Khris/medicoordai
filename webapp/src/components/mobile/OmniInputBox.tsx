@@ -37,7 +37,7 @@ export function OmniInputBox({ value, onChange, onSend, disabled = false }: Omni
         disabled={disabled}
         rows={1}
         placeholder="Describe your symptoms..."
-        className="flex-1 bg-transparent resize-none text-[13px] focus:outline-none leading-5 no-scrollbar border-none outline-none"
+        className="flex-1 bg-transparent resize-none text-[16px] focus:outline-none leading-5 no-scrollbar border-none outline-none"
         style={{
           color: '#E2F1F5',
           minHeight: 24,
@@ -48,8 +48,8 @@ export function OmniInputBox({ value, onChange, onSend, disabled = false }: Omni
         disabled={!canSend}
         className="flex items-center justify-center flex-none transition-transform active:scale-95 border-none cursor-pointer"
         style={{
-          width: 32,
-          height: 32,
+          width: 44,
+          height: 44,
           borderRadius: 8,
           background: canSend ? '#48F6C1' : 'rgba(28,70,89,0.5)',
         }}

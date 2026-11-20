@@ -114,6 +114,10 @@ def test_load_rf2_never_writes_layer_2_labels():
 
     # Positive control: load() must still genuinely write real Layer 1 data --
     # otherwise the assertions above would pass vacuously on an empty function.
-    assert "MERGE (c:SnomedConcept" in source
-    assert "MERGE (d:Description" in source
-    assert "MERGE (child)-[:IS_A]->(parent)" in source
+    # The Cypher now lives in layer1_writer (load() delegates to it), so check both.
+    from scripts.snomed_ingest import layer1_writer
+    writers = inspect.getsource(layer1_writer)
+    assert "write_concepts(" in source and "write_descriptions(" in source and "write_is_a(" in source
+    assert "MERGE (c:SnomedConcept" in writers
+    assert "MERGE (d:Description" in writers
+    assert "MERGE (child)-[:IS_A]->(parent)" in writers

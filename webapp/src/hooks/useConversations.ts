@@ -4,6 +4,9 @@ import { apiFetch } from "../lib/apiClient"
 import { nextBusyStep } from "../lib/busy"
 import type { Message, Session, ConversationsCache, ChatMessageResponse, BusyResponse } from "@shared/types"
 
+// 'busy': the server asked us to wait (the busy banner explains). 'failed': network error or non-OK answer.
+export type SendResult = ChatMessageResponse | "busy" | "failed"
+
 export type { Message, Session, ConversationsCache, ChatMessageResponse }
 
 interface UseConversationsResult {
@@ -11,7 +14,7 @@ interface UseConversationsResult {
   loading: boolean
   error: string | null
   busyUntil: number | null
-  sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<ChatMessageResponse | null>
+  sendMessage: (sessionId: string, content: string, coords?: { lat: number; lng: number } | null) => Promise<SendResult>
   createSession: (firstMessage: string) => Promise<Session | null>
   loadOlderMessages: (sessionId: string, beforeId: string) => Promise<Message[]>
 }
@@ -55,10 +58,15 @@ export function useConversations(): UseConversationsResult {
   }, [user])
 
   const createSession = async (firstMessage: string): Promise<Session | null> => {
-    const res = await apiFetch("/chat/sessions", {
-      method: "POST",
-      body: JSON.stringify({ first_message: firstMessage }),
-    })
+    let res: Response
+    try {
+      res = await apiFetch("/chat/sessions", {
+        method: "POST",
+        body: JSON.stringify({ first_message: firstMessage }),
+      })
+    } catch {
+      return null
+    }
     if (!res.ok) return null
     const session: Session = await res.json()
     setCache((prev: ConversationsCache | null) => prev
@@ -72,17 +80,22 @@ export function useConversations(): UseConversationsResult {
     sessionId: string,
     content: string,
     coords?: { lat: number; lng: number } | null,
-  ): Promise<ChatMessageResponse | null> => {
+  ): Promise<SendResult> => {
     // Resending is safe: a refused turn stored nothing on the server.
     for (let attempt = 0; ; attempt++) {
-      const res = await apiFetch("/chat/message", {
-        method: "POST",
-        body: JSON.stringify({
-          session_id: sessionId,
-          content,
-          ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
-        }),
-      })
+      let res: Response
+      try {
+        res = await apiFetch("/chat/message", {
+          method: "POST",
+          body: JSON.stringify({
+            session_id: sessionId,
+            content,
+            ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+          }),
+        })
+      } catch {
+        return "failed"
+      }
       if (res.status === 429) {
         const body = await res.json().catch(() => null) as BusyResponse | null
         const retryAfter = body?.retry_after ?? 60
@@ -96,9 +109,9 @@ export function useConversations(): UseConversationsResult {
           continue
         }
         busyTimerRef.current = setTimeout(() => setBusyUntil(null), step.waitMs)
-        return null
+        return "busy"
       }
-      if (!res.ok) return null
+      if (!res.ok) return "failed"
       const data: ChatMessageResponse = await res.json()
       setCache((prev: ConversationsCache | null) => {
         if (!prev) return prev

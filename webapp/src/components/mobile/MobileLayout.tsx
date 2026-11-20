@@ -2,26 +2,30 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useConfig } from "../../hooks/useConfig"
 import { FALLBACK_NOTICE, requestLocation, resolveDemoCoords } from "../../lib/demoLocation"
-import { motion, AnimatePresence } from 'motion/react'
 import type {
   Facility,
   Message,
   Session,
   ConversationsCache,
-  ChatMessageResponse,
   TriageResult,
+  TravelModeKey,
 } from '@shared/types'
 import { MapPanel } from '../map'
 import { MobileTopBar } from './MobileTopBar'
 import { DrawerMenu } from './DrawerMenu'
 import { BottomNavBar, type MobileTab } from './BottomNavBar'
 import { BottomSheet } from './BottomSheet'
-import { StreamingLogStrip } from './StreamingLogStrip'
 import { FacilityCardPanel } from './FacilityCardPanel'
+import { FacilityList } from './FacilityList'
 import { useAuth } from '../../auth/useAuth'
+import { nextHighlightRequest, type HighlightRequest } from '../../lib/highlightRequest'
+import { useSheetGeometry } from '../../hooks/useSheetGeometry'
+import { stateForTab, tabForState, type SheetState } from '../../lib/sheetState'
 import { useGeolocation } from '../../hooks/useGeolocation'
 import { useTriageState } from '../../hooks/useTriageState'
 import { useNextActions } from '../../hooks/useNextActions'
+import type { SendResult } from '../../hooks/useConversations'
+import { failureMessage } from '../../lib/sendFailure'
 import { busyMessage } from '../../lib/busy'
 
 interface MobileLayoutProps {
@@ -32,7 +36,7 @@ interface MobileLayoutProps {
     sessionId: string,
     content: string,
     coords?: { lat: number; lng: number } | null
-  ) => Promise<ChatMessageResponse | null>
+  ) => Promise<SendResult>
   createSession: (firstMessage: string) => Promise<Session | null>
   loadOlderMessages: (sessionId: string, beforeId: string) => Promise<Message[]>
   busyUntil: number | null
@@ -46,10 +50,8 @@ function stripToolNarration(content: string): string {
     .trim()
 }
 
-const STATE_2_LOGS = [
-  { tag: 'ROUTE', message: 'OPTIMAL PATH VIA NEAREST FACILITY' },
-  { tag: 'CAPAC', message: 'WALK-IN AVAILABILITY: HIGH (EST. WAIT = 30 MIN)' },
-]
+// The vertical legend needs about this much map height above the sheet, below the filter chips.
+const LEGEND_MIN_MAP_HEIGHT = 300
 
 const FALLBACK_STARTERS = ['I have a fever', 'Chest pain', 'Sore throat', 'Dizziness']
 
@@ -65,7 +67,7 @@ export function MobileLayout({
   const [usingFallbackLocation, setUsingFallbackLocation] = useState(false)
   const geo = useGeolocation()
   const { triage, applyTriageResult, changeMode, reset: triageReset } = useTriageState()
-  const { getDirections } = useNextActions(triage.severity)
+  const { getDirections } = useNextActions()
 
   // Chat state (previously in AiAssistantTab)
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null)
@@ -74,12 +76,22 @@ export function MobileLayout({
   const [progressStage, setProgressStage] = useState<ProgressStage>('idle')
 
   // Nav
-  const [activeTab, setActiveTab] = useState<MobileTab>('map')
+  const [sheetState, setSheetState] = useState<SheetState>('peek')
+  const geometry = useSheetGeometry()
+  const [highlightRequest, setHighlightRequest] = useState<HighlightRequest | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   // Mode derived from triage state
   const mode = triage.active ? 'recommendation' : 'browse'
   const isBusy = busyUntil !== null
+  // While the keyboard is up the sheet is full, so the thread and the input stay above it.
+  const effectiveState: SheetState = geometry.keyboardOpen ? 'full' : sheetState
+  const emergentResult = triage.active && triage.severity === 'emergent'
+  const heights: Record<SheetState, number> = {
+    peek: Math.min(geometry.peek + (emergentResult ? 56 : 0), geometry.half - 1), // + the Call 911 strip
+    half: geometry.half,
+    full: geometry.full,
+  }
 
   // Reset on user logout
   useEffect(() => {
@@ -88,6 +100,7 @@ export function MobileLayout({
 
   const handleNewConversation = useCallback(() => {
     triageReset()
+    setHighlightRequest(null)
     setActiveSessionId(null)
     setMessages([])
     setOmniValue('')
@@ -106,6 +119,7 @@ export function MobileLayout({
     const text = (starter ?? omniValue).trim()
     if (!text || !user || busyUntil !== null) return
     setOmniValue('')
+    setSheetState('full')
 
     let coords = geo.coords
     if (!coords) coords = await requestLocation(geo.requestOnce, config)
@@ -117,7 +131,11 @@ export function MobileLayout({
     let sid = activeSessionId
     if (!sid) {
       const session = await createSession(text)
-      if (!session) return
+      if (!session) {
+        setOmniValue(text)
+        setMessages(prev => [...prev, failureMessage('', user.id)])
+        return
+      }
       sid = session.id
       setActiveSessionId(sid)
     }
@@ -134,7 +152,15 @@ export function MobileLayout({
     setProgressStage('typing')
 
     const response = await sendMessage(sid, text, coords)
-    if (response) {
+    if (response === 'busy' || response === 'failed') {
+      // Keep the text for a retry; the busy banner already explains a busy answer.
+      setMessages(prev => {
+        const kept = prev.filter(m => m.id !== optimisticMsg.id)
+        return response === 'failed' ? [...kept, failureMessage(sid, user.id)] : kept
+      })
+      setOmniValue(text)
+      setProgressStage('idle')
+    } else {
       const cleaned = {
         ...response.assistant_message,
         content: stripToolNarration(response.assistant_message.content),
@@ -152,17 +178,17 @@ export function MobileLayout({
       } else {
         setProgressStage('idle')
       }
-    } else {
-      setProgressStage('idle')
     }
   }, [omniValue, user, geo, activeSessionId, createSession, sendMessage, handleApplyTriage, config, busyUntil])
 
-  const handleTabChange = useCallback((tab: MobileTab) => {
-    setActiveTab(tab)
-    if ((tab === 'chat' || tab === 'triage') && mode === 'recommendation') {
-      handleNewConversation()
-    }
-  }, [mode, handleNewConversation])
+  const handleModeChange = useCallback((mode: TravelModeKey) => { void changeMode(mode) }, [changeMode])
+
+  const handleShowOnMap = useCallback((facilityId: string) => {
+    setHighlightRequest(previous => nextHighlightRequest(previous, facilityId))
+    setSheetState('peek')
+  }, [])
+
+  const handleTabChange = useCallback((tab: MobileTab) => setSheetState(stateForTab(tab)), [])
 
   const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant')
   const feedback = isGuest && activeSessionId && lastAssistant
@@ -193,7 +219,10 @@ export function MobileLayout({
           verticalLegend
           sizeVersion={0}
           onClear={handleNewConversation}
-          onModeChange={mode => { void changeMode(mode) }}
+          onModeChange={handleModeChange}
+          highlightRequest={highlightRequest}
+          bottomInset={heights.peek}
+          showLegend={geometry.free - heights.peek >= LEGEND_MIN_MAP_HEIGHT}
         />
       </div>
 
@@ -201,65 +230,52 @@ export function MobileLayout({
       <MobileTopBar
         mode={mode}
         severity={triage.severity}
-        onMenuOpen={() => setIsDrawerOpen(true)}
+        onMenuOpen={isGuest ? undefined : () => setIsDrawerOpen(true)}
       />
 
-      {/* State 1: BottomSheet (browse mode) */}
-      <AnimatePresence>
-        {mode === 'browse' && (
-          <motion.div
-            key="bottomsheet"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 30 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            style={{ position: 'fixed', inset: 0, zIndex: 20, pointerEvents: 'none' }}
-          >
-            <div style={{ pointerEvents: 'auto' }}>
-              <BottomSheet
-                messages={messages}
-                omniValue={omniValue}
-                onOmniChange={setOmniValue}
-                onSend={() => { void handleSend() }}
-                inputDisabled={!user || isBusy}
-                onChipSelect={v => { void handleSend(v) }}
-                progressStage={progressStage}
-                locationNotice={usingFallbackLocation ? FALLBACK_NOTICE : null}
-                starterPrompts={config.starter_prompts.length > 0 ? config.starter_prompts : FALLBACK_STARTERS}
-                busyText={isBusy ? busyMessage(busyUntil, Date.now()) : null}
-              />
-            </div>
-          </motion.div>
+      <BottomSheet
+        state={effectiveState}
+        onStateChange={setSheetState}
+        heights={heights}
+        bottomOffset={geometry.bottomOffset}
+        messages={messages}
+        resultSlot={triage.active ? (
+          <FacilityCardPanel
+            feedback={feedback}
+            triage={triage}
+            onModeChange={handleModeChange}
+            onGetDirections={(name, lat, lng) => getDirections(name, lat, lng)}
+          />
+        ) : null}
+        listSlot={(
+          <FacilityList
+            facilities={facilities}
+            loading={facilitiesLoading}
+            origin={geo.coords ?? config.downtown_fallback}
+            originIsFallback={geo.coords === null}
+            onShowOnMap={handleShowOnMap}
+            onDirections={getDirections}
+          />
         )}
-      </AnimatePresence>
-
-      {/* State 2: StreamingLogStrip + FacilityCardPanel (recommendation mode) */}
-      <AnimatePresence>
-        {mode === 'recommendation' && (
-          <motion.div
-            key="state2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            style={{ position: 'fixed', bottom: 64, left: 0, right: 0, zIndex: 20 }}
-          >
-            <StreamingLogStrip logs={STATE_2_LOGS} />
-            <FacilityCardPanel
-              feedback={feedback}
-              triage={triage}
-              onModeChange={mode => { void changeMode(mode) }}
-              onGetDirections={(name, lat, lng) => getDirections(name, lat, lng)}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+        showEmergencyStrip={triage.active && triage.severity === 'emergent'}
+        hasConversation={messages.length > 0 || triage.active}
+        onNewConversation={handleNewConversation}
+        omniValue={omniValue}
+        onOmniChange={setOmniValue}
+        onSend={() => { void handleSend() }}
+        inputDisabled={!user || isBusy}
+        onChipSelect={v => { void handleSend(v) }}
+        progressStage={progressStage}
+        locationNotice={usingFallbackLocation ? FALLBACK_NOTICE : null}
+        starterPrompts={config.starter_prompts.length > 0 ? config.starter_prompts : FALLBACK_STARTERS}
+        busyText={isBusy ? busyMessage(busyUntil, Date.now()) : null}
+      />
 
       {/* Fixed bottom nav */}
-      <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />
+      <BottomNavBar activeTab={tabForState(effectiveState)} onTabChange={handleTabChange} />
 
       {/* Drawer menu */}
-      <DrawerMenu isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+      {!isGuest && <DrawerMenu isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />}
     </div>
   )
 }

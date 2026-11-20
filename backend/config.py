@@ -70,6 +70,55 @@ def llm_provider_chain() -> list[str]:
     return [name.strip().lower() for name in raw.split(",") if name.strip()]
 
 
+def llm_retry_attempts() -> int:
+    return env_int("LLM_RETRY_ATTEMPTS", 2, minimum=1, maximum=5)
+
+
+def retry_budget_percent() -> int:
+    return env_int("RETRY_BUDGET_PERCENT", 10, minimum=1, maximum=100)
+
+
+def llm_breaker_failures() -> int:
+    return env_int("LLM_BREAKER_FAILURES", 5, minimum=1)
+
+
+def llm_breaker_cooldown_seconds() -> int:
+    return env_int("LLM_BREAKER_COOLDOWN_SECONDS", 30, minimum=1)
+
+
+def llm_conversation_token_cap() -> int:
+    # 2x the largest conversation measured (Sprint 24 baseline: max 7.2k, Sprint 23: about 11k).
+    return env_int("LLM_CONVERSATION_TOKEN_CAP", 22000, minimum=1)
+
+
+GUARD_MODES: tuple[str, ...] = ("off", "shadow", "enforce")
+
+
+def guard_mode(name: str, default: str = "shadow") -> str:
+    """A safety guard's mode from the environment: off, shadow (log what it would do) or enforce.
+    A missing value uses `default`; an unknown value uses `default` with one warning, so a typo
+    never turns a guard off or stops the API from starting."""
+    raw = os.environ.get(name, "").strip().lower()
+    if not raw:
+        return default
+    if raw not in GUARD_MODES:
+        logger.warning("env_setting_invalid", extra={"setting": name, "reason": "not a guard mode"})
+        return default
+    return raw
+
+
+def red_flag_floor_mode() -> str:
+    return guard_mode("RED_FLAG_FLOOR_MODE", "shadow")
+
+
+def emergency_mismatch_mode() -> str:
+    return guard_mode("EMERGENCY_MISMATCH_MODE", "shadow")
+
+
+def groundedness_guard_mode() -> str:
+    return guard_mode("GROUNDEDNESS_GUARD_MODE", "enforce")
+
+
 def load_aware_routing() -> bool:
     """
     Whether facility load counters influence candidate scoring and routing.
@@ -97,3 +146,17 @@ def stubbed_providers() -> list[str]:
     """
     return [name for name in ("groq", "geoapify") if os.environ.get(f"{name.upper()}_BASE_URL", "").strip()]
 
+
+def admission_control_enabled() -> bool:
+    """Whether admission control enforces MAX_TURNS_IN_FLIGHT.
+
+    MAX_TURNS_IN_FLIGHT=0 means "no limit", so ADMISSION_CONTROL=off lets operators
+    switch a measured limit off without forgetting the configured number.
+    """
+    raw = os.environ.get("ADMISSION_CONTROL", "").strip().lower()
+    if not raw or raw == "on":
+        return True
+    if raw == "off":
+        return False
+    logger.warning("env_setting_invalid", extra={"setting": "ADMISSION_CONTROL", "reason": "not on or off"})
+    return True

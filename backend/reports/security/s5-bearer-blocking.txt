@@ -1,0 +1,2 @@
+health alone      : max 0.027s
+health during 8 junk-bearer requests:  ['15.80s/200', '0.00s/200', '0.00s/200', '0.00s/200', '0.00s/200']

@@ -1,0 +1,181 @@
+{
+ "version": 1,
+ "variant": "lay",
+ "leg": "off",
+ "sources": [
+  "full-ollama-2026-11-10/lay.jsonl",
+  "replay-lay-capture-2026-11-12/lay.jsonl"
+ ],
+ "sentinels": [
+  {
+   "case_id": "1",
+   "gold": "emergent",
+   "expected": "emergent",
+   "stability": "6/6"
+  },
+  {
+   "case_id": "2",
+   "gold": "emergent",
+   "expected": "emergent",
+   "stability": "6/6"
+  },
+  {
+   "case_id": "5",
+   "gold": "emergent",
+   "expected": "emergent",
+   "stability": "6/6"
+  },
+  {
+   "case_id": "11",
+   "gold": "emergent",
+   "expected": "emergent",
+   "stability": "6/6"
+  },
+  {
+   "case_id": "20",
+   "gold": "emergent",
+   "expected": "emergent",
+   "stability": "6/6"
+  },
+  {
+   "case_id": "8",
+   "gold": "moderate",
+   "expected": "moderate",
+   "stability": "6/6"
+  },
+  {
+   "case_id": "14",
+   "gold": "urgent",
+   "expected": "urgent",
+   "stability": "6/6"
+  }
+ ],
+ "watch": [
+  {
+   "case_id": "3",
+   "gold": "emergent",
+   "observed": {
+    "emergent": 5,
+    "urgent": 1
+   }
+  },
+  {
+   "case_id": "4",
+   "gold": "urgent",
+   "observed": {
+    "emergent": 6
+   }
+  },
+  {
+   "case_id": "6",
+   "gold": "urgent",
+   "observed": {
+    "moderate": 6
+   }
+  },
+  {
+   "case_id": "7",
+   "gold": "urgent",
+   "observed": {
+    "moderate": 6
+   }
+  },
+  {
+   "case_id": "9",
+   "gold": "emergent",
+   "observed": {
+    "emergent": 2,
+    "moderate": 3,
+    "urgent": 1
+   }
+  },
+  {
+   "case_id": "10c",
+   "gold": "emergent",
+   "observed": {
+    "moderate": 5,
+    "urgent": 1
+   }
+  },
+  {
+   "case_id": "13",
+   "gold": "urgent",
+   "observed": {
+    "urgent": 6
+   },
+   "groq_calibration": {
+    "moderate": 2,
+    "urgent": 1
+   }
+  },
+  {
+   "case_id": "16",
+   "gold": "routine",
+   "observed": {
+    "moderate": 6
+   }
+  },
+  {
+   "case_id": "17",
+   "gold": "emergent",
+   "observed": {
+    "urgent": 6
+   }
+  },
+  {
+   "case_id": "18",
+   "gold": "emergent",
+   "observed": {
+    "urgent": 1,
+    "emergent": 5
+   }
+  },
+  {
+   "case_id": "19",
+   "gold": "urgent",
+   "observed": {
+    "urgent": 3,
+    "emergent": 1,
+    "moderate": 2
+   }
+  },
+  {
+   "case_id": "21",
+   "gold": "emergent",
+   "observed": {
+    "emergent": 6
+   },
+   "groq_calibration": {
+    "urgent": 3
+   }
+  },
+  {
+   "case_id": "22",
+   "gold": "emergent",
+   "observed": {
+    "emergent": 6
+   },
+   "groq_calibration": {
+    "moderate": 2,
+    "emergent": 1
+   }
+  },
+  {
+   "case_id": "23",
+   "gold": "emergent",
+   "observed": {
+    "urgent": 5,
+    "moderate": 1
+   }
+  },
+  {
+   "case_id": "24",
+   "gold": "moderate",
+   "observed": {
+    "routine": 2,
+    "moderate": 4
+   }
+  }
+ ],
+ "note": "Built from 6 runs per case of the no-graph leg on the lay set: gpt-oss-120b on Ollama Cloud, patient simulated by claude-haiku-4-5. The CI gate runs on Groq with a Groq patient (qwen/qwen3.8-27b), so these sentinels were re-checked on that setup (30 conversations, 2026-11-13). Cases 13, 21 and 22 were right 6/6 on Ollama but under-triaged on Groq (13: 2 of 3, 21: 3 of 3, 22: 2 of 3), so they moved to watch; \"groq_calibration\" holds the Groq counts."
+}

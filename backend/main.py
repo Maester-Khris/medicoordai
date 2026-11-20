@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from collections.abc import Mapping
 import demo_db
 from config import demo_mode, stubbed_providers
 from contextlib import asynccontextmanager
@@ -15,7 +16,8 @@ from services.wait_cache import current_wait, max_age_seconds
 from services.proximity import find_facilities_within
 from db import supabase_rpc
 from models import MemoryProfileResponse, NearbyFacilityResult
-from middleware.auth import AuthMiddleware, get_current_user, require_internal
+from middleware.auth import AuthMiddleware, get_current_user, is_internal_request, require_internal
+from middleware.security_headers import SecurityHeadersMiddleware
 from cache import get_cached_facilities, set_cached_facilities
 from graph.factory import close_graph_provider, get_graph_provider
 from observability import init_observability, verify_metrics_token, RequestIDMiddleware, _registry
@@ -59,7 +61,17 @@ async def lifespan(_app: FastAPI):
     demo_db.close_pool()
 
 
-app = FastAPI(title="MediCoord AI API", version="0.1.0", lifespan=lifespan)
+def docs_enabled(env: Mapping[str, str] = os.environ) -> bool:
+    """The interactive docs and the OpenAPI document list every route; they are for local use and scanners."""
+    return env.get("ENABLE_DOCS", "").strip().lower() in ("1", "true")
+
+
+_docs = docs_enabled()
+app = FastAPI(
+    title="MediCoord AI API", version="0.1.0", lifespan=lifespan,
+    docs_url="/docs" if _docs else None, redoc_url="/redoc" if _docs else None,
+    openapi_url="/openapi.json" if _docs else None,
+)
 
 ALLOWED_ORIGINS = [
     origin.strip()
@@ -75,6 +87,7 @@ app.add_middleware(
 )
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RequestIDMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)  # outermost: also covers CORS preflights and errors
 
 init_observability(app)
 app.include_router(chat_router)
@@ -110,7 +123,16 @@ def root() -> dict:
 
 
 @app.get("/health")
-def health() -> dict:
+def health(request: Request) -> dict:
+    # Every check runs for every caller (the neo4j ping is also the Aura keep-alive); only the detail is
+    # restricted: provider, mode and semantic state are reconnaissance for anyone else.
+    detail = health_detail()
+    if is_internal_request(request):
+        return detail
+    return {"status": detail["status"]}
+
+
+def health_detail() -> dict:
     result = {
         "status": "ok",
         "llmProvider": os.environ.get("LLM_PROVIDER", "groq"),
@@ -126,13 +148,25 @@ def health() -> dict:
     # Doubles as a keep-alive ping for AuraDB's free-tier 72h auto-pause
     # window (graph/snomed_neo4j/provider.py) — meant to be polled by an
     # external cronjob, not just a status check.
-    if os.environ.get("GRAPH_RAG_PROVIDER", "off").lower() == "neo4j":
+    provider_name = os.environ.get("GRAPH_RAG_PROVIDER", "off").lower()
+    if provider_name in ("neo4j", "neo4j_semantic"):
+        provider = None
         try:
-            get_graph_provider().ping()
+            provider = get_graph_provider()
+            provider.ping()
             result["neo4j"] = "ok"
         except Exception as exc:
             result["neo4j"] = "unreachable"
             logger.warning("neo4j_health_ping_failed", extra={"error_type": type(exc).__name__})
+        if provider_name == "neo4j_semantic" and provider is not None:
+            # A health poll is also what notices an index built after startup (the build runs
+            # detached from the API), so the reload check rides on it; it is rate limited inside.
+            try:
+                provider.maybe_reload()
+                result["semantic"] = provider.semantic_status()
+            except Exception as exc:
+                result["semantic"] = {"state": "error"}
+                logger.warning("semantic_health_failed", extra={"error_type": type(exc).__name__})
     if stubbed_providers():
         result["stubbed"] = True
     return result

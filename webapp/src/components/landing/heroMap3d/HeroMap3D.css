@@ -1,0 +1,359 @@
+/* 3D hero map. Ported from the light prototype. Everything lives inside .hero-map. */
+.hero-map {
+  /* Defaults only (the cool, dimmed dusk palette): boot.ts sets these from CONFIG.PALETTE. */
+  --hm-haze: #e4e9ec; /* the distance haze dissolves into this */
+  --hm-ground: #d3d9dd;
+  --hm-route: #087a6d;
+  --hm-chrome: #313a3d;
+  --hm-chrome-hover: #3f4a4e;
+  --hm-chrome-text: #f4f6f6;
+  --hm-chrome-text-dim: #c8d0d2;
+  --hm-mint: #47f5c0;
+  --hm-mint-ink: #10312a;
+  --hm-marker-label: #262d30;
+  --hm-hospital: #e05555;
+  --hm-walkin: #3ac9d4;
+  --hm-residential: #74c69d;
+
+  /* Product-preview card: crisp card edge, the glow and the dark shadow separate the dimmed dusk panel from the dark page. */
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(28, 70, 89, 0.7);
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px rgba(72, 246, 193, 0.06), 0 30px 90px -30px rgba(72, 246, 193, 0.22), 0 18px 40px -18px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  background: var(--hm-ground);
+  color: var(--hm-marker-label);
+  isolation: isolate;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+.hero-map *,
+.hero-map *::before,
+.hero-map *::after {
+  box-sizing: border-box;
+}
+.hero-map__map,
+.hero-map__fallback {
+  position: absolute;
+  inset: 0;
+}
+.hero-map__fallback[hidden],
+.hero-map__map[hidden] {
+  display: none;
+}
+
+/* Distance haze: far blocks wash out towards the cool dusk haze. Sits above the canvas, under the markers. */
+.hero-map__haze {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--hm-haze) 70%, transparent) 0%,
+    color-mix(in srgb, var(--hm-haze) 30%, transparent) 9%,
+    transparent 20%
+  );
+}
+
+/* Edge vignette: soft darkening at the edges settles the eye on the middle and pulls the light map toward the dark page. */
+.hero-map__vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 46%, transparent 52%, rgba(6, 18, 25, 0.42) 100%);
+}
+
+/* Markers (pins, you-are-here dot, chip) sit above the vignette so they stay crisp; the map canvas stays under it. */
+.hero-map .maplibregl-marker {
+  z-index: 2;
+}
+
+/* pause / play: the app's dark pill */
+.hero-map__toggle {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 0;
+  background: var(--hm-chrome);
+  color: var(--hm-chrome-text);
+  box-shadow: 0 4px 14px rgba(40, 32, 20, 0.28);
+  cursor: pointer;
+}
+.hero-map__toggle:hover {
+  background: var(--hm-chrome-hover);
+}
+.hero-map__toggle:focus-visible {
+  outline: 3px solid var(--hm-mint);
+  outline-offset: 3px;
+}
+.hero-map__toggle[hidden] {
+  display: none;
+}
+.hero-map__toggle svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.hero-map__toggle .icon-play {
+  display: none;
+}
+.hero-map.is-paused .hero-map__toggle .icon-play {
+  display: block;
+}
+.hero-map.is-paused .hero-map__toggle .icon-pause {
+  display: none;
+}
+
+/* markers (HTML, so the text is real text) */
+.hm-label {
+  position: absolute;
+  white-space: nowrap;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  line-height: 1;
+  color: var(--hm-marker-label);
+  padding: 4px 8px 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 1px 4px rgba(40, 32, 20, 0.22);
+}
+.hm-user {
+  width: 20px;
+  height: 20px;
+}
+.hm-user__dot {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--hm-mint);
+  box-shadow: 0 0 0 1.5px var(--hm-chrome), 0 2px 6px rgba(40, 32, 20, 0.35);
+}
+.hm-user__pulse {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: var(--hm-mint);
+  opacity: 0.5;
+  animation: hm-pulse 2.4s ease-out infinite;
+}
+.hm-user .hm-label {
+  right: 30px;
+  top: -2px;
+}
+@keyframes hm-pulse {
+  from {
+    transform: scale(0.8);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+.hero-map.is-paused .hm-user__pulse {
+  animation-play-state: paused;
+}
+
+.hm-pin {
+  width: 30px;
+  height: 30px;
+}
+.hm-pin svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 3px rgba(40, 32, 20, 0.35));
+}
+.hm-pin .hm-label {
+  left: calc(100% + 7px);
+  top: 50%;
+  transform: translateY(-50%);
+  transition: opacity 0.25s;
+}
+.hm-pin--hospital {
+  color: var(--hm-hospital);
+}
+.hm-pin--walkin {
+  color: var(--hm-walkin);
+}
+.hm-pin--residential {
+  color: var(--hm-residential);
+}
+.hm-pin--dest {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.92), 0 4px 14px rgba(40, 32, 20, 0.4);
+}
+.hm-pin--dest svg {
+  filter: none;
+}
+.hero-map.chip-on .hm-pin--dest .hm-label {
+  opacity: 0;
+}
+
+.hm-chip {
+  padding: 11px 16px 12px;
+  border-radius: 14px;
+  background: var(--hm-chrome);
+  color: var(--hm-chrome-text);
+  box-shadow: 0 10px 28px rgba(40, 32, 20, 0.32);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s;
+}
+.hm-chip__inner {
+  transform: translateY(6px);
+  transition: transform 0.3s ease;
+}
+.hero-map.chip-on .hm-chip {
+  opacity: 1;
+  visibility: visible;
+}
+.hero-map.chip-on .hm-chip__inner {
+  transform: none;
+}
+.hm-chip p {
+  margin: 0;
+}
+.hm-chip__name {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 3px !important;
+}
+.hm-chip__type {
+  font-size: 13px;
+  color: var(--hm-chrome-text-dim);
+  margin-bottom: 5px !important;
+}
+.hm-chip__meta {
+  font-size: 14.5px;
+  color: var(--hm-mint);
+  font-variant-numeric: tabular-nums;
+}
+.hm-chip__sample {
+  position: absolute;
+  top: -12px;
+  right: -8px;
+  padding: 4px 9px 5px;
+  border-radius: 999px;
+  background: var(--hm-mint);
+  color: var(--hm-mint-ink);
+  box-shadow: 0 0 0 2px var(--hm-chrome);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+.hm-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* attribution: MapLibre's own control, not hidden, not shrunk */
+.hero-map .maplibregl-ctrl-attrib {
+  background: rgba(255, 255, 255, 0.82);
+  color: #333;
+  font-size: 12px;
+  border-radius: 6px 0 0 0;
+}
+.hero-map .maplibregl-ctrl-attrib a {
+  color: #333;
+  text-decoration: underline;
+}
+.hero-map .maplibregl-ctrl-attrib a:focus-visible {
+  outline: 2px solid var(--hm-chrome);
+  outline-offset: 1px;
+}
+.hero-map__fallback-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 3px 8px;
+  font-size: 12px;
+  color: #333;
+  background: rgba(255, 255, 255, 0.82);
+  border-radius: 6px 0 0 0;
+}
+
+/* static fallback (no WebGL, or the style / tiles failed) */
+.hero-map__fallback svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.hero-map__fallback .hm-chip {
+  position: absolute;
+  opacity: 1;
+  visibility: visible;
+}
+.hero-map__fallback .hm-chip__inner {
+  transform: none;
+}
+.hero-map__fallback .hm-user {
+  position: absolute;
+}
+
+/* narrow screens: smaller type, labels kept inside the crop */
+@media (max-width: 600px) {
+  .hm-label {
+    font-size: 13.5px;
+  }
+  .hm-pin--dest .hm-label {
+    left: auto;
+    right: calc(100% + 9px);
+  }
+  .hm-pin--walkin .hm-label {
+    left: 50%;
+    top: calc(100% + 6px);
+    transform: translateX(-50%);
+  }
+  .hm-chip {
+    padding: 9px 12px 10px;
+  }
+  .hm-chip__name {
+    font-size: 15px;
+  }
+  .hm-chip__type {
+    font-size: 12.5px;
+  }
+  .hm-chip__meta {
+    font-size: 13.5px;
+  }
+  .hero-map .maplibregl-ctrl-attrib,
+  .hero-map__fallback-credit {
+    font-size: 11px;
+  }
+}
+
+/* reduced motion: no pulse, no transitions (boot.ts also skips all animation) */
+@media (prefers-reduced-motion: reduce) {
+  .hm-user__pulse {
+    animation: none;
+    opacity: 0.3;
+    transform: scale(1.5);
+  }
+  .hm-chip,
+  .hm-chip__inner,
+  .hm-pin .hm-label {
+    transition: none;
+  }
+}

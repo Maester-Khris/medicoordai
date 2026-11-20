@@ -131,4 +131,9 @@ backend/script.demo.local.sh
 .playwright-mcp/
 webapp/test-results/
 .agents/skills/
+.agents/tasks/
 .claude/skills/
+
+# embedding model experiment: cached embeddings/targets and results, regenerate via the scripts
+backend/scripts/embedding_eval/cache/
+backend/scripts/embedding_eval/results/

@@ -18,13 +18,14 @@ def run_vignette_conversation(
     vignette: Vignette,
     simulator: PatientSimulatorPort,
     system: SystemUnderTestPort,
+    conversation_id: str,
 ) -> VignetteTranscript:
     history: list[dict] = []
     turns: list[ConversationTurn] = []
     patient_message = vignette.opening_message
 
     for turn_index in range(MAX_TURNS):
-        result = system.respond(patient_message, history)
+        result = system.respond(patient_message, history, conversation_id)
         turns.append(
             ConversationTurn(
                 turn_index=turn_index,
@@ -33,6 +34,9 @@ def run_vignette_conversation(
                 graph_context_matched=result.graph_context_matched,
                 surfaced_red_flag_indicators=result.surfaced_red_flag_indicators,
                 surfaced_followup_questions=result.surfaced_followup_questions,
+                cap_reached=result.cap_reached,
+                tokens_used=result.tokens_used,
+                complaint_name=result.complaint_name,
             )
         )
         history.append({"role": "user", "content": patient_message})

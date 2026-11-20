@@ -1,0 +1,36 @@
+{
+  "opening_message": "He's unconscious and I can't get any reaction out of him.",
+  "disclosure_items": [
+    {
+      "feature_id": "gcs",
+      "category": "exam",
+      "first_person_phrasing": "He's completely out, no eye opening, no sounds, no movement.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_pressure",
+      "category": "vitals",
+      "first_person_phrasing": "His blood pressure is 190 over 100.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse",
+      "category": "vitals",
+      "first_person_phrasing": "His pulse feels like about 60.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respirations",
+      "category": "vitals",
+      "first_person_phrasing": "He's breathing 12 times a minute.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "o2_saturation",
+      "category": "vitals",
+      "first_person_phrasing": "His oxygen reading is 94%.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

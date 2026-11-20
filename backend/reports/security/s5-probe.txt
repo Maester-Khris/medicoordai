@@ -1,0 +1,34 @@
+PASS A creates a session  [200]
+INFO A's own turn status: 200
+PASS A sees its own messages  [2]
+PASS B cannot page A's messages (before_id)  [200 {"messages":[]}]
+PASS no A content in B's page
+PASS B's session list excludes A's  [200]
+PASS A can page its own history (control: non-empty)  [200]
+PASS B cannot post into A's session  [404]
+PASS A's history unchanged after B's attempt  [2->2]
+PASS feedback by B on A's message (status recorded)  [404]
+PASS event by B on A's session (status recorded)  [404]
+PASS no guest id rejected  [400]
+PASS malformed guest id rejected  [400]
+PASS sql-ish guest id rejected  [400]
+PASS wrong X-Internal token is just ignored (guest, not internal)  [200]
+PASS garbage bearer in demo mode does not crash  [503]
+PASS /metrics without token is 403
+PASS /metrics wrong token is 403
+PASS memory-profile without internal token refused
+PASS memory-profile wrong token refused
+PASS /notifications/devices needs a user, not a guest  [422]
+PASS notifications/send refused for a guest
+FAIL /health exposes only status  [fields: ['demoDb', 'demoMode', 'llmProvider', 'status', 'stubbed']]
+INFO /config keys: ['demo_mode', 'downtown_fallback', 'modes_enabled', 'routes_up_front', 'starter_prompts']
+FAIL /docs not exposed  [200]
+FAIL /openapi.json not exposed  [200]
+PASS foreign origin gets no ACAO  [400]
+PASS allowed origin gets ACAO (no wildcard)
+PASS 4001-char message rejected
+PASS 5 MB body rejected without a 5xx  [422]
+PASS non-UUID session id rejected
+PASS routes: 10 facility ids rejected  [422]
+
+27/30 pass

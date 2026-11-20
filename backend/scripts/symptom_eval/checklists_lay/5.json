@@ -1,0 +1,60 @@
+{
+  "opening_message": "I can't talk properly and my left side won't move right.",
+  "disclosure_items": [
+    {
+      "feature_id": "slurred_speech",
+      "category": "chief_complaint",
+      "first_person_phrasing": "I can hardly get the words out, they come out all slurred.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "facial_drooping",
+      "category": "exam",
+      "first_person_phrasing": "I think one side of my face is sagging.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "left_sided_weakness",
+      "category": "exam",
+      "first_person_phrasing": "I can't move my left arm and leg properly.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "last_seen_normal",
+      "category": "history",
+      "first_person_phrasing": "I was totally fine an hour ago.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "blood_sugar",
+      "category": "vitals",
+      "first_person_phrasing": "I haven't eaten anything, but they said my blood sugar is fine.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "vital_signs",
+      "category": "vitals",
+      "first_person_phrasing": "I don't know the number, but my blood pressure felt very high.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "gcs_score",
+      "category": "vitals",
+      "first_person_phrasing": "They gave me some kind of score and said it was 13, I'm not sure what it means.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "pulse_rate",
+      "category": "vitals",
+      "first_person_phrasing": "I don't know my pulse, I just feel weak.",
+      "reveal_only_if_asked": true
+    },
+    {
+      "feature_id": "respirations_rate",
+      "category": "vitals",
+      "first_person_phrasing": "My breathing feels fine, around 18 breaths a minute.",
+      "reveal_only_if_asked": true
+    }
+  ],
+  "update_message": null
+}

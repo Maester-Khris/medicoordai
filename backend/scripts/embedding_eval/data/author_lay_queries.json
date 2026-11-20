@@ -1,0 +1,902 @@
+[
+ {
+  "idx": 0,
+  "expected_complaint": "Cardiac arrest (non traumatic)",
+  "message": "My husband just dropped to the floor, he isn't breathing and I can't feel a heartbeat.",
+  "source": "author"
+ },
+ {
+  "idx": 0,
+  "expected_complaint": "Cardiac arrest (non traumatic)",
+  "message": "Grandma slumped over at the dinner table, no breathing, her lips are going gray.",
+  "source": "author"
+ },
+ {
+  "idx": 2,
+  "expected_complaint": "Chest pain (cardiac features)",
+  "message": "Crushing pressure in the middle of my chest spreading into my jaw and I'm drenched in sweat.",
+  "source": "author"
+ },
+ {
+  "idx": 2,
+  "expected_complaint": "Chest pain (cardiac features)",
+  "message": "Feels like a belt is tightening around my chest and my left shoulder aches.",
+  "source": "author"
+ },
+ {
+  "idx": 3,
+  "expected_complaint": "Chest pain (non cardiac features) Chest pain (non",
+  "message": "Sharp stabbing pain in my chest that gets worse when I take a deep breath or press on it.",
+  "source": "author"
+ },
+ {
+  "idx": 3,
+  "expected_complaint": "Chest pain (non cardiac features) Chest pain (non",
+  "message": "My chest only hurts when I twist or cough and I can point to the exact spot.",
+  "source": "author"
+ },
+ {
+  "idx": 4,
+  "expected_complaint": "Palpitations / Irregular heart beat Palpit ations",
+  "message": "My heart keeps skipping and fluttering for the last hour.",
+  "source": "author"
+ },
+ {
+  "idx": 4,
+  "expected_complaint": "Palpitations / Irregular heart beat Palpit ations",
+  "message": "It feels like my heart is pounding out of my chest even when I'm sitting still.",
+  "source": "author"
+ },
+ {
+  "idx": 5,
+  "expected_complaint": "Hypertension",
+  "message": "The cuff at home says 190 over 110 and I have a pounding head.",
+  "source": "author"
+ },
+ {
+  "idx": 6,
+  "expected_complaint": "General weakness Gener",
+  "message": "I feel completely drained and my legs barely hold me up, it's been days.",
+  "source": "author"
+ },
+ {
+  "idx": 7,
+  "expected_complaint": "Syncope / Pre-syncope",
+  "message": "I stood up quickly, the room went dark, and I woke up on the kitchen floor.",
+  "source": "author"
+ },
+ {
+  "idx": 7,
+  "expected_complaint": "Syncope / Pre-syncope",
+  "message": "I nearly passed out in the shower and had to sit down on the floor.",
+  "source": "author"
+ },
+ {
+  "idx": 8,
+  "expected_complaint": "Edema, generalized",
+  "message": "My whole body looks puffy and swollen, even my face and hands.",
+  "source": "author"
+ },
+ {
+  "idx": 9,
+  "expected_complaint": "Bilateral leg swelling / Edema",
+  "message": "Both my ankles and shins are swollen and my socks leave deep marks.",
+  "source": "author"
+ },
+ {
+  "idx": 10,
+  "expected_complaint": "Cool pulseless limb",
+  "message": "My foot suddenly went cold, pale and numb and I can't feel a pulse in it.",
+  "source": "author"
+ },
+ {
+  "idx": 11,
+  "expected_complaint": "Unilateral reddened hot limb",
+  "message": "One of my calves is red, warm, swollen and sore to touch, the other leg is fine.",
+  "source": "author"
+ },
+ {
+  "idx": 12,
+  "expected_complaint": "Earache",
+  "message": "A throbbing deep pain in my ear since last night, my toddler keeps tugging at it.",
+  "source": "author"
+ },
+ {
+  "idx": 13,
+  "expected_complaint": "Foreign body ear",
+  "message": "My child pushed a bead into his ear and now I can't see it.",
+  "source": "author"
+ },
+ {
+  "idx": 14,
+  "expected_complaint": "Loss of hearing",
+  "message": "I woke up and can't hear anything out of my right ear.",
+  "source": "author"
+ },
+ {
+  "idx": 15,
+  "expected_complaint": "Tinnitus",
+  "message": "There's a constant ringing in both ears that won't go away.",
+  "source": "author"
+ },
+ {
+  "idx": 16,
+  "expected_complaint": "Discharge, ear",
+  "message": "Yellow fluid is leaking out of my ear and staining my pillow.",
+  "source": "author"
+ },
+ {
+  "idx": 17,
+  "expected_complaint": "Ear injury",
+  "message": "Someone clipped my ear in a fight and the edge is torn and bleeding.",
+  "source": "author"
+ },
+ {
+  "idx": 18,
+  "expected_complaint": "Dental / Gum problems",
+  "message": "My back tooth is killing me and the gum around it is swollen and bleeding.",
+  "source": "author"
+ },
+ {
+  "idx": 19,
+  "expected_complaint": "Facial trauma",
+  "message": "I got hit in the face with a hockey puck and my cheek is swelling up and looks out of shape.",
+  "source": "author"
+ },
+ {
+  "idx": 20,
+  "expected_complaint": "Sore throat",
+  "message": "My throat is raw and scratchy and every swallow hurts, there are white spots back there.",
+  "source": "author"
+ },
+ {
+  "idx": 21,
+  "expected_complaint": "Neck swelling / pain",
+  "message": "There's a painful lump on the side of my neck and it's hard to turn my head.",
+  "source": "author"
+ },
+ {
+  "idx": 22,
+  "expected_complaint": "Neck trauma",
+  "message": "I got whiplash in a car crash and my neck is stiff and screaming at me.",
+  "source": "author"
+ },
+ {
+  "idx": 23,
+  "expected_complaint": "Difficulty swallowing / Dysphagia",
+  "message": "Food feels like it gets stuck halfway down every time I swallow.",
+  "source": "author"
+ },
+ {
+  "idx": 24,
+  "expected_complaint": "Facial pain (non-traumatic / non-dental)",
+  "message": "A burning electric jolt shoots across my cheek whenever I touch my face.",
+  "source": "author"
+ },
+ {
+  "idx": 25,
+  "expected_complaint": "Epistaxis",
+  "message": "Blood is pouring out of one nostril after I blew my nose and it won't slow down.",
+  "source": "author"
+ },
+ {
+  "idx": 26,
+  "expected_complaint": "Nasal congestion / Hay fever",
+  "message": "My nose is totally blocked, my eyes are itchy and I keep sneezing since the pollen came out.",
+  "source": "author"
+ },
+ {
+  "idx": 27,
+  "expected_complaint": "Foreign body, nose",
+  "message": "My daughter stuffed a pea up her nostril and now she breathes noisily through it.",
+  "source": "author"
+ },
+ {
+  "idx": 28,
+  "expected_complaint": "URTI complaints",
+  "message": "Runny nose, scratchy throat and a mild cough for three days, feels like a cold.",
+  "source": "author"
+ },
+ {
+  "idx": 29,
+  "expected_complaint": "Nasal trauma",
+  "message": "I took an elbow to the nose and it's crooked, swollen and bleeding.",
+  "source": "author"
+ },
+ {
+  "idx": 30,
+  "expected_complaint": "Frostbite / Cold injury",
+  "message": "My fingertips are white, hard and wooden after being out in the cold all day.",
+  "source": "author"
+ },
+ {
+  "idx": 31,
+  "expected_complaint": "Noxious inhalation",
+  "message": "I breathed in smoke from a chemical fire and my eyes and throat are burning.",
+  "source": "author"
+ },
+ {
+  "idx": 32,
+  "expected_complaint": "Electrical injury",
+  "message": "I got zapped by a live wire and my arm is tingling and I feel shaky.",
+  "source": "author"
+ },
+ {
+  "idx": 33,
+  "expected_complaint": "Chemical exposure",
+  "message": "I spilled drain cleaner on my hands and the skin is burning.",
+  "source": "author"
+ },
+ {
+  "idx": 34,
+  "expected_complaint": "Hypothermia",
+  "message": "He was found outside in the snow, shivering hard, confused, with ice cold skin.",
+  "source": "author"
+ },
+ {
+  "idx": 36,
+  "expected_complaint": "Abdominal pain",
+  "message": "A bad cramping ache low in my belly that keeps getting worse since this morning.",
+  "source": "author"
+ },
+ {
+  "idx": 36,
+  "expected_complaint": "Abdominal pain",
+  "message": "Sharp pain on the right side of my belly that started around my belly button and moved over.",
+  "source": "author"
+ },
+ {
+  "idx": 37,
+  "expected_complaint": "Anorexia",
+  "message": "I have no appetite at all, I haven't wanted to eat in a week.",
+  "source": "author"
+ },
+ {
+  "idx": 38,
+  "expected_complaint": "Constipation",
+  "message": "I haven't been able to poop in four days and I'm straining and bloated.",
+  "source": "author"
+ },
+ {
+  "idx": 39,
+  "expected_complaint": "Diarrhea",
+  "message": "I've had watery stools ten times since last night and I feel dried out.",
+  "source": "author"
+ },
+ {
+  "idx": 40,
+  "expected_complaint": "Foreign body in rectum",
+  "message": "Something got stuck up my bottom and I can't get it out.",
+  "source": "author"
+ },
+ {
+  "idx": 41,
+  "expected_complaint": "Groin pain / mass",
+  "message": "There's a tender bulge in my groin that pops out when I cough.",
+  "source": "author"
+ },
+ {
+  "idx": 42,
+  "expected_complaint": "Vomiting and/or nausea",
+  "message": "I feel sick to my stomach all day and I've thrown up three times.",
+  "source": "author"
+ },
+ {
+  "idx": 43,
+  "expected_complaint": "Rectal / Perineal pain",
+  "message": "Sharp burning pain around my bottom when I sit, worse after I go to the bathroom.",
+  "source": "author"
+ },
+ {
+  "idx": 44,
+  "expected_complaint": "Vomiting blood",
+  "message": "I threw up bright red blood into the sink.",
+  "source": "author"
+ },
+ {
+  "idx": 45,
+  "expected_complaint": "Blood in stool / Melena",
+  "message": "My stool is black and sticky like tar and smells awful.",
+  "source": "author"
+ },
+ {
+  "idx": 47,
+  "expected_complaint": "Hiccoughs",
+  "message": "I've had the hiccups for two days straight and can't stop them.",
+  "source": "author"
+ },
+ {
+  "idx": 48,
+  "expected_complaint": "Abdominal mass / distention",
+  "message": "My belly has swollen up tight like a drum over the last week.",
+  "source": "author"
+ },
+ {
+  "idx": 49,
+  "expected_complaint": "Anal / Rectal trauma",
+  "message": "I tore something down there and there is blood on the toilet paper.",
+  "source": "author"
+ },
+ {
+  "idx": 50,
+  "expected_complaint": "Oral / Esophageal Foreign Body",
+  "message": "A fish bone is stuck in my throat and I can feel it every time I swallow.",
+  "source": "author"
+ },
+ {
+  "idx": 51,
+  "expected_complaint": "Flank pain",
+  "message": "A deep ache in my side just below my ribs toward the back, on the left.",
+  "source": "author"
+ },
+ {
+  "idx": 53,
+  "expected_complaint": "Genital discharge / lesion",
+  "message": "I have a sore on my private parts and a thick drip when I pee.",
+  "source": "author"
+ },
+ {
+  "idx": 54,
+  "expected_complaint": "Penile swelling",
+  "message": "My son's foreskin is swollen, red and painful.",
+  "source": "author"
+ },
+ {
+  "idx": 55,
+  "expected_complaint": "Scrotal pain and/or swelling",
+  "message": "One testicle is swollen and aching badly and it came on suddenly.",
+  "source": "author"
+ },
+ {
+  "idx": 56,
+  "expected_complaint": "Urinary retention",
+  "message": "I feel like I need to pee badly but nothing comes out.",
+  "source": "author"
+ },
+ {
+  "idx": 57,
+  "expected_complaint": "UTI complaints",
+  "message": "Peeing burns and I'm running to the bathroom every ten minutes but only a dribble comes out.",
+  "source": "author"
+ },
+ {
+  "idx": 58,
+  "expected_complaint": "Oliguria",
+  "message": "I've barely passed any urine in the last day and what I did pass was dark.",
+  "source": "author"
+ },
+ {
+  "idx": 59,
+  "expected_complaint": "Polyuria",
+  "message": "I'm peeing constantly and I'm unbelievably thirsty all the time.",
+  "source": "author"
+ },
+ {
+  "idx": 60,
+  "expected_complaint": "Genital trauma",
+  "message": "I got kicked between the legs and it's swollen and bruised.",
+  "source": "author"
+ },
+ {
+  "idx": 61,
+  "expected_complaint": "Depression / Suicidal / Deliberate self harm",
+  "message": "I don't see the point in living anymore and I've been thinking about ending it.",
+  "source": "author"
+ },
+ {
+  "idx": 62,
+  "expected_complaint": "Anxiety / Situational crisis",
+  "message": "My chest is tight, my hands are shaking and I feel like something terrible is about to happen.",
+  "source": "author"
+ },
+ {
+  "idx": 63,
+  "expected_complaint": "Hallucinations / Delusions",
+  "message": "I keep hearing voices telling me what to do and nobody is there.",
+  "source": "author"
+ },
+ {
+  "idx": 64,
+  "expected_complaint": "Insomnia",
+  "message": "I haven't slept more than two hours a night for a week.",
+  "source": "author"
+ },
+ {
+  "idx": 65,
+  "expected_complaint": "Violent / Homicidal behaviour",
+  "message": "My son is screaming that he'll hurt people and smashing things around the house.",
+  "source": "author"
+ },
+ {
+  "idx": 67,
+  "expected_complaint": "Bizarre behaviour",
+  "message": "My brother is walking down the street with no clothes on, talking nonsense.",
+  "source": "author"
+ },
+ {
+  "idx": 68,
+  "expected_complaint": "Altered level of consciousness",
+  "message": "She is very sleepy and hard to wake, and only answers with mumbles.",
+  "source": "author"
+ },
+ {
+  "idx": 69,
+  "expected_complaint": "Confusion",
+  "message": "My grandfather suddenly doesn't know where he is or what day it is.",
+  "source": "author"
+ },
+ {
+  "idx": 70,
+  "expected_complaint": "Vertigo",
+  "message": "The room is spinning every time I roll over in bed and I feel like throwing up.",
+  "source": "author"
+ },
+ {
+  "idx": 71,
+  "expected_complaint": "Headache",
+  "message": "The worst headache of my life hit me like a thunderclap.",
+  "source": "author"
+ },
+ {
+  "idx": 71,
+  "expected_complaint": "Headache",
+  "message": "A tight band of pressure around my head all afternoon.",
+  "source": "author"
+ },
+ {
+  "idx": 72,
+  "expected_complaint": "Seizure",
+  "message": "He fell down and was jerking all over with his eyes rolled back for a couple of minutes.",
+  "source": "author"
+ },
+ {
+  "idx": 73,
+  "expected_complaint": "Gait disturbance / Ataxia",
+  "message": "I keep stumbling and veering to one side when I walk, like I'm drunk, but I haven't been drinking.",
+  "source": "author"
+ },
+ {
+  "idx": 74,
+  "expected_complaint": "Head injury",
+  "message": "I hit my head on the ice, I have a lump and felt woozy afterwards.",
+  "source": "author"
+ },
+ {
+  "idx": 75,
+  "expected_complaint": "Tremor",
+  "message": "My hands shake uncontrollably when I try to hold a cup.",
+  "source": "author"
+ },
+ {
+  "idx": 76,
+  "expected_complaint": "Extremity weakness / Symptoms of CVA",
+  "message": "One side of my face droops and my right arm hangs limp.",
+  "source": "author"
+ },
+ {
+  "idx": 77,
+  "expected_complaint": "Sensory loss / Paresthesias",
+  "message": "Pins and needles in my fingers and toes that won't go away.",
+  "source": "author"
+ },
+ {
+  "idx": 78,
+  "expected_complaint": "Menstrual problems",
+  "message": "My period has lasted three weeks and I'm soaking a pad every two hours.",
+  "source": "author"
+ },
+ {
+  "idx": 79,
+  "expected_complaint": "Foreign body, vagina",
+  "message": "A tampon is stuck and I can't find the string.",
+  "source": "author"
+ },
+ {
+  "idx": 80,
+  "expected_complaint": "Vaginal discharge",
+  "message": "There's thick white discharge like cottage cheese and it itches.",
+  "source": "author"
+ },
+ {
+  "idx": 81,
+  "expected_complaint": "Sexual assault",
+  "message": "Someone forced himself on me last night and I don't know what to do.",
+  "source": "author"
+ },
+ {
+  "idx": 82,
+  "expected_complaint": "Vaginal bleed",
+  "message": "I'm bleeding from down there but it isn't my period.",
+  "source": "author"
+ },
+ {
+  "idx": 83,
+  "expected_complaint": "Labial swelling",
+  "message": "One side of my private area is swollen, red and tender.",
+  "source": "author"
+ },
+ {
+  "idx": 84,
+  "expected_complaint": "Pregnancy issues < 20 wks",
+  "message": "I'm ten weeks pregnant and having cramps with spotting.",
+  "source": "author"
+ },
+ {
+  "idx": 85,
+  "expected_complaint": "Pregnancy issues > 20 wks",
+  "message": "I'm 32 weeks pregnant and the baby has barely moved today.",
+  "source": "author"
+ },
+ {
+  "idx": 86,
+  "expected_complaint": "Vaginal pain / itch",
+  "message": "It's incredibly itchy and burning down there.",
+  "source": "author"
+ },
+ {
+  "idx": 87,
+  "expected_complaint": "Chemical exposure, eye",
+  "message": "Bleach splashed in my eye and it's burning like crazy.",
+  "source": "author"
+ },
+ {
+  "idx": 88,
+  "expected_complaint": "Foreign body, eye",
+  "message": "Something flew into my eye while I was grinding metal and it feels like a grain of sand.",
+  "source": "author"
+ },
+ {
+  "idx": 89,
+  "expected_complaint": "Visual disturbance",
+  "message": "Half my vision went blurry with flashing zigzag lights.",
+  "source": "author"
+ },
+ {
+  "idx": 90,
+  "expected_complaint": "Eye pain",
+  "message": "A deep aching pain behind my eyeball that gets worse when I move it.",
+  "source": "author"
+ },
+ {
+  "idx": 91,
+  "expected_complaint": "Red Eye, discharge",
+  "message": "My eye is pink and crusty and glued shut in the morning.",
+  "source": "author"
+ },
+ {
+  "idx": 92,
+  "expected_complaint": "Photophobia",
+  "message": "Bright lights hurt my eyes so much I have to keep the curtains closed.",
+  "source": "author"
+ },
+ {
+  "idx": 93,
+  "expected_complaint": "Diplopia",
+  "message": "I'm seeing two of everything since this morning.",
+  "source": "author"
+ },
+ {
+  "idx": 94,
+  "expected_complaint": "Periorbital swelling",
+  "message": "The skin around my eye is puffy, red and tender.",
+  "source": "author"
+ },
+ {
+  "idx": 95,
+  "expected_complaint": "Eye trauma",
+  "message": "A ball hit me in the eye and it's swollen shut.",
+  "source": "author"
+ },
+ {
+  "idx": 96,
+  "expected_complaint": "Back pain",
+  "message": "A stabbing pain in my lower back after lifting a heavy box that shoots down my leg.",
+  "source": "author"
+ },
+ {
+  "idx": 97,
+  "expected_complaint": "Traumatic back / spine injury",
+  "message": "I fell off a ladder and my back is in agony and my toes feel numb.",
+  "source": "author"
+ },
+ {
+  "idx": 98,
+  "expected_complaint": "Amputation",
+  "message": "My finger got cut off in the car door and it's in a bag of ice.",
+  "source": "author"
+ },
+ {
+  "idx": 99,
+  "expected_complaint": "Upper extremity pain",
+  "message": "My shoulder and upper arm ache constantly and I can't lift it above my head.",
+  "source": "author"
+ },
+ {
+  "idx": 100,
+  "expected_complaint": "Lower extremity pain",
+  "message": "My thigh and knee ache deep inside after standing all day.",
+  "source": "author"
+ },
+ {
+  "idx": 101,
+  "expected_complaint": "Upper extremity injury",
+  "message": "I fell on my outstretched hand and my forearm looks bent.",
+  "source": "author"
+ },
+ {
+  "idx": 102,
+  "expected_complaint": "Lower extremity injury",
+  "message": "I rolled my knee on the stairs, heard a pop and it gave out.",
+  "source": "author"
+ },
+ {
+  "idx": 103,
+  "expected_complaint": "Joint(s) swelling",
+  "message": "My knee has blown up like a balloon, hot and stiff.",
+  "source": "author"
+ },
+ {
+  "idx": 104,
+  "expected_complaint": "Feeding difficulties in newborn",
+  "message": "My two-week-old won't latch and keeps falling asleep at the breast.",
+  "source": "author"
+ },
+ {
+  "idx": 105,
+  "expected_complaint": "Neonatal jaundice",
+  "message": "My newborn's skin and eyes look yellow.",
+  "source": "author"
+ },
+ {
+  "idx": 106,
+  "expected_complaint": "Inconsolable crying in infants",
+  "message": "My baby has been screaming for hours and nothing I do calms her down.",
+  "source": "author"
+ },
+ {
+  "idx": 107,
+  "expected_complaint": "Wheezing \u2013 no other complaints",
+  "message": "My little guy makes a whistling sound when he breathes out but otherwise seems fine.",
+  "source": "author"
+ },
+ {
+  "idx": 108,
+  "expected_complaint": "Paediatric gait disorder / painful walk",
+  "message": "My four-year-old suddenly refuses to put weight on her leg and limps.",
+  "source": "author"
+ },
+ {
+  "idx": 109,
+  "expected_complaint": "Apneic spells in infants",
+  "message": "My baby stopped breathing for several seconds and turned a bit blue.",
+  "source": "author"
+ },
+ {
+  "idx": 111,
+  "expected_complaint": "Floppy child",
+  "message": "My toddler is limp in my arms and won't respond to me.",
+  "source": "author"
+ },
+ {
+  "idx": 112,
+  "expected_complaint": "Stridor",
+  "message": "My child makes a harsh crowing noise every time he breathes in.",
+  "source": "author"
+ },
+ {
+  "idx": 114,
+  "expected_complaint": "Shortness of breath",
+  "message": "I can't catch my breath even sitting still and I get winded walking to the bathroom.",
+  "source": "author"
+ },
+ {
+  "idx": 115,
+  "expected_complaint": "Respiratory arrest",
+  "message": "She has stopped breathing completely and her chest isn't moving.",
+  "source": "author"
+ },
+ {
+  "idx": 116,
+  "expected_complaint": "Cough / Congestion",
+  "message": "A deep rattling cough that brings up green phlegm for a week.",
+  "source": "author"
+ },
+ {
+  "idx": 117,
+  "expected_complaint": "Hyperventilation",
+  "message": "I'm breathing really fast and my hands and lips are tingling.",
+  "source": "author"
+ },
+ {
+  "idx": 118,
+  "expected_complaint": "Hemoptysis",
+  "message": "I coughed up spit streaked with blood.",
+  "source": "author"
+ },
+ {
+  "idx": 119,
+  "expected_complaint": "Respiratory foreign body",
+  "message": "He choked on a peanut and now he's wheezing and coughing.",
+  "source": "author"
+ },
+ {
+  "idx": 120,
+  "expected_complaint": "Allergic reaction",
+  "message": "After eating shrimp my lips swelled up, I have hives and my throat feels tight.",
+  "source": "author"
+ },
+ {
+  "idx": 121,
+  "expected_complaint": "Bite",
+  "message": "My cat bit my hand and it's red and swollen.",
+  "source": "author"
+ },
+ {
+  "idx": 122,
+  "expected_complaint": "Sting",
+  "message": "A wasp stung me and the area is swelling up.",
+  "source": "author"
+ },
+ {
+  "idx": 123,
+  "expected_complaint": "Abrasion",
+  "message": "I scraped the skin off my knee falling off my bike.",
+  "source": "author"
+ },
+ {
+  "idx": 124,
+  "expected_complaint": "Laceration / Puncture",
+  "message": "I cut my hand deeply on broken glass and it won't stop bleeding.",
+  "source": "author"
+ },
+ {
+  "idx": 125,
+  "expected_complaint": "Burn",
+  "message": "I spilled boiling water on my forearm and blisters are forming.",
+  "source": "author"
+ },
+ {
+  "idx": 126,
+  "expected_complaint": "Blood and body fluid exposure",
+  "message": "I got pricked by a used needle while cleaning up.",
+  "source": "author"
+ },
+ {
+  "idx": 127,
+  "expected_complaint": "Pruritus",
+  "message": "My whole body itches intensely but there's no rash.",
+  "source": "author"
+ },
+ {
+  "idx": 128,
+  "expected_complaint": "Rash",
+  "message": "A red bumpy rash has spread across my chest and back.",
+  "source": "author"
+ },
+ {
+  "idx": 129,
+  "expected_complaint": "Localized swelling / redness",
+  "message": "A patch of skin on my shin is hot, red and swollen.",
+  "source": "author"
+ },
+ {
+  "idx": 130,
+  "expected_complaint": "Other skin conditions",
+  "message": "Dry scaly itchy patches on my elbows that crack and bleed.",
+  "source": "author"
+ },
+ {
+  "idx": 131,
+  "expected_complaint": "Lumps, bumps, calluses",
+  "message": "I found a pea-sized lump under the skin of my arm.",
+  "source": "author"
+ },
+ {
+  "idx": 132,
+  "expected_complaint": "Redness / tenderness, breast",
+  "message": "My breast is red, hot and tender with a hard area.",
+  "source": "author"
+ },
+ {
+  "idx": 133,
+  "expected_complaint": "Cyanosis",
+  "message": "His lips and fingertips are turning blue.",
+  "source": "author"
+ },
+ {
+  "idx": 134,
+  "expected_complaint": "Spontaneous bruising",
+  "message": "I keep getting big bruises for no reason.",
+  "source": "author"
+ },
+ {
+  "idx": 135,
+  "expected_complaint": "Foreign body, skin",
+  "message": "I have a splinter deep in my palm.",
+  "source": "author"
+ },
+ {
+  "idx": 136,
+  "expected_complaint": "Substance misuse / Intoxication",
+  "message": "My friend drank way too much, he's slurring and can't stand.",
+  "source": "author"
+ },
+ {
+  "idx": 137,
+  "expected_complaint": "Overdose ingestion",
+  "message": "My toddler swallowed a handful of my pills.",
+  "source": "author"
+ },
+ {
+  "idx": 138,
+  "expected_complaint": "Substance withdrawal",
+  "message": "I stopped drinking two days ago and I'm shaking, sweating and seeing things.",
+  "source": "author"
+ },
+ {
+  "idx": 139,
+  "expected_complaint": "Major trauma \u2013 penetrating",
+  "message": "He was stabbed in the stomach and is bleeding heavily.",
+  "source": "author"
+ },
+ {
+  "idx": 140,
+  "expected_complaint": "Major trauma \u2013 blunt",
+  "message": "A car hit our motorcycle at highway speed and the rider is unresponsive.",
+  "source": "author"
+ },
+ {
+  "idx": 141,
+  "expected_complaint": "Isolated chest trauma \u2013 penetrating",
+  "message": "A knife went into his chest and he's gasping.",
+  "source": "author"
+ },
+ {
+  "idx": 142,
+  "expected_complaint": "Isolated chest trauma \u2013 blunt",
+  "message": "I slammed my chest into the steering wheel and it hurts to breathe.",
+  "source": "author"
+ },
+ {
+  "idx": 144,
+  "expected_complaint": "Isolated abdominal trauma \u2013 blunt",
+  "message": "I got hit in the belly during a football game and now it's very tender.",
+  "source": "author"
+ },
+ {
+  "idx": 145,
+  "expected_complaint": "Exposure to communicable disease",
+  "message": "My coworker was just diagnosed with measles and I've been around him all week.",
+  "source": "author"
+ },
+ {
+  "idx": 146,
+  "expected_complaint": "Fever",
+  "message": "I'm burning up with chills and the thermometer says 39.5, for two days now.",
+  "source": "author"
+ },
+ {
+  "idx": 147,
+  "expected_complaint": "Hyperglycemia",
+  "message": "My blood sugar meter says 28 and I'm thirsty and nauseous.",
+  "source": "author"
+ },
+ {
+  "idx": 148,
+  "expected_complaint": "Hypoglycemia",
+  "message": "I'm diabetic, sweaty, shaky and confused, and haven't eaten since morning.",
+  "source": "author"
+ },
+ {
+  "idx": 151,
+  "expected_complaint": "Pallor / Anemia",
+  "message": "I'm very pale, tired, and dizzy whenever I stand.",
+  "source": "author"
+ },
+ {
+  "idx": 152,
+  "expected_complaint": "Post-operative complications",
+  "message": "Three days after my surgery the cut is red, oozing pus and I have a fever.",
+  "source": "author"
+ }
+]

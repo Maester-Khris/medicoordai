@@ -1,107 +1,41 @@
 # MediCoord AI
 
-**AI-powered city-wide health coordination system**  
-Toronto Tech Week 2025 Hackathon → SaaS rebuild in progress
+**AI-powered health coordination: describe how you feel, get sent to the right care nearby.**
 
 ---
 
 ## What This Is
 
-MediCoord AI is a health coordination platform designed to reduce the friction between a patient experiencing symptoms and the right care provider reaching them in time.
+A person describes symptoms in plain language. The system asks follow-up questions when it needs them, classifies the severity (`routine`, `moderate`, `urgent` or `emergent`), picks the nearest appropriate facility, and shows the route on a live map. The chat explains why, in plain words, and every emergent answer tells the person to call 911.
 
-A user describes how they feel in natural language. The system classifies their symptom severity, locates them, identifies the most appropriate nearby facility, and routes them there — all surfaced in a single conversational interface backed by a live city map.
-
-The system is designed for city-scale deployment: any Toronto resident with a browser can open it, describe their symptoms, and receive a real routing recommendation without needing to know which hospital handles what, how far away anything is, or what their condition actually warrants.
+It started as a 48-hour hackathon build (Toronto Tech Week 2025). The rebuild replaced the simulation with a working backend, a real chat flow and measured evidence. The hackathon code is archived in the repository.
 
 ---
 
-## Background
+## Current State (Sprint 24)
 
-This project was originally built for **Toronto Tech Week 2025** as a hackathon submission under a 48-hour constraint. The goal was to demonstrate AI-driven triage and coordination at a city scale using Toronto's actual healthcare facility layout.
-
-The hackathon build shipped a working frontend simulation — a React map interface that generates synthetic patients, routes them to providers using the Geoapify Route Matrix API, and visualizes queue state per hospital. It also included a GCP Cloud Function with Gemini 2.5 Flash for symptom extraction and a fine-tuned Vertex AI classifier for severity prediction.
-
-**What worked at submission:** the frontend simulation, the Geoapify routing integration, the priority queue scheduling algorithm, the Gemini symptom extraction call.
-
-**What didn't:** the fine-tuned Vertex AI endpoint was never successfully wired into the cloud function after 8 attempted endpoint URL formats — the deployed version silently substitutes random classification for real model inference. The frontend and backend never communicated. The severity schemas between the two layers were incompatible.
-
-The codebase is a collection of parallel exploration tracks that were not consolidated before the demo. It reads like a hackathon, because it was one.
-
----
-
-## Current State (as of May 2026 audit)
-
-| Layer | Status |
+| Area | Status |
 |---|---|
-| React SPA (3 tabs: Smart Routing, In-house Scheduling, Predictive Analysis) | Working as standalone simulation |
-| Geoapify Route Matrix integration | Working (API key hardcoded — not safe to deploy) |
-| Priority queue triage algorithm | Working |
-| Gemini 2.5 Flash symptom extraction (Cloud Function) | Working given valid GCP credentials |
-| Fine-tuned Vertex AI severity classifier | Broken — never successfully called; random fallback deployed |
-| Frontend ↔ Backend integration | None — fully isolated subsystems |
-| Severity schema consistency | Broken — two incompatible 4-class schemas across layers |
-| Environment / secrets management | None — keys hardcoded in client-side source |
-| CI/CD, Docker, infrastructure config | None |
+| Chat, severity classification, facility routing on a live map | Working, deployed |
+| Guest demo (anonymous guest ids, feedback and event capture) | Working |
+| LLM calls | Groq `gpt-oss-120b`, with Anthropic as fallback; per-provider circuit breaker, retries and a per-conversation token cap |
+| Facility routing | Geoapify Route Matrix (car, bike, bus, walk) with load-aware ranking and ER wait times from a 15-minute worker |
+| Graph-assisted triage (SNOMED knowledge graph) | Built and measured, **off by default**: it does not beat the no-graph path yet (see Symptom Understanding) |
+| Load and scale | Measured to about 35 chat turns per second on one small instance (see Performance) |
+| Security | Reviewed in Sprint 23, 3 High findings fixed (see Security) |
+| Safety checks | Red-flag floor and emergency-mismatch check run in shadow (log only, awaiting a clinical reviewer); a groundedness guard replaces malformed replies with a template |
+| Cost guards | Token cap 22,000, admission off switch, retry budget, nightly eval gate |
+| Accounts, emergency-contact alerts, analytics, admin | Out of scope for this phase |
 
-See [`CHANGELOG.md`](./CHANGELOG.md) for the full known-issues inventory from the hackathon release.
+Full history: [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
-## New Direction — v2.0
+## How It Works
 
-The rebuild moves from a simulation demo to an integrated AI-powered product with a real user session flow.
+![MediCoord AI architecture: guest to web app to API, with the LLM provider, Geoapify, Redis, Postgres and the wait-time worker](docs/images/architecture.png)
 
-### Product Vision
-
-The home page presents a split interface: a conversational chat panel on the left, a live Leaflet map of Toronto on the right centered on the CN Tower with nearby medical facilities marked.
-
-The user flow:
-
-1. User types how they feel in the chat panel — free text, no structured form
-2. The AI agent runs a parallelized tool workflow:
-   - **Tool 1a** — Claude (Anthropic API) parses the input and returns structured severity classification (`routine / moderate / urgent / emergent`) with reasoning
-   - **Tool 1b** — Browser Geolocation API captures the user's position (with explicit consent prompt)
-3. On both results returning, a second tool call fires:
-   - **Tool 2** — Geoapify RouteMatrix computes travel times from the user to all nearby facilities; the system selects the most appropriate facility given severity class
-4. The map updates in real time: user pin appears, route polyline draws, destination facility highlights
-5. The chat responds with a plain-language explanation of the recommendation and why — not just a name and address
-6. Optionally: a user-initiated contact alert panel appears for high-severity classifications (user taps to send — never autonomous)
-
-The tool-calling pipeline is made visible in the chat UI with a live progress trace during the parallel step, so the AI engineering is legible to both end users and technical evaluators.
-
-### Architecture (v2.0 Target)
-
-```
-Browser
-├── Chat Panel (left)
-│   ├── User symptom input
-│   ├── Tool trace UI (parallel step progress)
-│   └── Claude response with recommendation + reasoning
-└── Map Panel (right)
-    ├── Facility markers (static, 43 Toronto providers)
-    ├── User pin (from geolocation, this session)
-    └── Route polyline (drawn after Tool 2 resolves)
-
-Backend API
-├── POST /triage
-│   ├── Tool 1a: Anthropic API → severity classification (structured output)
-│   ├── Tool 1b: Geolocation payload from client
-│   └── Tool 2: Geoapify RouteMatrix → nearest appropriate facility
-└── (Optional) POST /alert — user-initiated contact notification
-
-Infrastructure
-├── Environment variables for all API keys (no hardcoded secrets)
-├── requirements.txt for Python services
-├── Docker config for backend
-└── GitHub Actions CI/CD (lint, type-check, deploy gate)
-```
-
-### What Changes from the Hackathon Build
-
-- The Vertex AI fine-tuned classifier is retired. Claude handles severity classification natively via structured tool output — more reliable, no endpoint management, better accuracy than a 238-sample fine-tune
-- The simulation engine is not the product anymore. The map responds to this user's real session, not synthetic patients
-- Frontend and backend are connected through a real API contract with a shared severity schema
-- The Dialogflow CX dependency is dropped — the agentic workflow is implemented directly via the Anthropic API tool-calling interface
+Safety rules in code, not in the prompt: the model's severity is validated against the four allowed values and fails toward `emergent`; every emergent reply carries a 911 line; the model has one tool and cannot fetch, send or run anything; routing takes facility ids only.
 
 ---
 
@@ -124,23 +58,111 @@ Next: an async database pool and a 2-worker box, re-measured with the same ladde
 
 ---
 
+## Symptom Understanding
+
+**Why this is measured.** The aim is a graph path that is clinically as good as the no-graph baseline (`off`), where the LLM alone decides. Relying on the LLM alone sends every user's symptom text to the model host, with no data processing agreement yet. Matching `off` on safety and on the questions asked is the condition for moving part of that work off the model. Not met today.
+
+Method: 27 clinician-reviewed vignettes extracted from CTAS (Canadian Triage and Acuity Scale) data, 3 repeats, simulated patient (`claude-haiku-4-5`), scored in code against gold severity. Sprint 23 system under test: `gpt-oss-120b` on Ollama Cloud (August: Groq). Details: [CHANGELOG.md](CHANGELOG.md).
+
+**Legs.** `off` = no graph (the LLM alone decides; production default), static = the v1 lookup, v3 = the rebuilt semantic graph. v3 replaced the v2 graph because v2 had one major flaw: its complaints were poorly clustered (the cross-symptom cluster layer was only built for one pilot cluster), which led to poor retrieval. The August v2 numbers are kept for reference and have no "now" column.
+
+### 1. Retrieval
+
+Does the graph find the right complaint? Gold anchor in the top 5 (top 1 in brackets). `off` retrieves nothing.
+
+| Leg | August 2026 | Now (Sprint 23) |
+|---|---|---|
+| static lookup | 100% on 20 messages (top 1); 0 of 10 lay messages | not re-run |
+| v2 graph | 35% on 20 messages (top 1); 0 of 10 lay messages | not re-run (replaced by v3) |
+| v3 (BioLORD) | did not exist | 83 to 93% across four sets of 104 to 365 messages (top 1: 38 to 71%) |
+| v3 (bge-small) | did not exist | 69 to 81% on the same four sets (top 1: 36 to 56%) |
+
+The static 100% is a vocabulary artifact: its test messages were written from its own vocabulary. Substring matching scored 4% on the 150 author-written messages. v3 fixed lay-language matching; only its top 5 is reliable. BioLORD is the accuracy pick; bge-small is the likelier production pick on CPU, since in the ONNX bench it embeds a message in about 3 ms against 19 to 31 ms, uses about 115 MB of memory against about 600 MB, and its model file is 34 MB against 418 MB, but it misses the 75% hit@5 screen on all four sets, so it needs a retrieval-quality fix before it can ship.
+
+### 2. Triage
+
+Under-triage = a more severe case classified lower (lower is better). Accuracy in brackets. 81 conversations per leg.
+
+| Leg | August (original wording, 1 run) | Now, original wording | Now, lay wording |
+|---|---|---|---|
+| `off` | 22.2% (63.0%) | 23.5% (69.1%) | 22.2% (69.1%) |
+| static | 37.0% (51.9%) | 25.9% (66.7%) | 27.2% (64.2%) |
+| v2 | 22.2% (66.7%) | not re-run (replaced by v3) | not re-run (replaced by v3) |
+| v3 | n/a | 28.4% (65.4%) | 29.6% (64.2%) |
+
+v3 is 7.4 points worse than `off` on the lay set (paired 95% interval [-14.8, -1.2], exact McNemar p = 0.25): no evidence it helps, not proof it harms. Re-running the lay set moved `off` by 5 points, so smaller gaps are noise.
+
+### 3. Elicitation coverage
+
+The goal: check whether the graph improves understanding (asking for the facts a clinician needs) even if overall triage does not improve. Share of checklist facts the patient voiced after the system's questions. Lay set, 81 conversations per leg, judge `gpt-4o-mini`. August: not measured.
+
+| Leg | Patient-answerable facts (primary) | All facts |
+|---|---|---|
+| `off` | 35.5% | 24.0% |
+| static | 33.9% | 23.9% |
+| v3 | 32.6% | 24.2% |
+
+v3 minus `off`: -2.9 points (95% interval [-11.7, +3.1]). All comparisons include zero: the graph does not elicit more needed facts. One run; the second-judge check failed (misconfigured).
+
+### 4. Safety enforcement
+
+Under-triage (accuracy), 81 conversations per variant. Baseline against the run with the floor in shadow and the groundedness guard enforcing.
+
+| | Baseline | After |
+|---|---|---|
+| Lay | 18.5% (70.4%) | 22.2% (69.1%) |
+| Original wording | 21.0% (70.4%) | 19.8% (71.6%) |
+
+Paired intervals include zero in both variants (McNemar p = 1.0): no change was measured, as expected while the floor only logs. Run-to-run variation is about 4 points.
+
+- The floor matched 4 of 16 emergent cases in lay wording and 5 of 16 in original wording, with one false positive (case 4). It is a net for explicit wording, not a classifier.
+- `gpt-oss` wrote its tool call as reply text in about a third of conversations; the groundedness guard replaces those replies.
+- A later review tightened the matcher and the replacement wording; the offline pass over the same transcripts gives the same hits.
+
+### Reading
+
+- Better matching did not make triage safer or the chat's questions better.
+- Production keeps the no-graph path as default until v3 beats it beyond the paired interval.
+- Open: whether the host matters (no Groq check was run), and why v3 misses some vignettes. Early reading: generic red flags plus patient "no" answers get used as reassurance, lowering severity (not yet quantified).
+
+### CI regression gate
+
+One workflow (`.github/workflows/eval-gate.yml`) protects the production no-graph path. It runs 7 sentinel cases of the lay set once each, on Groq's free tier. It does not measure quality: it fails when a case that was reliably right is now wrong.
+
+1. **Nightly run (model drift).** Every night at 06:17 UTC, and on demand. It catches silent changes in the hosted model that no code change triggers. A failed nightly run opens an issue.
+2. **Regression on under-triage.** On a PR with the `run-eval` label. It fails if an emergent sentinel is under-triaged, if 2 or more other sentinels differ from the baseline, or if a sentinel is missing.
+3. **Retry of skipped conversations.** A conversation skipped by a Groq error is retried once; a sentinel still missing fails the gate.
+4. **Calibration and limits.** Calibrated on 30 conversations of the no-graph leg: accuracy 73.3%, under-triage 23.3%, in line with the table above. Three cases that held on the Ollama baseline did not hold on Groq (one urgent, two emergent under-triaged), so they are reported but cannot fail the gate: only 5 emergent cases are protected, and why those two under-triage on Groq is not investigated. The first run on the Sprint 24 code passed 7 of 7 after one retry. It has since passed in CI on the Sprint 24 pull request.
+5. **Not covered yet.** Escalation tests and in-conversation security tests are planned, not built.
+
+---
+
+## Security
+
+Sprint 23 review (2026-11-09 to 2026-11-12), run locally with free tools; the AI part used the production model (Groq `gpt-oss-120b`). Full report: [docs/security/2026-11-12-security-review.md](docs/security/2026-11-12-security-review.md).
+
+| Area | Result |
+|---|---|
+| Secrets, dependencies, static analysis, ZAP scans | no secret in the tree; known advisories fixed or listed; 0 findings in app code; ZAP 0 FAIL |
+| Guest isolation | 30 of 30 checks; no guest can read or change another guest's data |
+| Red team (72 attacks, real model) | none lowered the severity or leaked the prompt; every emergent reply carried 911; 6 flagged, none High |
+| Agent power | the model has one tool that returns a classification; it cannot fetch, send or run anything |
+
+Three High findings were found and fixed with tests: a junk `Bearer` header could stall the API, the model's severity was not validated, and emergent replies could lack a 911 line. Open: typed personal details reach the model provider unredacted. Closed in Sprint 24 for the red-team forms, effective once released: a raw tool-call blob, a reply with a forged prompt tag, a reply too short to be real (a planted code word, finding `inj4`), or a reply that omits the chosen facility's name is replaced by a template. Limit: attacker text written as a full sentence on a turn with no facility is not detected. Limits: one run of a sample, not a proof; the semantic path and live graph were not tested.
+
+---
+
 ## Tech Stack
 
-**Current (hackathon build)**
-- React 18 + Vite + TypeScript + Tailwind CSS
-- React Leaflet / Leaflet
-- Geoapify Route Matrix API
-- GCP: Cloud Functions (Python), Vertex AI, Firestore
-- Gemini 2.5 Flash (symptom extraction)
-- `@faker-js/faker` (synthetic patient generation)
-
-**Target (v2.0)**
-- React 18 + Vite + TypeScript + Tailwind CSS
-- React Leaflet / Leaflet
-- Anthropic API (Claude) — agentic tool-calling, severity classification, chat
-- Geoapify Route Matrix API
-- Backend API layer (Node/Python TBD)
-- Secure environment variable management
+- **Frontend:** React 18, Vite, TypeScript (strict), Tailwind CSS, React Leaflet
+- **Backend:** Python 3.11, FastAPI, Pydantic
+- **AI:** Groq (primary) and Anthropic (fallback), chosen by `LLM_PROVIDER` and `LLM_PROVIDER_CHAIN`
+- **Routing:** Geoapify Route Matrix
+- **Data:** Railway Postgres for the guest demo, Redis for caches, Neo4j Aura for the optional graph path; Supabase remains the legacy store
+- **Config and secrets:** Doppler
+- **Deploy:** Vercel (frontend), Railway (API and worker)
+- **Infrastructure as code:** AWS SAM (CloudFormation) for the analytics pipeline's AWS resources (`pipeline/infra/template.yaml`, `pipeline/infra/s3-buckets.yaml`); no Terraform or Kubernetes in the repo
+- **Evaluation:** a 27-vignette triage harness in `backend/scripts/symptom_eval/`
 
 ---
 
@@ -148,41 +170,21 @@ Next: an async database pool and a 2-worker box, re-measured with the same ladde
 
 ```
 medicoordai/
-├── webapp/                        # React/Vite SPA
-│   └── src/
-│       ├── App.tsx
-│       ├── Menucomponents/
-│       │   ├── Home.tsx           # Smart Routing tab
-│       │   ├── Inhousescheduler.tsx # In-house Scheduling tab
-│       │   ├── Map.tsx            # Predictive Analysis tab
-│       │   ├── subcomponent/
-│       │   │   ├── MapPanel.tsx
-│       │   │   └── SimulationForm.tsx
-│       │   └── utils/
-│       │       ├── baseData.ts    # 43 Toronto health providers
-│       │       ├── geoapify.ts    # Route Matrix API client
-│       │       ├── priorityQueue.ts # Binary min-heap triage sorter
-│       │       ├── generator.ts
-│       │       ├── formatter.ts
-│       │       └── customIcon.tsx
-├── cloud_function/
-│   ├── triage_function_original.py  # Broken Vertex AI integration
-│   └── triage_function_alternate.py # Deployed fallback (random classifier)
-├── fine_tuning_training/            # 238-sample severity dataset (archived)
-├── backup/                          # Earlier Python triage iterations
-└── CHANGELOG.md
+|-- backend/      FastAPI API: routers, services, llm, graph, middleware; eval and security scripts
+|-- webapp/       React + Vite + TypeScript app
+|-- shared/       shared TypeScript types (severity schema, API contracts)
+|-- workers/      ER wait-time scraper (Railway cron)
+|-- migrations/   database migrations
+|-- e2e/          end-to-end symptom-understanding check script
+|-- docs/         architecture, API, specs, plans, security review
+|-- pipeline/     analytics pipeline (dbt models, functions, infra)
+`-- cloud_function/, fine_tuning_training/, backup/   archived hackathon code
 ```
 
----
-
-## Hackathon Team
-
-Built at Toronto Tech Week 2025.  
-Technologies: Python · GCP Vertex AI · Gemini 2.5 · React.js · Geoapify · Leaflet
+Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/API.md](docs/API.md) and [shared/types.ts](shared/types.ts). The severity values (`routine`, `moderate`, `urgent`, `emergent`) are defined once, in `shared/types.ts`.
 
 ---
 
 ## Status
 
-> **This project is in active redesign.**  
-> The hackathon build is preserved on `main` as the baseline. v2.0 development begins from the audit completed May 2026.
+Active development. The guest demo is live; the open questions are clinical (the graph path does not yet match the no-graph baseline) and the items listed under Security. `main` is protected; work goes through `preview`.

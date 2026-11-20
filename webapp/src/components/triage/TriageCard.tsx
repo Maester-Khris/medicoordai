@@ -1,9 +1,12 @@
+import { useState } from "react"
 import type { TravelModeKey, TriageUIState } from "../../../../shared/types"
+import { EmergencyCall } from "../EmergencyCall"
 import { useNextActions } from "../../hooks/useNextActions"
+import { DIRECTIONS_UNAVAILABLE } from "../../lib/directions"
+import { SEVERITY_LABEL } from "../../lib/severityLabels"
 
 interface TriageCardProps {
   triage: TriageUIState
-  emergencyContactPhone: string | null
   onModeChange: (mode: TravelModeKey) => void
   onSelectFacility: (facilityId: string) => void | Promise<void>
 }
@@ -17,28 +20,28 @@ const MODE_CHIPS: { key: TravelModeKey; emoji: string; label: string }[] = [
 
 const SEV_CONFIG: Record<string, { label: string; color: string; borderColor: string; bgColor: string; glowColor: string }> = {
   emergent: {
-    label: "EMERGENT — ESI 1-2",
+    label: SEVERITY_LABEL.emergent,
     color: "#FF7B93",
     borderColor: "rgba(255,123,147,0.35)",
     bgColor: "rgba(255,123,147,0.08)",
     glowColor: "rgba(255,123,147,0.1)",
   },
   urgent: {
-    label: "URGENT — ESI 3",
+    label: SEVERITY_LABEL.urgent,
     color: "#F59E0B",
     borderColor: "rgba(245,158,11,0.35)",
     bgColor: "rgba(245,158,11,0.08)",
     glowColor: "rgba(245,158,11,0.08)",
   },
   moderate: {
-    label: "MODERATE — ESI 3",
+    label: SEVERITY_LABEL.moderate,
     color: "#35A7C4",
     borderColor: "rgba(53,167,196,0.35)",
     bgColor: "rgba(53,167,196,0.08)",
     glowColor: "rgba(53,167,196,0.08)",
   },
   routine: {
-    label: "NON-URGENT — ESI 4-5",
+    label: SEVERITY_LABEL.routine,
     color: "#00D2FF",
     borderColor: "rgba(0,210,255,0.35)",
     bgColor: "rgba(0,210,255,0.08)",
@@ -61,9 +64,11 @@ function getCategoryLabel(category: string): string {
 
 import { useConfig } from "../../hooks/useConfig"
 
-export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSelectFacility }: TriageCardProps) {
+export function TriageCard({ triage, onModeChange, onSelectFacility }: TriageCardProps) {
   const config = useConfig()
-  const { call911, messageEmergencyContact, getDirections, saveRecommendation } = useNextActions(triage.severity)
+  const { getDirections } = useNextActions()
+  const [directionsFailed, setDirectionsFailed] = useState(false)
+  const openMaps = (name: string, lat: number, lng: number) => setDirectionsFailed(!getDirections(name, lat, lng))
 
   if (!triage.active || !triage.severity) return null
 
@@ -270,7 +275,7 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
             {/* Directions CTA — all non-emergent severities */}
             {triage.severity !== "emergent" && (
               <button
-                onClick={() => getDirections(recommended.name, recommended.lat, recommended.lng)}
+                onClick={() => openMaps(recommended.name, recommended.lat, recommended.lng)}
                 className="w-full flex items-center justify-center gap-2 font-bold transition-all active:scale-[0.98]"
                 style={{
                   height: 40,
@@ -297,54 +302,18 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
         {/* Emergent: 911 CTA + secondary actions */}
         {triage.severity === "emergent" && (
           <div className="flex flex-col gap-2">
-            <button
-              onClick={call911}
-              className="w-full flex items-center justify-center gap-2 font-bold transition-all active:scale-[0.98]"
-              style={{
-                height: 44,
-                background: "rgba(255,123,147,0.12)",
-                color: "#FF7B93",
-                border: "1px solid rgba(255,123,147,0.45)",
-                borderRadius: 8,
-                fontSize: 14,
-                cursor: "pointer",
-                letterSpacing: "0.02em",
-              }}
-              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,123,147,0.2)")}
-              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = "rgba(255,123,147,0.12)")}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.22 2.18 2 2 0 012.22 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.09 6.09l1.27-.64a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 15.92l-.08 1z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Call 911 immediately
-            </button>
-            <div className="grid grid-cols-2 gap-2">
-              {emergencyContactPhone && (
-                <GhostButton onClick={() => messageEmergencyContact(emergencyContactPhone)} label="Alert contact" />
-              )}
-              {recommended && (
-                <GhostButton
-                  onClick={() => getDirections(recommended.name, recommended.lat, recommended.lng)}
-                  label="ER directions"
-                />
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Urgent: secondary row */}
-        {triage.severity === "urgent" && (
-          <div className="grid grid-cols-2 gap-2">
-            {emergencyContactPhone && (
-              <GhostButton onClick={() => messageEmergencyContact(emergencyContactPhone)} label="Alert contact" />
+            <EmergencyCall variant="primary" />
+            {recommended && (
+              <GhostButton
+                onClick={() => openMaps(recommended.name, recommended.lat, recommended.lng)}
+                label="ER directions"
+              />
             )}
-            <GhostButton onClick={saveRecommendation} label="Save facility" icon={<BookmarkIcon />} />
           </div>
         )}
 
-        {/* Moderate / routine: save only */}
-        {(triage.severity === "moderate" || triage.severity === "routine") && (
-          <GhostButton onClick={saveRecommendation} label="Save facility" icon={<BookmarkIcon />} fullWidth />
+        {directionsFailed && (
+          <p role="status" style={{ fontSize: 12, color: "#F59E0B" }}>{DIRECTIONS_UNAVAILABLE}</p>
         )}
 
         {/* Secondary facilities stack */}
@@ -444,22 +413,18 @@ export function TriageCard({ triage, emergencyContactPhone, onModeChange, onSele
 function GhostButton({
   onClick,
   label,
-  icon,
-  fullWidth,
 }: {
   onClick: () => void
   label: string
-  icon?: React.ReactNode
-  fullWidth?: boolean
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center gap-1.5 font-semibold transition-all active:scale-[0.98] ${fullWidth ? "w-full" : ""}`}
+      className="w-full flex items-center justify-center gap-1.5 font-semibold transition-all active:scale-[0.98]"
       style={{
-        height: 34,
-        borderRadius: 7,
-        fontSize: 11,
+        height: 44,
+        borderRadius: 8,
+        fontSize: 13,
         cursor: "pointer",
         background: "transparent",
         color: "#85A4B1",
@@ -474,16 +439,7 @@ function GhostButton({
         ;(e.currentTarget as HTMLElement).style.borderColor = "rgba(28,70,89,0.55)"
       }}
     >
-      {icon}
       {label}
     </button>
-  )
-}
-
-function BookmarkIcon() {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2v16z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
   )
 }
