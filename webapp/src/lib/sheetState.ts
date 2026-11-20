@@ -31,5 +31,5 @@ export function snapState({ visible, velocityY, current, heights }: SnapInput): 
     return ORDER[Math.min(ORDER.length - 1, Math.max(0, index + step))]
   }
   return ORDER.reduce((best, s) =>
-    Math.abs(heights[s] - visible) < Math.abs(heights[best] - visible) ? s : best)
+    Math.abs(heights[s] - visible) < Math.abs(heights[best] - visible) ? s : best, ORDER[0])
 }
