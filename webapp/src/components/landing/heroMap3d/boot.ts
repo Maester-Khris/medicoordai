@@ -29,6 +29,8 @@ function webglAvailable(): boolean {
  * (React StrictMode): the disposer stops everything the call started.
  */
 export function startHeroMap(refs: HeroMapRefs): () => void {
+  // The build's prerender step renders this page where matchMedia does not exist; there is no map to start.
+  if (typeof window.matchMedia !== 'function') return () => {}
   const { root, mapEl, fallbackEl, fallbackSvg, toggleBtn } = refs
   const P = CONFIG.PALETTE
   const disposers: Array<() => void> = []
