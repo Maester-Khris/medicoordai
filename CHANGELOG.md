@@ -7,7 +7,9 @@ Sprints are listed newest first, by the date each started (or, where a section h
 
 ---
 
-## [Sprint 24 — feat/safety-enforcement-and-release] · Production release and enforced safety checks — In progress
+## [Sprint 24 — feat/safety-enforcement-and-release] · Production release and enforced safety checks — Closed
+
+**Closed — 2026-11-20.** Branch `feat/safety-enforcement-and-release`, merged to `preview` (PR #61, `30edf91`; CI, SonarCloud and the eval gate green), not yet promoted to `main`: the release (item 1) is the open step. Result: the red-flag floor and mismatch check are built and run in shadow, groundedness enforcement is on, the spend guards are in, and the eval gate runs nightly. No change in under-triage was measured (README, Safety enforcement).
 
 **Started — 2026-11-14 · branch: `feat/safety-enforcement-and-release`.** Window: Nov 16 to 22. Goal: the Sprint 23 work (3 High security fixes, guards, CI gate) reaches production, the safety guarantees hold in code instead of in the prompt, and the chat is usable on a phone. Metric: under-triage rate on the 27 vignettes plus the lay set, on the production config with the floor on, paired with an interval. Counters: over-triage (routine sent to emergent) and cost per conversation (read from the existing token logs; it becomes the baseline for the agentic-conversation sprint).
 
@@ -18,8 +20,8 @@ Sprints are listed newest first, by the date each started (or, where a section h
 - [x] **3. Groundedness and emergency-mismatch enforcement.** An ungrounded or malformed reply is replaced by the template (closes the forged-closing-tag and code-word findings for the red-team forms; an injected reply written as a full sentence on a turn with no facility is not caught); the 911 line now comes before any 211 line. **Done 2026-11-17 (task 015):** groundedness defaults to `enforce`; mismatch enforcement is built and defaults to `shadow`.
 - [x] **4. Emergency and directions buttons, web and mobile.** Call 911 on every emergent result (`tel:` link on touch devices, template panel on web, link in every chat header); Get directions opens Google Maps. **Done 2026-11-16 (task 016).** Alert contact, Save and web push are revisited later.
 - [x] **5. Mobile fix.** Chat on web mobile screens and a content and working-feature pass on the old interfaces. **Done 2026-11-16 (task 016):** three-state chat sheet, three tabs, facilities list, no guest menu, failed-send errors, one severity label per platform. Not done: landscape, "open now", M-012, M-015, M-026 to M-028. iOS keyboard covered by geometry unit tests plus a manual iPhone check; 70 Playwright tests pass; smoke specs not run.
-- [ ] **6. Cost guards.** Token cap 22,000 (about 2x the observed max, from the Phase 1 baseline, which is the before number for the agentic-conversation sprint), `ADMISSION_CONTROL` off switch, retry budget (10%), failover counter, nightly gate (06:17 UTC) with one retry. **Built 2026-11-17 (task 015); Railway variables set 2026-11-18 on `python-api` (deploys skipped; they apply when this branch is deployed); open:** one live gate run and the `GROQ_API_KEY` secret. A failed nightly run also opens an issue. Prompt-cache pinning deferred: count failovers first.
-- [x] **7. Hero visual.** **Done:** the landing page now shows a 3D map with the road drawing, built and added to the landing.
+- [x] **6. Cost guards.** Token cap 22,000 (about 2x the observed max, from the Phase 1 baseline, which is the before number for the agentic-conversation sprint), `ADMISSION_CONTROL` off switch, retry budget (10%), failover counter, nightly gate (06:17 UTC) with one retry. **Done 2026-11-18 to 2026-11-20 (task 015):** Railway variables set on `python-api` (deploys skipped; they apply at the deploy); the gate passed its first live CI run on PR #61 (7 sentinels, 5m28s, Groq API key secret and `run-eval` label in place); a failed nightly run opens an issue. Prompt-cache pinning deferred: count failovers first.
+- [x] **7. Hero visual.** **Done:** the landing page now shows a 3D map with the road drawing, built and added to the landing; adds the npm package `maplibre-gl` 6.16.0. A prerender-build crash (`matchMedia` missing at build time) was fixed in PR #61.
 - [x] **8. README fixes.** State the v1/v2 leg change (legs became `off`, static, v3), mark the elicitation-coverage numbers as unproven, check the `test_b.js` header. **Done 2026-11-19:** legs paragraph added, v2 marked as replaced by v3 in both tables; the `test_b.js` header matches the code, no change.
 
 ### Post-deploy checks
@@ -35,8 +37,6 @@ Every vignette that was emergent in all 3 repeats at the 2026-11-16 baseline sta
 ### Security findings (task 015)
 
 - **Closed:** M1 for the red-team forms (raw tool-call blobs, forged prompt tags, a planted code word such as `inj4`, a reply missing the chosen facility's name); L3 ("call 211" before "call 911"; emergent templates no longer mention 211). Both take effect when the branch is deployed.
-- **Open, new limit:** injected text written as a full sentence on a turn with no facility is not detected.
-- **Still open:** L5 (no chat-off switch: `ADMISSION_CONTROL=off` removes the limit, it does not stop chat), M2 (typed PII to the provider), M5 (staging shares production), L7, L8, L10 to L13.
 
 ### Miss response and cut order
 
@@ -46,7 +46,9 @@ Every vignette that was emergent in all 3 repeats at the 2026-11-16 baseline sta
 
 ### Carried over
 
-- **Owner actions from Sprint 23:** add the `GROQ_API_KEY` secret and the `run-eval` label; replace the invalid Anthropic keys in Doppler `dev_personal` and `eval`; drop the local stash holding an old key; set the SonarCloud exclusion for `backend/scripts/**`.
+- **Security, open (re-checked against the code 2026-11-20):** injected text written as a full sentence on a turn with no facility is not detected; no deliberate chat-off switch (L5: the admission switch removes the limit, it does not stop chat); typed names, phones and addresses reach the model provider unredacted, with no PII detector (M2); guests can nudge load-aware ranking counters (L7); `X-Real-IP` is trusted first for rate-limit buckets (L8); 11 npm advisories remain, 2 High (L10); Hugging Face downloads in the export scripts are not pinned to a revision (L12). L11 (Trivy leftovers) and L13 (one unexplained 503) were not re-checked. Review: `docs/security/2026-11-12-security-review.md`.
+- **Before the floor or mismatch check leaves shadow:** name a clinical reviewer to sign the red-flag list.
+- **SonarCloud:** the `backend/scripts/**` exclusion is now set in the SonarCloud UI (the file setting was not honoured); PR #61's gate passes. 48 code smells remain open (composite test assertions, three functions over the complexity limit).
 - **Open finding (task 015):** `gpt-oss` writes its tool call as raw JSON in the reply text in about a third of eval conversations on Ollama Cloud; the rate on Groq (production) is not measured.
 - **Not in this sprint:** retrieval challengers, graph v3 as default, agentic sufficiency and the open-weight shadow run (agentic-conversation sprint, Dec 14 to 20), natural-language follow-ups and the no-dialogue lookup channel test (Nov 30 to Dec 6).
 
