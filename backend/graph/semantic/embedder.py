@@ -73,7 +73,7 @@ def cls_pool(hidden: np.ndarray) -> np.ndarray:
 def l2_normalize(v: np.ndarray) -> np.ndarray:
     v_arr = np.asarray(v, dtype=np.float32)
     norm = float(np.linalg.norm(v_arr))
-    if norm == 0.0 or np.isnan(norm):
+    if norm <= 0.0 or np.isnan(norm):
         return np.zeros_like(v_arr, dtype=np.float32)
     return (v_arr / norm).astype(np.float32)
 

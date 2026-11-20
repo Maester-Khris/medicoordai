@@ -84,6 +84,9 @@ const FAQ_ITEMS = [
 ] as const
 
 type CookieSettings = { zoom: boolean; history: boolean; analytics: boolean }
+// Hidden until the LLM text-to-map navigation lands (see the comment above the block it guards).
+const SHOW_OMNI_INPUT: boolean = false
+
 const COOKIE_CONSENT_KEY = 'medicoord_cookie_consent'
 
 function loadStoredConsent(): CookieSettings | null {
@@ -333,10 +336,10 @@ export default function LandingPage() {
             </div>
 
             {/* Hidden until the LLM text-to-map navigation lands: the omni-input, its command menu, the
-                sample-query chips and the parse preview. Delete `false &&` to restore. It is not a
+                sample-query chips and the parse preview. Set SHOW_OMNI_INPUT to true to restore. It is not a
                 block comment because the block holds JSX comments of its own, and tsconfig's
                 noUnusedLocals would flag the state and handlers only this block uses. */}
-            {false && (
+            {SHOW_OMNI_INPUT && (
             <div className="relative w-full max-w-lg mt-2">
               <form onSubmit={handleFormSubmit} className="relative z-20">
                 <div className="flex items-center w-full h-14 pl-4 pr-2.5 rounded-xl border border-[#1C4659]/65 bg-[#0A1D27]/90 backdrop-blur-xl shadow-lg focus-within:border-[#48F6C1] focus-within:ring-2 focus-within:ring-[#48F6C1]/10 transition-all duration-300">
